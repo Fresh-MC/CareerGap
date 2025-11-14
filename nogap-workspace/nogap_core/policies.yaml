@@ -1,0 +1,812 @@
+- id: "A.1.a.i"
+  title: "Enforce password complexity requirements"
+  description: "Ensure password complexity policy is enabled"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "local_policy"
+  policy_name: "PasswordComplexity"
+  expected_state: "1"
+  remediate_type: "local_policy_set"
+  set_value: "1"
+  post_reboot_required: false
+  reference: "Annexure A Page 1, Item 1.a.i"
+
+- id: "A.1.a.ii"
+  title: "Set minimum password length"
+  description: "Ensure minimum password length is at least 14 characters"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa"
+  value_name: "MinimumPasswordLength"
+  expected_state:
+    operator: "gte"
+    value: 14
+  remediate_type: "registry_set"
+  set_value: 14
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 1, Item 1.a.ii"
+
+- id: "A.1.a.iii"
+  title: "Set maximum password age"
+  description: "Ensure maximum password age is 60 days or less"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters"
+  value_name: "MaximumPasswordAge"
+  expected_state:
+    operator: "lte"
+    value: 60
+  remediate_type: "registry_set"
+  set_value: 60
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 1, Item 1.a.iii"
+
+- id: "A.1.a.iv"
+  title: "Set minimum password age"
+  description: "Ensure minimum password age is at least 1 day"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters"
+  value_name: "MinimumPasswordAge"
+  expected_state:
+    operator: "gte"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 1, Item 1.a.iv"
+
+- id: "A.1.b.i"
+  title: "Enforce password history"
+  description: "Ensure password history remembers at least 24 passwords"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa"
+  value_name: "PasswordHistorySize"
+  expected_state:
+    operator: "gte"
+    value: 24
+  remediate_type: "registry_set"
+  set_value: 24
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 2, Item 1.b.i"
+
+- id: "A.2.a.i"
+  title: "Disable Guest account"
+  description: "Ensure Guest account is disabled"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "local_policy"
+  policy_name: "EnableGuestAccount"
+  expected_state: "0"
+  remediate_type: "local_policy_set"
+  set_value: "0"
+  post_reboot_required: false
+  reference: "Annexure A Page 3, Item 2.a.i"
+
+- id: "A.2.a.ii"
+  title: "Rename Administrator account"
+  description: "Ensure default Administrator account is renamed"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"
+  value_name: "DefaultUserName"
+  expected_state:
+    operator: "ne"
+    value: "Administrator"
+  remediate_type: "registry_set"
+  set_value: "WinAdmin"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 3, Item 2.a.ii"
+
+- id: "A.2.b.i"
+  title: "Set account lockout threshold"
+  description: "Ensure account lockout threshold is 5 invalid attempts or fewer"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\RemoteAccess\\Parameters\\AccountLockout"
+  value_name: "MaxDenials"
+  expected_state:
+    operator: "lte"
+    value: 5
+  remediate_type: "registry_set"
+  set_value: 5
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 3, Item 2.b.i"
+
+- id: "A.2.b.ii"
+  title: "Set account lockout duration"
+  description: "Ensure account lockout duration is at least 15 minutes"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\RemoteAccess\\Parameters\\AccountLockout"
+  value_name: "LockoutDuration"
+  expected_state:
+    operator: "gte"
+    value: 15
+  remediate_type: "registry_set"
+  set_value: 15
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 3, Item 2.b.ii"
+
+- id: "A.3.a.i"
+  title: "Disable SMBv1 protocol"
+  description: "Ensure SMBv1 protocol is disabled"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\LanmanServer\\Parameters"
+  value_name: "SMB1"
+  expected_state:
+    operator: "eq"
+    value: 0
+  remediate_type: "registry_set"
+  set_value: 0
+  set_type: "DWORD"
+  post_reboot_required: true
+  reference: "Annexure A Page 4, Item 3.a.i"
+
+- id: "A.3.a.ii"
+  title: "Enable Windows Firewall for Domain profile"
+  description: "Ensure Windows Firewall is enabled for Domain profile"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\SharedAccess\\Parameters\\FirewallPolicy\\DomainProfile"
+  value_name: "EnableFirewall"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.a.ii"
+
+- id: "A.3.a.iii"
+  title: "Enable Windows Firewall for Private profile"
+  description: "Ensure Windows Firewall is enabled for Private profile"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\SharedAccess\\Parameters\\FirewallPolicy\\StandardProfile"
+  value_name: "EnableFirewall"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.a.iii"
+
+- id: "A.3.a.iv"
+  title: "Enable Windows Firewall for Public profile"
+  description: "Ensure Windows Firewall is enabled for Public profile"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\SharedAccess\\Parameters\\FirewallPolicy\\PublicProfile"
+  value_name: "EnableFirewall"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.a.iv"
+
+- id: "A.4.a.i"
+  title: "Disable Remote Desktop Services"
+  description: "Ensure Remote Desktop Services is disabled when not required"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "service_status"
+  service_name: "TermService"
+  expected_state: "stopped_disabled"
+  remediate_type: "service_disable"
+  remediate_params:
+    stop: true
+    disable: true
+  post_reboot_required: false
+  reference: "Annexure A Page 5, Item 4.a.i"
+
+- id: "A.4.a.ii"
+  title: "Disable Print Spooler service"
+  description: "Ensure Print Spooler service is disabled on non-print servers"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "service_status"
+  service_name: "Spooler"
+  expected_state: "stopped_disabled"
+  remediate_type: "service_disable"
+  remediate_params:
+    stop: true
+    disable: true
+  post_reboot_required: false
+  reference: "Annexure A Page 5, Item 4.a.ii"
+
+- id: "A.4.b.i"
+  title: "Configure NTP client"
+  description: "Ensure Windows Time service is configured and running"
+  platform: "windows"
+  severity: "low"
+  reversible: true
+  check_type: "service_status"
+  service_name: "W32Time"
+  expected_state: "running"
+  remediate_type: "service_enable"
+  remediate_params:
+    start: true
+    enable: true
+  post_reboot_required: false
+  reference: "Annexure A Page 5, Item 4.b.i"
+
+- id: "A.5.a.i"
+  title: "Restrict anonymous SID/Name translation"
+  description: "Ensure anonymous SID/Name translation is disabled"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa"
+  value_name: "RestrictAnonymousSAM"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 6, Item 5.a.i"
+
+- id: "A.5.a.ii"
+  title: "Restrict anonymous enumeration of shares"
+  description: "Ensure anonymous enumeration of SAM accounts is restricted"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa"
+  value_name: "RestrictAnonymous"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 6, Item 5.a.ii"
+
+- id: "A.5.b.i"
+  title: "Configure LAN Manager authentication level"
+  description: "Ensure LAN Manager authentication level is NTLMv2 only"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa"
+  value_name: "LmCompatibilityLevel"
+  expected_state:
+    operator: "gte"
+    value: 5
+  remediate_type: "registry_set"
+  set_value: 5
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 6, Item 5.b.i"
+
+- id: "A.6.a.i"
+  title: "Enable audit of account logon events"
+  description: "Ensure audit policy for account logon events is enabled"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "local_policy"
+  policy_name: "AuditAccountLogon"
+  expected_state: "3"
+  remediate_type: "local_policy_set"
+  set_value: "3"
+  post_reboot_required: false
+  reference: "Annexure A Page 7, Item 6.a.i"
+
+- id: "A.6.a.ii"
+  title: "Enable audit of logon events"
+  description: "Ensure audit policy for logon events is enabled"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "local_policy"
+  policy_name: "AuditLogonEvents"
+  expected_state: "3"
+  remediate_type: "local_policy_set"
+  set_value: "3"
+  post_reboot_required: false
+  reference: "Annexure A Page 7, Item 6.a.ii"
+
+- id: "A.6.b.i"
+  title: "Enable audit of policy change"
+  description: "Ensure audit policy for policy change is enabled"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "local_policy"
+  policy_name: "AuditPolicyChange"
+  expected_state: "3"
+  remediate_type: "local_policy_set"
+  set_value: "3"
+  post_reboot_required: false
+  reference: "Annexure A Page 7, Item 6.b.i"
+
+- id: "A.7.a.i"
+  title: "Restrict remote registry access"
+  description: "Ensure Remote Registry service is disabled"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "service_status"
+  service_name: "RemoteRegistry"
+  expected_state: "stopped_disabled"
+  remediate_type: "service_disable"
+  remediate_params:
+    stop: true
+    disable: true
+  post_reboot_required: false
+  reference: "Annexure A Page 8, Item 7.a.i"
+
+- id: "A.7.b.i"
+  title: "Configure User Account Control elevation prompt"
+  description: "Ensure UAC elevation prompt for administrators is enabled"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System"
+  value_name: "ConsentPromptBehaviorAdmin"
+  expected_state:
+    operator: "gte"
+    value: 2
+  remediate_type: "registry_set"
+  set_value: 2
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 8, Item 7.b.i"
+
+- id: "A.8.a.i"
+  title: "Disable AutoPlay for all drives"
+  description: "Ensure AutoPlay is disabled for all drives"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer"
+  value_name: "NoDriveTypeAutoRun"
+  expected_state:
+    operator: "eq"
+    value: 255
+  remediate_type: "registry_set"
+  set_value: 255
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 9, Item 8.a.i"
+
+- id: "B.1.a.i"
+  title: "Ensure SSH PermitRootLogin is disabled"
+  description: "Ensure SSH does not permit root login"
+  platform: "linux"
+  severity: "high"
+  reversible: true
+  check_type: "file_regex"
+  target_file: "/etc/ssh/sshd_config"
+  regex: "^\\s*PermitRootLogin\\s+(yes|without-password|prohibit-password)"
+  remediate_type: "file_replace"
+  replace_regex: "^\\s*PermitRootLogin\\s+.*"
+  replace_with: "PermitRootLogin no"
+  post_reboot_required: false
+  reference: "Annexure B Page 1, Item 1.a.i"
+
+- id: "B.1.a.ii"
+  title: "Ensure SSH Protocol 2 is used"
+  description: "Ensure SSH uses protocol 2 only"
+  platform: "linux"
+  severity: "high"
+  reversible: true
+  check_type: "file_regex"
+  target_file: "/etc/ssh/sshd_config"
+  regex: "^\\s*Protocol\\s+1"
+  remediate_type: "file_replace"
+  replace_regex: "^\\s*Protocol\\s+.*"
+  replace_with: "Protocol 2"
+  post_reboot_required: false
+  reference: "Annexure B Page 1, Item 1.a.ii"
+
+- id: "B.1.a.iii"
+  title: "Set SSH MaxAuthTries"
+  description: "Ensure SSH MaxAuthTries is 4 or less"
+  platform: "linux"
+  severity: "medium"
+  reversible: true
+  check_type: "file_regex"
+  target_file: "/etc/ssh/sshd_config"
+  regex: "^\\s*MaxAuthTries\\s+([5-9]|\\d{2,})"
+  remediate_type: "file_replace"
+  replace_regex: "^\\s*MaxAuthTries\\s+.*"
+  replace_with: "MaxAuthTries 4"
+  post_reboot_required: false
+  reference: "Annexure B Page 1, Item 1.a.iii"
+
+- id: "B.1.b.i"
+  title: "Disable SSH X11 forwarding"
+  description: "Ensure SSH X11Forwarding is disabled"
+  platform: "linux"
+  severity: "medium"
+  reversible: true
+  check_type: "file_regex"
+  target_file: "/etc/ssh/sshd_config"
+  regex: "^\\s*X11Forwarding\\s+yes"
+  remediate_type: "file_replace"
+  replace_regex: "^\\s*X11Forwarding\\s+.*"
+  replace_with: "X11Forwarding no"
+  post_reboot_required: false
+  reference: "Annexure B Page 1, Item 1.b.i"
+
+- id: "B.2.a.i"
+  title: "Disable IP forwarding"
+  description: "Ensure IP forwarding is disabled"
+  platform: "linux"
+  severity: "high"
+  reversible: true
+  check_type: "sysctl_check"
+  key: "net.ipv4.ip_forward"
+  expected_state:
+    operator: "eq"
+    value: 0
+  remediate_type: "sysctl_set"
+  value: 0
+  post_reboot_required: false
+  reference: "Annexure B Page 2, Item 2.a.i"
+
+- id: "B.2.a.ii"
+  title: "Disable ICMP redirects"
+  description: "Ensure ICMP redirects are not accepted"
+  platform: "linux"
+  severity: "high"
+  reversible: true
+  check_type: "sysctl_check"
+  key: "net.ipv4.conf.all.accept_redirects"
+  expected_state:
+    operator: "eq"
+    value: 0
+  remediate_type: "sysctl_set"
+  value: 0
+  post_reboot_required: false
+  reference: "Annexure B Page 2, Item 2.a.ii"
+
+- id: "B.2.a.iii"
+  title: "Disable secure ICMP redirects"
+  description: "Ensure secure ICMP redirects are not accepted"
+  platform: "linux"
+  severity: "high"
+  reversible: true
+  check_type: "sysctl_check"
+  key: "net.ipv4.conf.all.secure_redirects"
+  expected_state:
+    operator: "eq"
+    value: 0
+  remediate_type: "sysctl_set"
+  value: 0
+  post_reboot_required: false
+  reference: "Annexure B Page 2, Item 2.a.iii"
+
+- id: "B.2.b.i"
+  title: "Enable TCP SYN cookies"
+  description: "Ensure TCP SYN cookies are enabled"
+  platform: "linux"
+  severity: "medium"
+  reversible: true
+  check_type: "sysctl_check"
+  key: "net.ipv4.tcp_syncookies"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "sysctl_set"
+  value: 1
+  post_reboot_required: false
+  reference: "Annexure B Page 2, Item 2.b.i"
+
+- id: "B.3.a.i"
+  title: "Remove telnet client"
+  description: "Ensure telnet client is not installed"
+  platform: "linux"
+  severity: "medium"
+  reversible: true
+  check_type: "package_absence"
+  package_name: "telnet"
+  remediate_type: "package_remove"
+  post_reboot_required: false
+  reference: "Annexure B Page 3, Item 3.a.i"
+
+- id: "B.3.a.ii"
+  title: "Remove rsh client"
+  description: "Ensure rsh client is not installed"
+  platform: "linux"
+  severity: "medium"
+  reversible: true
+  check_type: "package_absence"
+  package_name: "rsh-client"
+  remediate_type: "package_remove"
+  post_reboot_required: false
+  reference: "Annexure B Page 3, Item 3.a.ii"
+
+- id: "B.3.b.i"
+  title: "Disable avahi-daemon service"
+  description: "Ensure avahi-daemon is stopped and disabled"
+  platform: "linux"
+  severity: "low"
+  reversible: true
+  check_type: "service_status"
+  service_name: "avahi-daemon"
+  expected_state: "stopped_disabled"
+  remediate_type: "service_disable"
+  remediate_params:
+    stop: true
+    disable: true
+  post_reboot_required: false
+  reference: "Annexure B Page 3, Item 3.b.i"
+
+- id: "B.4.a.i"
+  title: "Set /etc/passwd permissions"
+  description: "Ensure permissions on /etc/passwd are 644"
+  platform: "linux"
+  severity: "high"
+  reversible: true
+  check_type: "file_permissions_glob"
+  target_glob: "/etc/passwd"
+  forbidden_permissions: "o+w"
+  remediate_type: "chmod_filter"
+  chmod_mode: "644"
+  post_reboot_required: false
+  reference: "Annexure B Page 4, Item 4.a.i"
+
+- id: "B.4.a.ii"
+  title: "Set /etc/shadow permissions"
+  description: "Ensure permissions on /etc/shadow are 640 or more restrictive"
+  platform: "linux"
+  severity: "high"
+  reversible: true
+  check_type: "file_permissions_glob"
+  target_glob: "/etc/shadow"
+  forbidden_permissions: "o+rwx"
+  remediate_type: "chmod_filter"
+  chmod_mode: "640"
+  post_reboot_required: false
+  reference: "Annexure B Page 4, Item 4.a.ii"
+
+- id: "B.4.a.iii"
+  title: "Set /etc/group permissions"
+  description: "Ensure permissions on /etc/group are 644"
+  platform: "linux"
+  severity: "medium"
+  reversible: true
+  check_type: "file_permissions_glob"
+  target_glob: "/etc/group"
+  forbidden_permissions: "o+w"
+  remediate_type: "chmod_filter"
+  chmod_mode: "644"
+  post_reboot_required: false
+  reference: "Annexure B Page 4, Item 4.a.iii"
+
+- id: "B.4.b.i"
+  title: "Set /etc/ssh/sshd_config permissions"
+  description: "Ensure permissions on /etc/ssh/sshd_config are 600"
+  platform: "linux"
+  severity: "high"
+  reversible: true
+  check_type: "file_permissions_glob"
+  target_glob: "/etc/ssh/sshd_config"
+  forbidden_permissions: "go+rwx"
+  remediate_type: "chmod_filter"
+  chmod_mode: "600"
+  post_reboot_required: false
+  reference: "Annexure B Page 4, Item 4.b.i"
+
+- id: "B.5.a.i"
+  title: "Disable core dumps"
+  description: "Ensure core dumps are restricted"
+  platform: "linux"
+  severity: "medium"
+  reversible: true
+  check_type: "file_regex"
+  target_file: "/etc/security/limits.conf"
+  regex: "^\\s*\\*\\s+hard\\s+core\\s+0"
+  remediate_type: "file_replace"
+  replace_regex: "^\\s*\\*\\s+hard\\s+core\\s+.*"
+  replace_with: "* hard core 0"
+  post_reboot_required: false
+  reference: "Annexure B Page 5, Item 5.a.i"
+
+- id: "B.5.b.i"
+  title: "Enable ASLR"
+  description: "Ensure address space layout randomization is enabled"
+  platform: "linux"
+  severity: "high"
+  reversible: true
+  check_type: "sysctl_check"
+  key: "kernel.randomize_va_space"
+  expected_state:
+    operator: "eq"
+    value: 2
+  remediate_type: "sysctl_set"
+  value: 2
+  post_reboot_required: false
+  reference: "Annexure B Page 5, Item 5.b.i"
+
+- id: "B.6.a.i"
+  title: "Ensure rsyslog is enabled"
+  description: "Ensure rsyslog service is running and enabled"
+  platform: "linux"
+  severity: "medium"
+  reversible: true
+  check_type: "service_status"
+  service_name: "rsyslog"
+  expected_state: "running"
+  remediate_type: "service_enable"
+  remediate_params:
+    start: true
+    enable: true
+  post_reboot_required: false
+  reference: "Annexure B Page 6, Item 6.a.i"
+
+- id: "B.6.b.i"
+  title: "Disable IPv6 router advertisements"
+  description: "Ensure IPv6 router advertisements are not accepted"
+  platform: "linux"
+  severity: "medium"
+  reversible: true
+  check_type: "sysctl_check"
+  key: "net.ipv6.conf.all.accept_ra"
+  expected_state:
+    operator: "eq"
+    value: 0
+  remediate_type: "sysctl_set"
+  value: 0
+  post_reboot_required: false
+  reference: "Annexure B Page 6, Item 6.b.i"
+
+- id: "B.7.a.i"
+  title: "Ensure password expiration is 90 days or less"
+  description: "Ensure maximum password age is configured in /etc/login.defs"
+  platform: "linux"
+  severity: "medium"
+  reversible: true
+  check_type: "file_regex"
+  target_file: "/etc/login.defs"
+  regex: "^\\s*PASS_MAX_DAYS\\s+(9[1-9]|[1-9][0-9]{2,})"
+  remediate_type: "file_replace"
+  replace_regex: "^\\s*PASS_MAX_DAYS\\s+.*"
+  replace_with: "PASS_MAX_DAYS 90"
+  post_reboot_required: false
+  reference: "Annexure B Page 7, Item 7.a.i"
+
+- id: "B.7.a.ii"
+  title: "Ensure minimum days between password changes"
+  description: "Ensure minimum password age is 7 days or more"
+  platform: "linux"
+  severity: "low"
+  reversible: true
+  check_type: "file_regex"
+  target_file: "/etc/login.defs"
+  regex: "^\\s*PASS_MIN_DAYS\\s+[0-6]\\s*$"
+  remediate_type: "file_replace"
+  replace_regex: "^\\s*PASS_MIN_DAYS\\s+.*"
+  replace_with: "PASS_MIN_DAYS 7"
+  post_reboot_required: false
+  reference: "Annexure B Page 7, Item 7.a.ii"
+
+- id: "B.7.b.i"
+  title: "Ensure password warning age is 7 or more"
+  description: "Ensure password expiration warning days is configured"
+  platform: "linux"
+  severity: "low"
+  reversible: true
+  check_type: "file_regex"
+  target_file: "/etc/login.defs"
+  regex: "^\\s*PASS_WARN_AGE\\s+[0-6]\\s*$"
+  remediate_type: "file_replace"
+  replace_regex: "^\\s*PASS_WARN_AGE\\s+.*"
+  replace_with: "PASS_WARN_AGE 7"
+  post_reboot_required: false
+  reference: "Annexure B Page 7, Item 7.b.i"
+
+- id: "B.8.a.i"
+  title: "Ensure default umask is 027 or more restrictive"
+  description: "Ensure default user umask is configured in /etc/profile"
+  platform: "linux"
+  severity: "medium"
+  reversible: true
+  check_type: "file_regex"
+  target_file: "/etc/profile"
+  regex: "^\\s*umask\\s+(00[0-6]|0[0-1][0-7])"
+  remediate_type: "file_replace"
+  replace_regex: "^\\s*umask\\s+.*"
+  replace_with: "umask 027"
+  post_reboot_required: false
+  reference: "Annexure B Page 8, Item 8.a.i"
+
+- id: "B.8.b.i"
+  title: "Ensure source routed packets are not accepted"
+  description: "Ensure source routed packets are disabled"
+  platform: "linux"
+  severity: "high"
+  reversible: true
+  check_type: "sysctl_check"
+  key: "net.ipv4.conf.all.accept_source_route"
+  expected_state:
+    operator: "eq"
+    value: 0
+  remediate_type: "sysctl_set"
+  value: 0
+  post_reboot_required: false
+  reference: "Annexure B Page 8, Item 8.b.i"
+
+- id: "B.9.a.i"
+  title: "Ensure suspicious packets are logged"
+  description: "Ensure martian packets are logged"
+  platform: "linux"
+  severity: "low"
+  reversible: true
+  check_type: "sysctl_check"
+  key: "net.ipv4.conf.all.log_martians"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "sysctl_set"
+  value: 1
+  post_reboot_required: false
+  reference: "Annexure B Page 9, Item 9.a.i"
+
+- id: "B.9.b.i"
+  title: "Ensure broadcast ICMP requests are ignored"
+  description: "Ensure ICMP echo requests to broadcast are ignored"
+  platform: "linux"
+  severity: "medium"
+  reversible: true
+  check_type: "sysctl_check"
+  key: "net.ipv4.icmp_echo_ignore_broadcasts"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "sysctl_set"
+  value: 1
+  post_reboot_required: false
+  reference: "Annexure B Page 9, Item 9.b.i"
