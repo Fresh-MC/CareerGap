@@ -1,0 +1,19 @@
+{
+  "name": "rust",
+  "version": "1.0.0",
+  "description": "Rust MCP server for nogap_core build/test automation",
+  "capabilities": {
+    "tools": [
+      {
+        "name": "build_core",
+        "description": "Builds the nogap_core library",
+        "parameters": []
+      },
+      {
+        "name": "check_core",
+        "description": "Runs cargo check on nogap_core",
+        "parameters": []
+      }
+    ]
+  }
+}

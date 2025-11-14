@@ -1,0 +1,21 @@
+{
+  "package": {
+    "productName": "nogap_dashboard",
+    "version": "0.1.0"
+  },
+  "tauri": {
+    "bundle": {
+      "identifier": "com.nogap.dashboard"
+    },
+    "updater": {
+      "active": false
+    },
+    "allowlist": {
+      "all": true
+    }
+  },
+  "build": {
+    "devPath": "../dist",
+    "distDir": "../dist"
+  }
+}

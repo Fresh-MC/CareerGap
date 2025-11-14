@@ -1,0 +1,15 @@
+[package]
+name = "nogap_dashboard"
+version = "0.1.0"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = "1.0"
+
+[dependencies]
+tauri = { version = "1.0", features = ["api-all"] }
+nogap_core = { path = "../../nogap_core" }
+serde = { version = "1.0", features = ["derive"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
