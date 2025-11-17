@@ -18,15 +18,13 @@
   platform: "windows"
   severity: "high"
   reversible: true
-  check_type: "registry_key"
-  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa"
-  value_name: "MinimumPasswordLength"
+  check_type: "local_policy"
+  policy_name: "MinimumPasswordLength"
   expected_state:
     operator: "gte"
     value: 14
-  remediate_type: "registry_set"
+  remediate_type: "local_policy_set"
   set_value: 14
-  set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 1, Item 1.a.ii"
 
@@ -36,15 +34,13 @@
   platform: "windows"
   severity: "medium"
   reversible: true
-  check_type: "registry_key"
-  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters"
-  value_name: "MaximumPasswordAge"
+  check_type: "local_policy"
+  policy_name: "MaximumPasswordAge"
   expected_state:
     operator: "lte"
     value: 60
-  remediate_type: "registry_set"
+  remediate_type: "local_policy_set"
   set_value: 60
-  set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 1, Item 1.a.iii"
 
@@ -54,15 +50,13 @@
   platform: "windows"
   severity: "medium"
   reversible: true
-  check_type: "registry_key"
-  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters"
-  value_name: "MinimumPasswordAge"
+  check_type: "local_policy"
+  policy_name: "MinimumPasswordAge"
   expected_state:
     operator: "gte"
     value: 1
-  remediate_type: "registry_set"
+  remediate_type: "local_policy_set"
   set_value: 1
-  set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 1, Item 1.a.iv"
 
@@ -72,15 +66,13 @@
   platform: "windows"
   severity: "medium"
   reversible: true
-  check_type: "registry_key"
-  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa"
-  value_name: "PasswordHistorySize"
+  check_type: "local_policy"
+  policy_name: "PasswordHistorySize"
   expected_state:
     operator: "gte"
     value: 24
-  remediate_type: "registry_set"
+  remediate_type: "local_policy_set"
   set_value: 24
-  set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 2, Item 1.b.i"
 
@@ -122,15 +114,13 @@
   platform: "windows"
   severity: "high"
   reversible: true
-  check_type: "registry_key"
-  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\RemoteAccess\\Parameters\\AccountLockout"
-  value_name: "MaxDenials"
+  check_type: "local_policy"
+  policy_name: "LockoutBadCount"
   expected_state:
     operator: "lte"
     value: 5
-  remediate_type: "registry_set"
+  remediate_type: "local_policy_set"
   set_value: 5
-  set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 3, Item 2.b.i"
 
@@ -140,15 +130,13 @@
   platform: "windows"
   severity: "medium"
   reversible: true
-  check_type: "registry_key"
-  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\RemoteAccess\\Parameters\\AccountLockout"
-  value_name: "LockoutDuration"
+  check_type: "local_policy"
+  policy_name: "LockoutDuration"
   expected_state:
     operator: "gte"
     value: 15
-  remediate_type: "registry_set"
+  remediate_type: "local_policy_set"
   set_value: 15
-  set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 3, Item 2.b.ii"
 
@@ -314,15 +302,13 @@
   platform: "windows"
   severity: "high"
   reversible: true
-  check_type: "registry_key"
-  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa"
-  value_name: "LmCompatibilityLevel"
+  check_type: "local_policy"
+  policy_name: "LmCompatibilityLevel"
   expected_state:
     operator: "gte"
     value: 5
-  remediate_type: "registry_set"
+  remediate_type: "local_policy_set"
   set_value: 5
-  set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 6, Item 5.b.i"
 
@@ -390,15 +376,13 @@
   platform: "windows"
   severity: "high"
   reversible: true
-  check_type: "registry_key"
-  target_path: "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System"
-  value_name: "ConsentPromptBehaviorAdmin"
+  check_type: "local_policy"
+  policy_name: "ConsentPromptBehaviorAdmin"
   expected_state:
     operator: "gte"
     value: 2
-  remediate_type: "registry_set"
+  remediate_type: "local_policy_set"
   set_value: 2
-  set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 8, Item 7.b.i"
 

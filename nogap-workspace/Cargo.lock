@@ -2620,6 +2620,7 @@ dependencies = [
  "signature",
  "tempfile",
  "thiserror 1.0.69",
+ "winreg 0.52.0",
 ]
 
 [[package]]

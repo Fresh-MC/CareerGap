@@ -18,6 +18,82 @@ pub enum RemediateResult {
     Failed(String),
 }
 
+// ========== PLATFORM DISPATCHERS ==========
+
+pub fn audit_policy(policy: &Policy) -> Result<AuditResult, Box<dyn Error>> {
+    match policy.check_type.as_str() {
+        "file_regex" => check_file_regex(policy),
+        "sysctl" => {
+            let sysctl = RealSysctlProvider;
+            match policy.id.as_str() {
+                "B.8.b.i" => check_ipv6_router_ads(policy, &sysctl),
+                "B.9.a.i" => check_source_route(policy, &sysctl),
+                "B.9.b.i" => check_log_martians(policy, &sysctl),
+                "B.9.c.i" => check_icmp_echo_ignore(policy, &sysctl),
+                _ => Err(format!("Unknown sysctl policy: {}", policy.id).into()),
+            }
+        }
+        "file_permissions" => {
+            let target_path = policy
+                .target_file
+                .as_ref()
+                .ok_or("target_file is required for file_permissions check")?;
+            check_file_permissions(policy, target_path)
+        }
+        "login_defs" => {
+            match policy.id.as_str() {
+                "B.7.a.i" => check_pass_max_days(policy),
+                "B.7.a.ii" => check_pass_min_days(policy),
+                "B.7.b.i" => check_pass_warn_age(policy),
+                "B.8.a.i" => check_default_umask(policy),
+                _ => Err(format!("Unknown login_defs policy: {}", policy.id).into()),
+            }
+        }
+        _ => Err(format!(
+            "Unsupported check_type for Linux platform: {} (policy: {})",
+            policy.check_type, policy.id
+        )
+        .into()),
+    }
+}
+
+pub fn remediate_policy(policy: &Policy) -> Result<RemediateResult, Box<dyn Error>> {
+    match policy.check_type.as_str() {
+        "file_regex" => remediate_file_replace(policy),
+        "sysctl" => {
+            let mut sysctl = RealSysctlProvider;
+            match policy.id.as_str() {
+                "B.8.b.i" => remediate_ipv6_router_ads(policy, &mut sysctl),
+                "B.9.a.i" => remediate_source_route(policy, &mut sysctl),
+                "B.9.b.i" => remediate_log_martians(policy, &mut sysctl),
+                "B.9.c.i" => remediate_icmp_echo_ignore(policy, &mut sysctl),
+                _ => Err(format!("Unknown sysctl policy: {}", policy.id).into()),
+            }
+        }
+        "file_permissions" => {
+            let target_path = policy
+                .target_file
+                .as_ref()
+                .ok_or("target_file is required for file_permissions remediation")?;
+            remediate_file_permissions(policy, target_path)
+        }
+        "login_defs" => {
+            match policy.id.as_str() {
+                "B.7.a.i" => remediate_pass_max_days(policy),
+                "B.7.a.ii" => remediate_pass_min_days(policy),
+                "B.7.b.i" => remediate_pass_warn_age(policy),
+                "B.8.a.i" => remediate_default_umask(policy),
+                _ => Err(format!("Unknown login_defs policy: {}", policy.id).into()),
+            }
+        }
+        _ => Err(format!(
+            "Unsupported check_type for Linux platform: {} (policy: {})",
+            policy.check_type, policy.id
+        )
+        .into()),
+    }
+}
+
 pub fn check_file_regex(policy: &Policy) -> Result<AuditResult, Box<dyn Error>> {
     let target_file = policy
         .target_file
@@ -580,14 +656,9 @@ pub fn check_ssh_host_key_perms(policy: &Policy) -> Result<AuditResult, Box<dyn 
 
     #[cfg(not(unix))]
     {
+        let _ = policy;
         return Err("File permission checks only supported on Unix systems".into());
     }
-
-    Ok(AuditResult {
-        policy_id: policy.id.clone(),
-        passed: true,
-        message: "All SSH host keys have correct permissions".to_string(),
-    })
 }
 
 pub fn remediate_ssh_host_key_perms(policy: &Policy) -> Result<RemediateResult, Box<dyn Error>> {
@@ -625,12 +696,9 @@ pub fn remediate_ssh_host_key_perms(policy: &Policy) -> Result<RemediateResult, 
 
     #[cfg(not(unix))]
     {
+        let _ = (policy, paths);
         return Err("File permission remediation only supported on Unix systems".into());
     }
-
-    Ok(RemediateResult::Success(
-        "SSH host key permissions corrected (removed world-writable)".to_string()
-    ))
 }
 
 // 6) B.5.a.vii — UFW default deny
@@ -1020,12 +1088,12 @@ pub fn remediate_icmp_echo_ignore<S: SysctlProvider>(
 
 pub fn check_file_permissions<P: AsRef<Path>>(
     policy: &Policy,
-    target_path: P,
+    _target_path: P,
 ) -> Result<AuditResult, Box<dyn Error>> {
-    let target_glob = policy.target_glob.as_ref().ok_or("target_glob required")?;
+    let _target_glob = policy.target_glob.as_ref().ok_or("target_glob required")?;
     
     // Get forbidden permissions from regex or expected_state
-    let forbidden = if let Some(regex) = policy.regex.as_ref() {
+    let _forbidden = if let Some(regex) = policy.regex.as_ref() {
         regex.clone()
     } else if let Some(expected_state) = policy.expected_state.as_ref() {
         match expected_state {
@@ -1042,15 +1110,15 @@ pub fn check_file_permissions<P: AsRef<Path>>(
     {
         use std::os::unix::fs::PermissionsExt;
         
-        let metadata = fs::metadata(target_path.as_ref())?;
+        let metadata = fs::metadata(_target_path.as_ref())?;
         let mode = metadata.permissions().mode();
         
         // Parse forbidden permissions
-        let is_vulnerable = if forbidden.contains("o+w") {
+        let is_vulnerable = if _forbidden.contains("o+w") {
             mode & 0o002 != 0  // Others have write
-        } else if forbidden.contains("go+rwx") {
+        } else if _forbidden.contains("go+rwx") {
             mode & 0o077 != 0  // Group or others have any permission
-        } else if forbidden.contains("o+rwx") {
+        } else if _forbidden.contains("o+rwx") {
             mode & 0o007 != 0  // Others have any permission
         } else {
             false
@@ -1058,10 +1126,10 @@ pub fn check_file_permissions<P: AsRef<Path>>(
 
         let passed = !is_vulnerable;
         let message = if passed {
-            format!("File {} has correct permissions (mode: {:o})", target_glob, mode)
+            format!("File {} has correct permissions (mode: {:o})", _target_glob, mode)
         } else {
             format!("File {} has incorrect permissions (mode: {:o}), forbidden: {}", 
-                target_glob, mode, forbidden)
+                _target_glob, mode, _forbidden)
         };
 
         Ok(AuditResult {
@@ -1079,23 +1147,23 @@ pub fn check_file_permissions<P: AsRef<Path>>(
 
 pub fn remediate_file_permissions<P: AsRef<Path>>(
     policy: &Policy,
-    target_path: P,
+    _target_path: P,
 ) -> Result<RemediateResult, Box<dyn Error>> {
-    let chmod_mode = policy.chmod_mode.as_ref().ok_or("chmod_mode required")?;
+    let _chmod_mode = policy.chmod_mode.as_ref().ok_or("chmod_mode required")?;
     
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
         
-        let mode_value = u32::from_str_radix(chmod_mode, 8)
-            .map_err(|_| format!("Invalid chmod mode: {}", chmod_mode))?;
+        let mode_value = u32::from_str_radix(_chmod_mode, 8)
+            .map_err(|_| format!("Invalid chmod mode: {}", _chmod_mode))?;
         
         let permissions = std::fs::Permissions::from_mode(mode_value);
-        fs::set_permissions(target_path.as_ref(), permissions)?;
+        fs::set_permissions(_target_path.as_ref(), permissions)?;
 
         Ok(RemediateResult::Success(format!(
             "File permissions set to {}",
-            chmod_mode
+            _chmod_mode
         )))
     }
 

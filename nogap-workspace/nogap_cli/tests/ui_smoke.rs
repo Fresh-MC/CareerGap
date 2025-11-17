@@ -460,3 +460,82 @@ fn test_get_selected_index_with_filter() {
     let actual_idx = state.get_selected_index().unwrap();
     assert_eq!(state.policies[actual_idx].id, "SSH-M-004");
 }
+
+#[test]
+fn test_local_policy_display() {
+    // Test that TUI can display policies with check_type="local_policy"
+    // This test verifies cross-platform UI rendering of local_policy entries
+    let policies = vec![
+        Policy {
+            id: "A.1.a.i".to_string(),
+            title: Some("Password Complexity".to_string()),
+            description: Some("Enable password complexity requirements".to_string()),
+            platform: "Windows".to_string(),
+            severity: Some("high".to_string()),
+            check_type: "local_policy".to_string(),
+            policy_name: Some("PasswordComplexity".to_string()),
+            // Note: expected_state and set_value are Option types, left as None for UI test
+            ..Default::default()
+        },
+        Policy {
+            id: "A.2.b.ii".to_string(),
+            title: Some("Account Lockout Duration".to_string()),
+            description: Some("Set lockout duration to at least 15 minutes".to_string()),
+            platform: "Windows".to_string(),
+            severity: Some("high".to_string()),
+            check_type: "local_policy".to_string(),
+            policy_name: Some("LockoutDuration".to_string()),
+            ..Default::default()
+        },
+        Policy {
+            id: "REG-M-100".to_string(),
+            title: Some("Registry Check".to_string()),
+            description: Some("Check registry setting".to_string()),
+            platform: "Windows".to_string(),
+            severity: Some("medium".to_string()),
+            check_type: "registry_key".to_string(),
+            ..Default::default()
+        },
+    ];
+    
+    let mut state = DashboardState::new(policies);
+    state.compute_filtered_indices();
+    
+    // Verify all policies are loaded
+    assert_eq!(state.policies.len(), 3);
+    assert_eq!(state.filtered_indices.len(), 3);
+    
+    // Verify local_policy entries have correct check_type
+    assert_eq!(state.policies[0].check_type, "local_policy");
+    assert_eq!(state.policies[1].check_type, "local_policy");
+    assert_eq!(state.policies[2].check_type, "registry_key");
+    
+    // Verify local_policy entries have policy_name set
+    assert_eq!(state.policies[0].policy_name, Some("PasswordComplexity".to_string()));
+    assert_eq!(state.policies[1].policy_name, Some("LockoutDuration".to_string()));
+    
+    // Verify we can navigate to local_policy entries
+    state.selected = 0;
+    let policy = state.get_selected_policy();
+    assert!(policy.is_some());
+    assert_eq!(policy.unwrap().check_type, "local_policy");
+    
+    state.move_down();
+    let policy = state.get_selected_policy();
+    assert!(policy.is_some());
+    assert_eq!(policy.unwrap().check_type, "local_policy");
+    
+    // Render the dashboard to verify no crashes with local_policy entries
+    let multiselect = MultiSelectState::new();
+    let dashboard = Dashboard::new(&state, &multiselect);
+    
+    let backend = TestBackend::new(80, 24);
+    let mut terminal = Terminal::new(backend).unwrap();
+    
+    terminal.draw(|f| {
+        f.render_widget(dashboard, f.area());
+    }).unwrap();
+    
+    // If we get here without panicking, local_policy entries render correctly
+    // This proves the TUI can display local_policy check types on all platforms
+}
