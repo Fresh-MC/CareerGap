@@ -139,7 +139,9 @@ fn test_windows_a_2_a_ii_admin_renamed() {
         check_type: "registry_key".to_string(),
         target_path: Some(r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon".to_string()),
         value_name: Some("DefaultUserName".to_string()),
-        expected_state: Some(nogap_core::types::ExpectedState::String("Administrator".to_string())),
+        expected_state: Some(nogap_core::types::ExpectedState::String(
+            "Administrator".to_string(),
+        )),
         ..Default::default()
     };
 
@@ -172,7 +174,9 @@ fn test_windows_a_2_b_i_lockout_threshold() {
         id: "A.2.b.i".to_string(),
         platform: "windows".to_string(),
         check_type: "registry_key".to_string(),
-        target_path: Some(r"SYSTEM\CurrentControlSet\Services\RemoteAccess\Parameters\AccountLockout".to_string()),
+        target_path: Some(
+            r"SYSTEM\CurrentControlSet\Services\RemoteAccess\Parameters\AccountLockout".to_string(),
+        ),
         value_name: Some("MaxDenials".to_string()),
         expected_state: Some(nogap_core::types::ExpectedState::String("5".to_string())),
         ..Default::default()
@@ -207,7 +211,9 @@ fn test_windows_a_2_b_ii_lockout_duration() {
         id: "A.2.b.ii".to_string(),
         platform: "windows".to_string(),
         check_type: "registry_key".to_string(),
-        target_path: Some(r"SYSTEM\CurrentControlSet\Services\RemoteAccess\Parameters\AccountLockout".to_string()),
+        target_path: Some(
+            r"SYSTEM\CurrentControlSet\Services\RemoteAccess\Parameters\AccountLockout".to_string(),
+        ),
         value_name: Some("ResetTime".to_string()),
         expected_state: Some(nogap_core::types::ExpectedState::String("15".to_string())),
         ..Default::default()
@@ -356,13 +362,21 @@ fn test_windows_a_4_a_i_termservice_disabled() {
         platform: "windows".to_string(),
         check_type: "service_status".to_string(),
         service_name: Some("TermService".to_string()),
-        expected_state: Some(nogap_core::types::ExpectedState::String("stopped_disabled".to_string())),
+        expected_state: Some(nogap_core::types::ExpectedState::String(
+            "stopped_disabled".to_string(),
+        )),
         ..Default::default()
     };
 
     let mut service_manager = MockServiceManager::new();
-    service_manager.running_services.borrow_mut().push("TermService".to_string());
-    service_manager.enabled_services.borrow_mut().push("TermService".to_string());
+    service_manager
+        .running_services
+        .borrow_mut()
+        .push("TermService".to_string());
+    service_manager
+        .enabled_services
+        .borrow_mut()
+        .push("TermService".to_string());
 
     let audit_result = check_termservice_disabled(&policy, &service_manager).unwrap();
     assert_eq!(audit_result.policy_id, "A.4.a.i");
@@ -387,13 +401,21 @@ fn test_windows_a_4_a_ii_spooler_disabled() {
         platform: "windows".to_string(),
         check_type: "service_status".to_string(),
         service_name: Some("Spooler".to_string()),
-        expected_state: Some(nogap_core::types::ExpectedState::String("stopped_disabled".to_string())),
+        expected_state: Some(nogap_core::types::ExpectedState::String(
+            "stopped_disabled".to_string(),
+        )),
         ..Default::default()
     };
 
     let mut service_manager = MockServiceManager::new();
-    service_manager.running_services.borrow_mut().push("Spooler".to_string());
-    service_manager.enabled_services.borrow_mut().push("Spooler".to_string());
+    service_manager
+        .running_services
+        .borrow_mut()
+        .push("Spooler".to_string());
+    service_manager
+        .enabled_services
+        .borrow_mut()
+        .push("Spooler".to_string());
 
     let audit_result = check_spooler_disabled(&policy, &service_manager).unwrap();
     assert_eq!(audit_result.policy_id, "A.4.a.ii");
@@ -418,7 +440,9 @@ fn test_windows_a_4_b_i_w32time_enabled() {
         platform: "windows".to_string(),
         check_type: "service_status".to_string(),
         service_name: Some("W32Time".to_string()),
-        expected_state: Some(nogap_core::types::ExpectedState::String("running".to_string())),
+        expected_state: Some(nogap_core::types::ExpectedState::String(
+            "running".to_string(),
+        )),
         ..Default::default()
     };
 
@@ -448,7 +472,9 @@ fn test_windows_a_7_a_i_remote_registry_disabled() {
         platform: "windows".to_string(),
         check_type: "service_status".to_string(),
         service_name: Some("RemoteRegistry".to_string()),
-        expected_state: Some(nogap_core::types::ExpectedState::String("stopped_disabled".to_string())),
+        expected_state: Some(nogap_core::types::ExpectedState::String(
+            "stopped_disabled".to_string(),
+        )),
         ..Default::default()
     };
 
@@ -593,9 +619,7 @@ fn test_windows_a_7_b_i_uac_elevation() {
         id: "A.7.b.i".to_string(),
         platform: "windows".to_string(),
         check_type: "registry_key".to_string(),
-        target_path: Some(
-            r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System".to_string(),
-        ),
+        target_path: Some(r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System".to_string()),
         value_name: Some("ConsentPromptBehaviorAdmin".to_string()),
         expected_state: Some(nogap_core::types::ExpectedState::String("2".to_string())),
         ..Default::default()
@@ -630,7 +654,9 @@ fn test_windows_a_8_a_i_autoplay_disabled() {
         id: "A.8.a.i".to_string(),
         platform: "windows".to_string(),
         check_type: "registry_key".to_string(),
-        target_path: Some(r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer".to_string()),
+        target_path: Some(
+            r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer".to_string(),
+        ),
         value_name: Some("NoDriveTypeAutoRun".to_string()),
         expected_state: Some(nogap_core::types::ExpectedState::String("255".to_string())),
         ..Default::default()

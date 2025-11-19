@@ -1,5 +1,4 @@
 /// Centralized keybindings and help text for the NoGap TUI
-
 use crossterm::event::{KeyCode, KeyModifiers};
 
 pub struct KeyMap;

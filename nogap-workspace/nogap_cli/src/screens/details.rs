@@ -1,5 +1,4 @@
 /// Policy details screen with BEFORE/AFTER diff viewer
-
 use nogap_core::types::Policy;
 use ratatui::{
     buffer::Buffer,
@@ -87,7 +86,12 @@ impl<'a> DetailsScreen<'a> {
         Widget::render(block, area, buf);
 
         let title = self.state.policy.title.as_deref().unwrap_or("Untitled");
-        let desc = self.state.policy.description.as_deref().unwrap_or("No description");
+        let desc = self
+            .state
+            .policy
+            .description
+            .as_deref()
+            .unwrap_or("No description");
 
         let text = vec![
             Line::from(Span::styled(
@@ -115,13 +119,7 @@ impl<'a> DetailsScreen<'a> {
         self.render_snapshot_panel(chunks[1], "AFTER", &self.state.after_snapshot, buf);
     }
 
-    fn render_snapshot_panel(
-        &self,
-        area: Rect,
-        title: &str,
-        content: &str,
-        buf: &mut Buffer,
-    ) {
+    fn render_snapshot_panel(&self, area: Rect, title: &str, content: &str, buf: &mut Buffer) {
         let accent = if self.state.high_contrast {
             Color::White
         } else {

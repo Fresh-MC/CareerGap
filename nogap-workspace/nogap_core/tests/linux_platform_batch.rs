@@ -1,6 +1,6 @@
 use nogap_core::platforms::linux::{
-    check_sshd_permit_empty_pw, check_sshd_permit_userenv,
-    check_sysctl_aslr, check_sysctl_ptrace, check_ufw_default,
+    check_ssh_host_key_perms, check_sshd_permit_empty_pw, check_sshd_permit_userenv,
+    check_sysctl_aslr, check_sysctl_ptrace, check_ufw_default, remediate_ssh_host_key_perms,
     remediate_sshd_permit_empty_pw, remediate_sshd_permit_userenv, remediate_sysctl_aslr,
     remediate_sysctl_ptrace, remediate_ufw_default, MockSysctlProvider, RemediateResult,
 };

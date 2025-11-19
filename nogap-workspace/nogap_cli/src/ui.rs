@@ -1,18 +1,17 @@
+use crate::components::{DiffViewer, DiffViewerState, MultiSelectState};
 /// Top-level TUI event loop and input handler
-
 use crate::keymap::KeyMap;
 use crate::screens::{
-    Dashboard, DashboardState, DetailsScreen, DetailState, PolicyFilter, PolicyStatus,
+    Dashboard, DashboardState, DetailState, DetailsScreen, PolicyFilter, PolicyStatus,
     SnapshotBrowser, SnapshotBrowserState, SnapshotMetadata, SnapshotPreview, SnapshotPreviewState,
 };
-use crate::components::{DiffViewer, DiffViewerState, MultiSelectState};
 use anyhow::Result;
 use crossterm::{
     event::{self, Event, KeyCode},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use nogap_core::{policy_parser, engine, snapshot};
+use nogap_core::{engine, policy_parser, snapshot};
 use ratatui::{
     backend::CrosstermBackend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -90,8 +89,6 @@ impl FilterModalState {
         }
     }
 }
-
-
 
 pub struct AppState {
     screen: Screen,
@@ -251,7 +248,8 @@ impl AppState {
             self.screen = Screen::FilterModal;
         } else if KeyMap::is_sort(code) {
             self.dashboard.cycle_sort();
-            self.dashboard.set_last_action(format!("Sort: {}", self.dashboard.sort_mode.label()));
+            self.dashboard
+                .set_last_action(format!("Sort: {}", self.dashboard.sort_mode.label()));
         } else if KeyMap::is_toggle_theme(code) {
             self.dashboard.high_contrast = !self.dashboard.high_contrast;
         } else if KeyMap::is_remediate(code) {
@@ -262,10 +260,13 @@ impl AppState {
             // Toggle multi-select mode
             if self.multiselect.active {
                 self.multiselect.exit_mode();
-                self.dashboard.set_last_action("Multi-select mode OFF".to_string());
+                self.dashboard
+                    .set_last_action("Multi-select mode OFF".to_string());
             } else {
                 self.multiselect.enter_mode();
-                self.dashboard.set_last_action("Multi-select mode ON (Space=toggle, A=all, N=clear)".to_string());
+                self.dashboard.set_last_action(
+                    "Multi-select mode ON (Space=toggle, A=all, N=clear)".to_string(),
+                );
             }
         } else if matches!(code, KeyCode::Char('b')) {
             // Open batch menu if multi-select active with selections
@@ -273,9 +274,11 @@ impl AppState {
                 self.batch_menu_selected = 0;
                 self.screen = Screen::BatchMenu;
             } else if !self.multiselect.active {
-                self.dashboard.set_last_action("Enable multi-select mode first (press 'm')".to_string());
+                self.dashboard
+                    .set_last_action("Enable multi-select mode first (press 'm')".to_string());
             } else {
-                self.dashboard.set_last_action("No policies selected".to_string());
+                self.dashboard
+                    .set_last_action("No policies selected".to_string());
             }
         } else if matches!(code, KeyCode::Char('S')) {
             // Open snapshot browser
@@ -287,17 +290,22 @@ impl AppState {
             // Toggle current item selection
             if let Some(idx) = self.dashboard.get_selected_index() {
                 self.multiselect.toggle(idx);
-                self.dashboard.set_last_action(format!("Selected: {}", self.multiselect.selected_count()));
+                self.dashboard
+                    .set_last_action(format!("Selected: {}", self.multiselect.selected_count()));
             }
         } else if matches!(code, KeyCode::Char('A')) && self.multiselect.active {
             // Select all filtered items
             let indices: Vec<usize> = (0..self.dashboard.filtered_indices.len()).collect();
             self.multiselect.select_all(&indices);
-            self.dashboard.set_last_action(format!("Selected all: {}", self.multiselect.selected_count()));
+            self.dashboard.set_last_action(format!(
+                "Selected all: {}",
+                self.multiselect.selected_count()
+            ));
         } else if matches!(code, KeyCode::Char('N')) && self.multiselect.active {
             // Clear all selections
             self.multiselect.clear_all();
-            self.dashboard.set_last_action("Selections cleared".to_string());
+            self.dashboard
+                .set_last_action("Selections cleared".to_string());
         }
         // Note: Audit key is handled in main loop to support blocking modal flow
     }
@@ -310,7 +318,7 @@ impl AppState {
             if let Some(ref detail) = self.detail {
                 let before = detail.before_snapshot.clone();
                 let after = detail.after_snapshot.clone();
-                
+
                 let state = DiffViewerState::new(&before, &after);
                 self.snapshot_diff = Some(state);
                 self.diff_previous_screen = Some(Screen::Details);
@@ -327,7 +335,8 @@ impl AppState {
             self.screen = Screen::Dashboard;
         } else if matches!(code, KeyCode::Esc | KeyCode::Char('n')) {
             self.screen = Screen::Dashboard;
-            self.dashboard.set_last_action("Remediation cancelled".to_string());
+            self.dashboard
+                .set_last_action("Remediation cancelled".to_string());
         }
     }
 
@@ -386,7 +395,10 @@ impl AppState {
             } else if matches!(code, KeyCode::Esc | KeyCode::Char('q')) {
                 self.snapshot_diff = None;
                 // Go back to the screen we came from
-                self.screen = self.diff_previous_screen.take().unwrap_or(Screen::SnapshotPreview);
+                self.screen = self
+                    .diff_previous_screen
+                    .take()
+                    .unwrap_or(Screen::SnapshotPreview);
             }
         }
     }
@@ -413,7 +425,7 @@ impl AppState {
         // Get the selected policy
         if let Some(policy) = self.dashboard.get_selected_policy().cloned() {
             let policies = vec![policy];
-            
+
             // Call the engine synchronously - blocking call
             match engine::audit(&policies) {
                 Ok(audit_results) => {
@@ -427,12 +439,14 @@ impl AppState {
                         };
                         self.dashboard.update_status(selected, status);
                     }
-                    
+
                     let title = policies[0].title.as_deref().unwrap_or("Untitled");
-                    self.dashboard.set_last_action(format!("Audited: {}", title));
+                    self.dashboard
+                        .set_last_action(format!("Audited: {}", title));
                 }
                 Err(e) => {
-                    self.dashboard.set_last_action(format!("Audit failed: {}", e));
+                    self.dashboard
+                        .set_last_action(format!("Audit failed: {}", e));
                 }
             }
         }
@@ -442,7 +456,7 @@ impl AppState {
         // Get the selected policy
         if let Some(policy) = self.dashboard.get_selected_policy().cloned() {
             let policies = vec![policy];
-            
+
             // Call the engine synchronously - blocking call
             let snapshot_provider = engine::RealSnapshotProvider;
             match engine::remediate(&policies, &snapshot_provider) {
@@ -456,12 +470,14 @@ impl AppState {
                         };
                         self.dashboard.update_status(selected, status);
                     }
-                    
+
                     let title = policies[0].title.as_deref().unwrap_or("Untitled");
-                    self.dashboard.set_last_action(format!("Remediated: {}", title));
+                    self.dashboard
+                        .set_last_action(format!("Remediated: {}", title));
                 }
                 Err(e) => {
-                    self.dashboard.set_last_action(format!("Remediate failed: {}", e));
+                    self.dashboard
+                        .set_last_action(format!("Remediate failed: {}", e));
                 }
             }
         }
@@ -470,10 +486,12 @@ impl AppState {
     fn open_diff_viewer(&mut self) {
         if let Some(policy) = self.dashboard.get_selected_policy().cloned() {
             let detail = DetailState::new(policy).with_snapshots(
-                "# BEFORE snapshot\nSystem state before remediation\n\nExample content...".to_string(),
-                "# AFTER snapshot\nSystem state after remediation\n\nExample content...".to_string(),
+                "# BEFORE snapshot\nSystem state before remediation\n\nExample content..."
+                    .to_string(),
+                "# AFTER snapshot\nSystem state after remediation\n\nExample content..."
+                    .to_string(),
             );
-            
+
             self.detail = Some(detail);
             self.screen = Screen::Details;
         }
@@ -482,27 +500,27 @@ impl AppState {
     fn load_snapshots(&mut self) {
         // Initialize snapshot database and load snapshot list
         match snapshot::init_db() {
-            Ok(conn) => {
-                match snapshot::list_snapshots(&conn) {
-                    Ok(snapshots) => {
-                        let snapshot_list: Vec<SnapshotMetadata> = snapshots
-                            .iter()
-                            .map(|s| SnapshotMetadata {
-                                id: s.0,
-                                timestamp: s.1,
-                                description: s.2.clone(),
-                            })
-                            .collect();
-                        
-                        self.snapshot_browser = Some(SnapshotBrowserState::new(snapshot_list));
-                    }
-                    Err(e) => {
-                        self.dashboard.set_last_action(format!("Error loading snapshots: {}", e));
-                    }
+            Ok(conn) => match snapshot::list_snapshots(&conn) {
+                Ok(snapshots) => {
+                    let snapshot_list: Vec<SnapshotMetadata> = snapshots
+                        .iter()
+                        .map(|s| SnapshotMetadata {
+                            id: s.0,
+                            timestamp: s.1,
+                            description: s.2.clone(),
+                        })
+                        .collect();
+
+                    self.snapshot_browser = Some(SnapshotBrowserState::new(snapshot_list));
                 }
-            }
+                Err(e) => {
+                    self.dashboard
+                        .set_last_action(format!("Error loading snapshots: {}", e));
+                }
+            },
             Err(e) => {
-                self.dashboard.set_last_action(format!("Error initializing snapshot DB: {}", e));
+                self.dashboard
+                    .set_last_action(format!("Error initializing snapshot DB: {}", e));
             }
         }
     }
@@ -510,25 +528,25 @@ impl AppState {
     fn load_snapshot_preview(&mut self, snapshot_id: i64) {
         // Load snapshot details
         match snapshot::init_db() {
-            Ok(conn) => {
-                match snapshot::get_snapshot(&conn, snapshot_id) {
-                    Ok(snap) => {
-                        let before_content = snap.2.clone();
-                        let after_content = snap.3.clone();
-                        
-                        self.snapshot_preview = Some(SnapshotPreviewState::new(
-                            snapshot_id,
-                            before_content,
-                            after_content,
-                        ));
-                    }
-                    Err(e) => {
-                        self.dashboard.set_last_action(format!("Error loading snapshot: {}", e));
-                    }
+            Ok(conn) => match snapshot::get_snapshot(&conn, snapshot_id) {
+                Ok(snap) => {
+                    let before_content = snap.2.clone();
+                    let after_content = snap.3.clone();
+
+                    self.snapshot_preview = Some(SnapshotPreviewState::new(
+                        snapshot_id,
+                        before_content,
+                        after_content,
+                    ));
                 }
-            }
+                Err(e) => {
+                    self.dashboard
+                        .set_last_action(format!("Error loading snapshot: {}", e));
+                }
+            },
             Err(e) => {
-                self.dashboard.set_last_action(format!("Error initializing snapshot DB: {}", e));
+                self.dashboard
+                    .set_last_action(format!("Error initializing snapshot DB: {}", e));
             }
         }
     }
@@ -537,7 +555,7 @@ impl AppState {
         if let Some(ref preview) = self.snapshot_preview {
             let before = preview.before_content.clone();
             let after = preview.after_content.clone();
-            
+
             let state = DiffViewerState::new(&before, &after);
             self.snapshot_diff = Some(state);
         }
@@ -546,9 +564,10 @@ impl AppState {
     fn batch_audit(&mut self) {
         let selected_indices = self.multiselect.get_selected_indices();
         let count = selected_indices.len();
-        
+
         if count == 0 {
-            self.dashboard.set_last_action("No policies selected".to_string());
+            self.dashboard
+                .set_last_action("No policies selected".to_string());
             return;
         }
 
@@ -560,9 +579,9 @@ impl AppState {
             // Get the policy at this index
             if let Some(policy) = self.dashboard.policies.get(idx).cloned() {
                 processed += 1;
-                
+
                 // Audit synchronously (blocking)
-                match engine::audit(&[policy.clone()]) {
+                match engine::audit(std::slice::from_ref(&policy)) {
                     Ok(audit_results) => {
                         if let Some(result) = audit_results.first() {
                             let status = if result.passed {
@@ -585,7 +604,7 @@ impl AppState {
             "Batch Audit: {} processed, {} failed, {} ms",
             processed, failed, elapsed
         ));
-        
+
         // Exit multi-select mode
         self.multiselect.exit_mode();
     }
@@ -593,9 +612,10 @@ impl AppState {
     fn batch_remediate(&mut self) {
         let selected_indices = self.multiselect.get_selected_indices();
         let count = selected_indices.len();
-        
+
         if count == 0 {
-            self.dashboard.set_last_action("No policies selected".to_string());
+            self.dashboard
+                .set_last_action("No policies selected".to_string());
             return;
         }
 
@@ -608,9 +628,9 @@ impl AppState {
             // Get the policy at this index
             if let Some(policy) = self.dashboard.policies.get(idx).cloned() {
                 processed += 1;
-                
+
                 // Remediate synchronously (blocking)
-                match engine::remediate(&[policy.clone()], &snapshot_provider) {
+                match engine::remediate(std::slice::from_ref(&policy), &snapshot_provider) {
                     Ok(_) => {
                         // Update status to Pass
                         self.dashboard.update_status(idx, PolicyStatus::Pass);
@@ -627,7 +647,7 @@ impl AppState {
             "Batch Remediate: {} processed, {} failed, {} ms",
             processed, failed, elapsed
         ));
-        
+
         // Exit multi-select mode
         self.multiselect.exit_mode();
     }
@@ -655,12 +675,12 @@ pub fn run_tui(policies_path: &str) -> Result<()> {
                 Screen::Dashboard => {
                     let dashboard = Dashboard::new(&app.dashboard, &app.multiselect);
                     f.render_widget(dashboard, size);
-                    
+
                     // Render search box overlay if in search mode
                     if app.search_mode {
                         render_search_box(f, size, &app.search_query, app.dashboard.high_contrast);
                     }
-                    
+
                     // Render quick actions bar at bottom
                     render_quick_actions_bar(f, size, &app.dashboard, app.dashboard.high_contrast);
                 }
@@ -678,7 +698,7 @@ pub fn run_tui(policies_path: &str) -> Result<()> {
                 Screen::ConfirmRemediate => {
                     let dashboard = Dashboard::new(&app.dashboard, &app.multiselect);
                     f.render_widget(dashboard, size);
-                    
+
                     if let Some(policy) = app.dashboard.get_selected_policy() {
                         let title = policy.title.as_deref().unwrap_or("Untitled");
                         let message = format!(
@@ -691,7 +711,7 @@ pub fn run_tui(policies_path: &str) -> Result<()> {
                 Screen::FilterModal => {
                     let dashboard = Dashboard::new(&app.dashboard, &app.multiselect);
                     f.render_widget(dashboard, size);
-                    
+
                     if let Some(ref filter_modal) = app.filter_modal {
                         render_filter_modal(f, size, filter_modal, app.dashboard.high_contrast);
                     }
@@ -718,13 +738,13 @@ pub fn run_tui(policies_path: &str) -> Result<()> {
                     // Render dashboard in background
                     let dashboard = Dashboard::new(&app.dashboard, &app.multiselect);
                     f.render_widget(dashboard, size);
-                    
+
                     // Render batch menu modal
                     let count = app.multiselect.selected_count();
-                    let options = vec!["Batch Audit", "Batch Remediate"];
+                    let options = ["Batch Audit", "Batch Remediate"];
                     let selected_marker = if app.batch_menu_selected == 0 { ">" } else { " " };
                     let other_marker = if app.batch_menu_selected == 1 { ">" } else { " " };
-                    
+
                     let message = format!(
                         "Selected {} policies\n\n{} {}\n{} {}\n\n[j/k] Navigate  [Enter] Confirm  [Esc] Cancel",
                         count,
@@ -744,52 +764,70 @@ pub fn run_tui(policies_path: &str) -> Result<()> {
         // Handle pending operations that need modal flow
         if pending_audit {
             pending_audit = false;
-            
+
             // 1. Push modal
-            app.push_modal(Modal::new("AUDITING", "Please wait. This operation is blocking and will complete soon."));
-            
+            app.push_modal(Modal::new(
+                "AUDITING",
+                "Please wait. This operation is blocking and will complete soon.",
+            ));
+
             // 2. Render modal immediately
             terminal.draw(|f| {
                 let size = f.area();
                 let dashboard = Dashboard::new(&app.dashboard, &app.multiselect);
                 f.render_widget(dashboard, size);
-                
+
                 if let Some(modal) = app.current_modal() {
-                    render_modal(f, size, &modal.title, &modal.message, app.dashboard.high_contrast);
+                    render_modal(
+                        f,
+                        size,
+                        &modal.title,
+                        &modal.message,
+                        app.dashboard.high_contrast,
+                    );
                 }
             })?;
-            
+
             // 3. Execute blocking operation
             app.run_audit();
-            
+
             // 4. Pop modal
             app.pop_modal();
         }
-        
+
         if pending_remediate {
             pending_remediate = false;
-            
+
             // 1. Push modal
-            app.push_modal(Modal::new("REMEDIATING", "Please wait. This operation is blocking and will complete soon."));
-            
+            app.push_modal(Modal::new(
+                "REMEDIATING",
+                "Please wait. This operation is blocking and will complete soon.",
+            ));
+
             // 2. Render modal immediately
             terminal.draw(|f| {
                 let size = f.area();
                 let dashboard = Dashboard::new(&app.dashboard, &app.multiselect);
                 f.render_widget(dashboard, size);
-                
+
                 if let Some(modal) = app.current_modal() {
-                    render_modal(f, size, &modal.title, &modal.message, app.dashboard.high_contrast);
+                    render_modal(
+                        f,
+                        size,
+                        &modal.title,
+                        &modal.message,
+                        app.dashboard.high_contrast,
+                    );
                 }
             })?;
-            
+
             // 3. Execute blocking operation
             app.run_remediate();
-            
+
             // 4. Pop modal
             app.pop_modal();
         }
-        
+
         // Check for remediate confirmation from modal_message
         if let Some(ref msg) = app.modal_message {
             if msg == "remediate_confirmed" {
@@ -807,7 +845,7 @@ pub fn run_tui(policies_path: &str) -> Result<()> {
                     pending_audit = true;
                     continue;
                 }
-                
+
                 app.handle_key(key.code, key.modifiers);
             }
         }
@@ -929,12 +967,7 @@ fn render_modal(
     f.render_widget(text, inner);
 }
 
-fn render_search_box(
-    f: &mut ratatui::Frame,
-    area: Rect,
-    query: &str,
-    high_contrast: bool,
-) {
+fn render_search_box(f: &mut ratatui::Frame, area: Rect, query: &str, high_contrast: bool) {
     let accent = if high_contrast {
         Color::White
     } else {
@@ -959,8 +992,7 @@ fn render_search_box(
     let inner = block.inner(search_area);
     f.render_widget(block, search_area);
 
-    let text = Paragraph::new(format!("/{}", query))
-        .style(Style::default().fg(Color::White));
+    let text = Paragraph::new(format!("/{}", query)).style(Style::default().fg(Color::White));
     f.render_widget(text, inner);
 }
 
@@ -985,13 +1017,13 @@ fn render_quick_actions_bar(
         Color::Gray
     };
 
-    let actions = vec![
-        format!("[a] Audit"),
-        format!("[r] Remediate"),
-        format!("[d] Diff"),
-        format!("[f] Filter"),
+    let actions = [
+        "[a] Audit".to_string(),
+        "[r] Remediate".to_string(),
+        "[d] Diff".to_string(),
+        "[f] Filter".to_string(),
         format!("[o] Sort: {}", dashboard.sort_mode.label()),
-        format!("[/] Search"),
+        "[/] Search".to_string(),
     ];
 
     let text = Line::from(
@@ -1075,7 +1107,10 @@ fn render_filter_modal(
     for (idx, label, checked) in checkboxes {
         let checkbox = if checked { "[✓]" } else { "[ ]" };
         let style = if idx == filter_modal.selected {
-            Style::default().fg(accent).bg(Color::DarkGray).add_modifier(Modifier::BOLD)
+            Style::default()
+                .fg(accent)
+                .bg(Color::DarkGray)
+                .add_modifier(Modifier::BOLD)
         } else {
             Style::default().fg(Color::White)
         };

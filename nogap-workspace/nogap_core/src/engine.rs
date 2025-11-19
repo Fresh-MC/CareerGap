@@ -45,6 +45,12 @@ pub struct MockSnapshotProvider {
     pub snapshot_count: std::sync::Mutex<usize>,
 }
 
+impl Default for MockSnapshotProvider {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MockSnapshotProvider {
     pub fn new() -> Self {
         Self {
@@ -90,7 +96,8 @@ pub fn audit(policies: &[Policy]) -> Result<Vec<AuditResult>, Box<dyn Error>> {
                     return Err(format!(
                         "Windows policy '{}' cannot run on this platform",
                         policy.id
-                    ).into());
+                    )
+                    .into());
                 }
             }
             "linux" => {
@@ -105,10 +112,9 @@ pub fn audit(policies: &[Policy]) -> Result<Vec<AuditResult>, Box<dyn Error>> {
                 }
                 #[cfg(target_os = "windows")]
                 {
-                    return Err(format!(
-                        "Linux policy '{}' cannot run on Windows",
-                        policy.id
-                    ).into());
+                    return Err(
+                        format!("Linux policy '{}' cannot run on Windows", policy.id).into(),
+                    );
                 }
             }
             _ => {
@@ -250,7 +256,8 @@ pub fn remediate(
             ("windows", "A.3.a.ii") => {
                 // A.3.a.ii: Windows Firewall Domain profile
                 let registry = windows::RealRegistry;
-                let platform_result = windows::remediate_firewall_domain_profile(policy, &registry)?;
+                let platform_result =
+                    windows::remediate_firewall_domain_profile(policy, &registry)?;
                 match platform_result {
                     windows::RemediateResult::Success(msg) => RemediateResult::Success {
                         policy_id: policy.id.clone(),
@@ -265,7 +272,8 @@ pub fn remediate(
             ("windows", "A.3.a.iv") => {
                 // A.3.a.iv: Windows Firewall Public profile
                 let registry = windows::RealRegistry;
-                let platform_result = windows::remediate_firewall_public_profile(policy, &registry)?;
+                let platform_result =
+                    windows::remediate_firewall_public_profile(policy, &registry)?;
                 match platform_result {
                     windows::RemediateResult::Success(msg) => RemediateResult::Success {
                         policy_id: policy.id.clone(),
@@ -280,7 +288,8 @@ pub fn remediate(
             ("windows", "A.4.a.i") => {
                 // A.4.a.i: Remote Desktop (TermService) disabled
                 let service_manager = windows::RealServiceManager;
-                let platform_result = windows::remediate_termservice_disabled(policy, &service_manager)?;
+                let platform_result =
+                    windows::remediate_termservice_disabled(policy, &service_manager)?;
                 match platform_result {
                     windows::RemediateResult::Success(msg) => RemediateResult::Success {
                         policy_id: policy.id.clone(),
@@ -295,7 +304,8 @@ pub fn remediate(
             ("windows", "A.4.a.ii") => {
                 // A.4.a.ii: Print Spooler disabled
                 let service_manager = windows::RealServiceManager;
-                let platform_result = windows::remediate_spooler_disabled(policy, &service_manager)?;
+                let platform_result =
+                    windows::remediate_spooler_disabled(policy, &service_manager)?;
                 match platform_result {
                     windows::RemediateResult::Success(msg) => RemediateResult::Success {
                         policy_id: policy.id.clone(),
@@ -370,7 +380,8 @@ pub fn remediate(
             ("windows", "A.7.a.i") => {
                 // A.7.a.i: Remote Registry disabled
                 let service_manager = windows::RealServiceManager;
-                let platform_result = windows::remediate_remote_registry_disabled(policy, &service_manager)?;
+                let platform_result =
+                    windows::remediate_remote_registry_disabled(policy, &service_manager)?;
                 match platform_result {
                     windows::RemediateResult::Success(msg) => RemediateResult::Success {
                         policy_id: policy.id.clone(),
@@ -550,8 +561,8 @@ pub fn remediate(
                 }
             }
             ("linux", "B.3.b.i") => {
-                let mut svc = linux::RealServiceManager;
-                let platform_result = linux::remediate_avahi_disabled(policy, &mut svc)?;
+                let svc = linux::RealServiceManager;
+                let platform_result = linux::remediate_avahi_disabled(policy, &svc)?;
                 match platform_result {
                     linux::RemediateResult::Success(msg) => RemediateResult::Success {
                         policy_id: policy.id.clone(),
@@ -617,20 +628,6 @@ pub fn remediate(
             }
             ("linux", "B.5.a.i") => {
                 let platform_result = linux::remediate_core_dumps(policy)?;
-                match platform_result {
-                    linux::RemediateResult::Success(msg) => RemediateResult::Success {
-                        policy_id: policy.id.clone(),
-                        message: msg,
-                    },
-                    linux::RemediateResult::Failed(msg) => RemediateResult::Failed {
-                        policy_id: policy.id.clone(),
-                        message: msg,
-                    },
-                }
-            }
-            ("linux", "B.6.a.i") => {
-                let mut svc = linux::RealServiceManager;
-                let platform_result = linux::remediate_rsyslog_enabled(policy, &mut svc)?;
                 match platform_result {
                     linux::RemediateResult::Success(msg) => RemediateResult::Success {
                         policy_id: policy.id.clone(),
@@ -767,8 +764,7 @@ pub fn remediate(
             // Legacy Stage 3/4 fallback patterns
             ("windows", _) if policy.remediate_type.as_deref() == Some("service_disable") => {
                 let service_manager = windows::RealServiceManager;
-                let platform_result =
-                    windows::remediate_service_disable(policy, &service_manager)?;
+                let platform_result = windows::remediate_service_disable(policy, &service_manager)?;
                 match platform_result {
                     windows::RemediateResult::Success(msg) => RemediateResult::Success {
                         policy_id: policy.id.clone(),
@@ -795,17 +791,15 @@ pub fn remediate(
             }
             #[cfg(target_os = "windows")]
             ("linux", _) => {
-                return Err(format!(
-                    "Linux policy '{}' cannot run on Windows",
-                    policy.id
-                ).into())
+                return Err(format!("Linux policy '{}' cannot run on Windows", policy.id).into())
             }
             #[cfg(not(target_os = "windows"))]
             ("windows", id) if id.starts_with("A.") => {
                 return Err(format!(
                     "Windows registry policy '{}' requires Windows platform",
                     policy.id
-                ).into())
+                )
+                .into())
             }
             _ => {
                 return Err(format!(

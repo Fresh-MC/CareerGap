@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Default)]
 pub struct Policy {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -59,43 +59,6 @@ pub struct Policy {
     pub reference: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub post_reboot_required: Option<bool>,
-}
-
-impl Default for Policy {
-    fn default() -> Self {
-        Self {
-            id: String::new(),
-            title: None,
-            description: None,
-            platform: String::new(),
-            severity: None,
-            reversible: None,
-            check_type: String::new(),
-            target_file: None,
-            target_glob: None,
-            regex: None,
-            replace_regex: None,
-            replace_with: None,
-            key: None,
-            expected_state: None,
-            package_name: None,
-            service_name: None,
-            value_name: None,
-            target_path: None,
-            policy_name: None,
-            right_name: None,
-            port: None,
-            protocol: None,
-            remediate_type: None,
-            value: None,
-            set_value: None,
-            set_type: None,
-            remediate_params: None,
-            chmod_mode: None,
-            reference: None,
-            post_reboot_required: None,
-        }
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

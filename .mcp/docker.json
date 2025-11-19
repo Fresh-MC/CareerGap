@@ -1,0 +1,8 @@
+ {
+  "id": "docker",
+  "name": "Docker MCP",
+  "command": "docker",
+  "args": ["ps"],
+  "workingDirectory": "${workspaceFolder}",
+  "description": "Lists Docker containers for ${workspaceFolder}"
+}

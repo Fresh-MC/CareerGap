@@ -1,9 +1,9 @@
 use crate::types::Policy;
+use std::collections::HashMap;
 use std::error::Error;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
-use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AuditResult {
@@ -40,15 +40,13 @@ pub fn audit_policy(policy: &Policy) -> Result<AuditResult, Box<dyn Error>> {
                 .ok_or("target_file is required for file_permissions check")?;
             check_file_permissions(policy, target_path)
         }
-        "login_defs" => {
-            match policy.id.as_str() {
-                "B.7.a.i" => check_pass_max_days(policy),
-                "B.7.a.ii" => check_pass_min_days(policy),
-                "B.7.b.i" => check_pass_warn_age(policy),
-                "B.8.a.i" => check_default_umask(policy),
-                _ => Err(format!("Unknown login_defs policy: {}", policy.id).into()),
-            }
-        }
+        "login_defs" => match policy.id.as_str() {
+            "B.7.a.i" => check_pass_max_days(policy),
+            "B.7.a.ii" => check_pass_min_days(policy),
+            "B.7.b.i" => check_pass_warn_age(policy),
+            "B.8.a.i" => check_default_umask(policy),
+            _ => Err(format!("Unknown login_defs policy: {}", policy.id).into()),
+        },
         _ => Err(format!(
             "Unsupported check_type for Linux platform: {} (policy: {})",
             policy.check_type, policy.id
@@ -77,15 +75,13 @@ pub fn remediate_policy(policy: &Policy) -> Result<RemediateResult, Box<dyn Erro
                 .ok_or("target_file is required for file_permissions remediation")?;
             remediate_file_permissions(policy, target_path)
         }
-        "login_defs" => {
-            match policy.id.as_str() {
-                "B.7.a.i" => remediate_pass_max_days(policy),
-                "B.7.a.ii" => remediate_pass_min_days(policy),
-                "B.7.b.i" => remediate_pass_warn_age(policy),
-                "B.8.a.i" => remediate_default_umask(policy),
-                _ => Err(format!("Unknown login_defs policy: {}", policy.id).into()),
-            }
-        }
+        "login_defs" => match policy.id.as_str() {
+            "B.7.a.i" => remediate_pass_max_days(policy),
+            "B.7.a.ii" => remediate_pass_min_days(policy),
+            "B.7.b.i" => remediate_pass_warn_age(policy),
+            "B.8.a.i" => remediate_default_umask(policy),
+            _ => Err(format!("Unknown login_defs policy: {}", policy.id).into()),
+        },
         _ => Err(format!(
             "Unsupported check_type for Linux platform: {} (policy: {})",
             policy.check_type, policy.id
@@ -106,7 +102,7 @@ pub fn check_file_regex(policy: &Policy) -> Result<AuditResult, Box<dyn Error>> 
         .ok_or("regex is required for file_regex check")?;
 
     let file_content = fs::read_to_string(target_file)?;
-    
+
     // Build regex with multiline flag so ^ and $ match line boundaries
     let regex = regex::RegexBuilder::new(regex_pattern)
         .multi_line(true)
@@ -117,10 +113,7 @@ pub fn check_file_regex(policy: &Policy) -> Result<AuditResult, Box<dyn Error>> 
     let passed = !vulnerable_match;
 
     let message = if passed {
-        format!(
-            "File '{}' does not contain vulnerable pattern",
-            target_file
-        )
+        format!("File '{}' does not contain vulnerable pattern", target_file)
     } else {
         format!(
             "File '{}' contains vulnerable pattern matching: {}",
@@ -164,7 +157,7 @@ pub fn remediate_file_replace(policy: &Policy) -> Result<RemediateResult, Box<dy
 
     let file = File::open(target_path)?;
     let reader = BufReader::new(file);
-    
+
     // Build regex with multiline flag for consistency
     let replace_regex = regex::RegexBuilder::new(replace_regex_pattern)
         .multi_line(true)
@@ -231,10 +224,13 @@ impl SysctlProvider for RealSysctlProvider {
             .arg("-w")
             .arg(format!("{}={}", key, value))
             .output()?;
-        
+
         if !output.status.success() {
-            return Err(format!("sysctl command failed: {}", 
-                String::from_utf8_lossy(&output.stderr)).into());
+            return Err(format!(
+                "sysctl command failed: {}",
+                String::from_utf8_lossy(&output.stderr)
+            )
+            .into());
         }
         Ok(())
     }
@@ -242,6 +238,12 @@ impl SysctlProvider for RealSysctlProvider {
 
 pub struct MockSysctlProvider {
     pub values: std::collections::HashMap<String, String>,
+}
+
+impl Default for MockSysctlProvider {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl MockSysctlProvider {
@@ -308,8 +310,12 @@ impl ServiceManager for RealServiceManager {
             .arg(service_name)
             .output()?;
         if !output.status.success() {
-            return Err(format!("Failed to stop {}: {}", service_name, 
-                String::from_utf8_lossy(&output.stderr)).into());
+            return Err(format!(
+                "Failed to stop {}: {}",
+                service_name,
+                String::from_utf8_lossy(&output.stderr)
+            )
+            .into());
         }
         Ok(())
     }
@@ -321,8 +327,12 @@ impl ServiceManager for RealServiceManager {
             .arg(service_name)
             .output()?;
         if !output.status.success() {
-            return Err(format!("Failed to disable {}: {}", service_name, 
-                String::from_utf8_lossy(&output.stderr)).into());
+            return Err(format!(
+                "Failed to disable {}: {}",
+                service_name,
+                String::from_utf8_lossy(&output.stderr)
+            )
+            .into());
         }
         Ok(())
     }
@@ -334,8 +344,12 @@ impl ServiceManager for RealServiceManager {
             .arg(service_name)
             .output()?;
         if !output.status.success() {
-            return Err(format!("Failed to start {}: {}", service_name, 
-                String::from_utf8_lossy(&output.stderr)).into());
+            return Err(format!(
+                "Failed to start {}: {}",
+                service_name,
+                String::from_utf8_lossy(&output.stderr)
+            )
+            .into());
         }
         Ok(())
     }
@@ -347,8 +361,12 @@ impl ServiceManager for RealServiceManager {
             .arg(service_name)
             .output()?;
         if !output.status.success() {
-            return Err(format!("Failed to enable {}: {}", service_name, 
-                String::from_utf8_lossy(&output.stderr)).into());
+            return Err(format!(
+                "Failed to enable {}: {}",
+                service_name,
+                String::from_utf8_lossy(&output.stderr)
+            )
+            .into());
         }
         Ok(())
     }
@@ -359,6 +377,12 @@ use std::cell::RefCell;
 pub struct MockServiceManager {
     pub running_services: RefCell<Vec<String>>,
     pub enabled_services: RefCell<Vec<String>>,
+}
+
+impl Default for MockServiceManager {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl MockServiceManager {
@@ -372,33 +396,55 @@ impl MockServiceManager {
 
 impl ServiceManager for MockServiceManager {
     fn is_running(&self, service_name: &str) -> Result<bool, Box<dyn Error>> {
-        Ok(self.running_services.borrow().contains(&service_name.to_string()))
+        Ok(self
+            .running_services
+            .borrow()
+            .contains(&service_name.to_string()))
     }
 
     fn is_enabled(&self, service_name: &str) -> Result<bool, Box<dyn Error>> {
-        Ok(self.enabled_services.borrow().contains(&service_name.to_string()))
+        Ok(self
+            .enabled_services
+            .borrow()
+            .contains(&service_name.to_string()))
     }
 
     fn stop(&self, service_name: &str) -> Result<(), Box<dyn Error>> {
-        self.running_services.borrow_mut().retain(|s| s != service_name);
+        self.running_services
+            .borrow_mut()
+            .retain(|s| s != service_name);
         Ok(())
     }
 
     fn disable(&self, service_name: &str) -> Result<(), Box<dyn Error>> {
-        self.enabled_services.borrow_mut().retain(|s| s != service_name);
+        self.enabled_services
+            .borrow_mut()
+            .retain(|s| s != service_name);
         Ok(())
     }
 
     fn start(&self, service_name: &str) -> Result<(), Box<dyn Error>> {
-        if !self.running_services.borrow().contains(&service_name.to_string()) {
-            self.running_services.borrow_mut().push(service_name.to_string());
+        if !self
+            .running_services
+            .borrow()
+            .contains(&service_name.to_string())
+        {
+            self.running_services
+                .borrow_mut()
+                .push(service_name.to_string());
         }
         Ok(())
     }
 
     fn enable(&self, service_name: &str) -> Result<(), Box<dyn Error>> {
-        if !self.enabled_services.borrow().contains(&service_name.to_string()) {
-            self.enabled_services.borrow_mut().push(service_name.to_string());
+        if !self
+            .enabled_services
+            .borrow()
+            .contains(&service_name.to_string())
+        {
+            self.enabled_services
+                .borrow_mut()
+                .push(service_name.to_string());
         }
         Ok(())
     }
@@ -416,27 +462,21 @@ impl PackageProvider for RealPackageProvider {
     fn is_installed(&self, package_name: &str) -> Result<bool, Box<dyn Error>> {
         use std::process::Command;
         // Try dpkg first (Debian/Ubuntu)
-        let output = Command::new("dpkg")
-            .arg("-s")
-            .arg(package_name)
-            .output();
-        
+        let output = Command::new("dpkg").arg("-s").arg(package_name).output();
+
         if let Ok(out) = output {
             if out.status.success() {
                 return Ok(true);
             }
         }
-        
+
         // Try rpm (RHEL/CentOS)
-        let output = Command::new("rpm")
-            .arg("-q")
-            .arg(package_name)
-            .output();
-        
+        let output = Command::new("rpm").arg("-q").arg(package_name).output();
+
         if let Ok(out) = output {
             return Ok(out.status.success());
         }
-        
+
         Ok(false)
     }
 
@@ -448,20 +488,20 @@ impl PackageProvider for RealPackageProvider {
             .arg("-y")
             .arg(package_name)
             .output();
-        
+
         if let Ok(out) = output {
             if out.status.success() {
                 return Ok(());
             }
         }
-        
+
         // Try yum
         let output = Command::new("yum")
             .arg("remove")
             .arg("-y")
             .arg(package_name)
             .output()?;
-        
+
         if !output.status.success() {
             return Err(format!("Failed to remove package {}", package_name).into());
         }
@@ -473,25 +513,38 @@ pub struct MockPackageProvider {
     pub installed_packages: RefCell<HashMap<String, bool>>,
 }
 
+impl Default for MockPackageProvider {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl MockPackageProvider {
     pub fn new() -> Self {
         MockPackageProvider {
             installed_packages: RefCell::new(HashMap::new()),
         }
     }
-    
+
     pub fn set_installed(&self, package_name: &str, installed: bool) {
-        self.installed_packages.borrow_mut().insert(package_name.to_string(), installed);
+        self.installed_packages
+            .borrow_mut()
+            .insert(package_name.to_string(), installed);
     }
 }
 
 impl PackageProvider for MockPackageProvider {
     fn is_installed(&self, package_name: &str) -> Result<bool, Box<dyn Error>> {
-        Ok(*self.installed_packages.borrow().get(package_name).unwrap_or(&false))
+        Ok(*self
+            .installed_packages
+            .borrow()
+            .get(package_name)
+            .unwrap_or(&false))
     }
 
     fn remove(&self, package_name: &str) -> Result<(), Box<dyn Error>> {
-        self.installed_packages.borrow_mut().insert(package_name.to_string(), false);
+        self.installed_packages
+            .borrow_mut()
+            .insert(package_name.to_string(), false);
         Ok(())
     }
 }
@@ -503,22 +556,26 @@ pub fn check_sysctl_aslr<S: SysctlProvider>(
     policy: &Policy,
     sysctl: &S,
 ) -> Result<AuditResult, Box<dyn Error>> {
-    let key = policy
-        .key
-        .as_ref()
-        .ok_or("key required for sysctl check")?;
+    let key = policy.key.as_ref().ok_or("key required for sysctl check")?;
 
     let current_value_str = sysctl.get_value(key)?;
-    let current_value: i32 = current_value_str.parse()
+    let current_value: i32 = current_value_str
+        .parse()
         .map_err(|_| format!("Invalid sysctl value: {}", current_value_str))?;
-    
+
     let expected_min = 2;
     let passed = current_value >= expected_min;
 
     let message = if passed {
-        format!("ASLR is enabled: {} (expected >= {})", current_value, expected_min)
+        format!(
+            "ASLR is enabled: {} (expected >= {})",
+            current_value, expected_min
+        )
     } else {
-        format!("ASLR is not properly configured: {} (expected >= {})", current_value, expected_min)
+        format!(
+            "ASLR is not properly configured: {} (expected >= {})",
+            current_value, expected_min
+        )
     };
 
     Ok(AuditResult {
@@ -550,22 +607,26 @@ pub fn check_sysctl_ptrace<S: SysctlProvider>(
     policy: &Policy,
     sysctl: &S,
 ) -> Result<AuditResult, Box<dyn Error>> {
-    let key = policy
-        .key
-        .as_ref()
-        .ok_or("key required for sysctl check")?;
+    let key = policy.key.as_ref().ok_or("key required for sysctl check")?;
 
     let current_value_str = sysctl.get_value(key)?;
-    let current_value: i32 = current_value_str.parse()
+    let current_value: i32 = current_value_str
+        .parse()
         .map_err(|_| format!("Invalid sysctl value: {}", current_value_str))?;
-    
+
     let expected_min = 1;
     let passed = current_value >= expected_min;
 
     let message = if passed {
-        format!("ptrace_scope is restricted: {} (expected >= {})", current_value, expected_min)
+        format!(
+            "ptrace_scope is restricted: {} (expected >= {})",
+            current_value, expected_min
+        )
     } else {
-        format!("ptrace_scope is not restricted: {} (expected >= {})", current_value, expected_min)
+        format!(
+            "ptrace_scope is not restricted: {} (expected >= {})",
+            current_value, expected_min
+        )
     };
 
     Ok(AuditResult {
@@ -638,11 +699,11 @@ pub fn check_ssh_host_key_perms(policy: &Policy) -> Result<AuditResult, Box<dyn 
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        
+
         for path in &paths {
             let metadata = fs::metadata(path)?;
             let mode = metadata.permissions().mode();
-            
+
             // Check if world-writable (others have write permission)
             if mode & 0o002 != 0 {
                 return Ok(AuditResult {
@@ -652,6 +713,12 @@ pub fn check_ssh_host_key_perms(policy: &Policy) -> Result<AuditResult, Box<dyn 
                 });
             }
         }
+
+        Ok(AuditResult {
+            policy_id: policy.id.clone(),
+            passed: true,
+            message: "All files have correct permissions".to_string(),
+        })
     }
 
     #[cfg(not(unix))]
@@ -674,24 +741,30 @@ pub fn remediate_ssh_host_key_perms(policy: &Policy) -> Result<RemediateResult, 
     };
 
     if paths.is_empty() {
-        return Ok(RemediateResult::Success("No files to remediate".to_string()));
+        return Ok(RemediateResult::Success(
+            "No files to remediate".to_string(),
+        ));
     }
 
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        
+
         for path in &paths {
             let metadata = fs::metadata(path)?;
             let mut permissions = metadata.permissions();
             let current_mode = permissions.mode();
-            
+
             // Remove world-writable bit
             let new_mode = current_mode & !0o002;
             permissions.set_mode(new_mode);
-            
+
             fs::set_permissions(path, permissions)?;
         }
+
+        Ok(RemediateResult::Success(
+            "File permissions corrected".to_string(),
+        ))
     }
 
     #[cfg(not(unix))]
@@ -791,7 +864,7 @@ pub fn remediate_core_dumps(policy: &Policy) -> Result<RemediateResult, Box<dyn 
         .ok_or("replace_with is required")?;
 
     let target_path = Path::new(target_file);
-    
+
     // Read existing content or create empty if doesn't exist
     let existing_content = if target_path.exists() {
         fs::read_to_string(target_path)?
@@ -799,7 +872,10 @@ pub fn remediate_core_dumps(policy: &Policy) -> Result<RemediateResult, Box<dyn 
         String::new()
     };
 
-    let replace_regex_pattern = policy.replace_regex.as_ref().ok_or("replace_regex required")?;
+    let replace_regex_pattern = policy
+        .replace_regex
+        .as_ref()
+        .ok_or("replace_regex required")?;
     let replace_regex = regex::RegexBuilder::new(replace_regex_pattern)
         .multi_line(true)
         .build()?;
@@ -891,22 +967,26 @@ pub fn check_sysctl_generic<S: SysctlProvider>(
     sysctl: &S,
 ) -> Result<AuditResult, Box<dyn Error>> {
     let key = policy.key.as_ref().ok_or("key required for sysctl check")?;
-    
+
     let current_value_str = sysctl.get_value(key)?;
-    let current_value: i32 = current_value_str.parse()
+    let current_value: i32 = current_value_str
+        .parse()
         .map_err(|_| format!("Invalid sysctl value: {}", current_value_str))?;
 
     // Parse expected_state which can be a String or Map variant
     let (operator, expected_value): (&str, i32) = match policy.expected_state.as_ref() {
         Some(crate::types::ExpectedState::Map { operator, value }) => {
             let op = operator.as_str();
-            let val = value.as_i64()
-                .ok_or("value field must be numeric in expected_state Map")? as i32;
+            let val = value
+                .as_i64()
+                .ok_or("value field must be numeric in expected_state Map")?
+                as i32;
             (op, val)
         }
         Some(crate::types::ExpectedState::String(s)) => {
             // Simple string value means eq operator
-            let val = s.parse()
+            let val = s
+                .parse()
                 .map_err(|_| format!("Invalid numeric value in expected_state: {}", s))?;
             ("eq", val)
         }
@@ -926,11 +1006,15 @@ pub fn check_sysctl_generic<S: SysctlProvider>(
     };
 
     let message = if passed {
-        format!("{} is compliant: current={} expected={}{}",
-            key, current_value, operator, expected_value)
+        format!(
+            "{} is compliant: current={} expected={}{}",
+            key, current_value, operator, expected_value
+        )
     } else {
-        format!("{} is not compliant: current={} expected={}{}",
-            key, current_value, operator, expected_value)
+        format!(
+            "{} is not compliant: current={} expected={}{}",
+            key, current_value, operator, expected_value
+        )
     };
 
     Ok(AuditResult {
@@ -945,7 +1029,7 @@ pub fn remediate_sysctl_generic<S: SysctlProvider>(
     sysctl: &mut S,
 ) -> Result<RemediateResult, Box<dyn Error>> {
     let key = policy.key.as_ref().ok_or("key required")?;
-    
+
     // Get the value from policy.value field
     let value_to_set = if let Some(val) = &policy.value {
         val.as_i64().ok_or("value must be numeric")?.to_string()
@@ -1091,7 +1175,7 @@ pub fn check_file_permissions<P: AsRef<Path>>(
     _target_path: P,
 ) -> Result<AuditResult, Box<dyn Error>> {
     let _target_glob = policy.target_glob.as_ref().ok_or("target_glob required")?;
-    
+
     // Get forbidden permissions from regex or expected_state
     let _forbidden = if let Some(regex) = policy.regex.as_ref() {
         regex.clone()
@@ -1109,27 +1193,32 @@ pub fn check_file_permissions<P: AsRef<Path>>(
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        
+
         let metadata = fs::metadata(_target_path.as_ref())?;
         let mode = metadata.permissions().mode();
-        
+
         // Parse forbidden permissions
         let is_vulnerable = if _forbidden.contains("o+w") {
-            mode & 0o002 != 0  // Others have write
+            mode & 0o002 != 0 // Others have write
         } else if _forbidden.contains("go+rwx") {
-            mode & 0o077 != 0  // Group or others have any permission
+            mode & 0o077 != 0 // Group or others have any permission
         } else if _forbidden.contains("o+rwx") {
-            mode & 0o007 != 0  // Others have any permission
+            mode & 0o007 != 0 // Others have any permission
         } else {
             false
         };
 
         let passed = !is_vulnerable;
         let message = if passed {
-            format!("File {} has correct permissions (mode: {:o})", _target_glob, mode)
+            format!(
+                "File {} has correct permissions (mode: {:o})",
+                _target_glob, mode
+            )
         } else {
-            format!("File {} has incorrect permissions (mode: {:o}), forbidden: {}", 
-                _target_glob, mode, _forbidden)
+            format!(
+                "File {} has incorrect permissions (mode: {:o}), forbidden: {}",
+                _target_glob, mode, _forbidden
+            )
         };
 
         Ok(AuditResult {
@@ -1150,14 +1239,14 @@ pub fn remediate_file_permissions<P: AsRef<Path>>(
     _target_path: P,
 ) -> Result<RemediateResult, Box<dyn Error>> {
     let _chmod_mode = policy.chmod_mode.as_ref().ok_or("chmod_mode required")?;
-    
+
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        
+
         let mode_value = u32::from_str_radix(_chmod_mode, 8)
             .map_err(|_| format!("Invalid chmod mode: {}", _chmod_mode))?;
-        
+
         let permissions = std::fs::Permissions::from_mode(mode_value);
         fs::set_permissions(_target_path.as_ref(), permissions)?;
 
@@ -1223,8 +1312,11 @@ pub fn check_package_absence<P: PackageProvider>(
     policy: &Policy,
     provider: &P,
 ) -> Result<AuditResult, Box<dyn Error>> {
-    let package_name = policy.package_name.as_ref().ok_or("package_name required")?;
-    
+    let package_name = policy
+        .package_name
+        .as_ref()
+        .ok_or("package_name required")?;
+
     let is_installed = provider.is_installed(package_name)?;
     let passed = !is_installed;
 
@@ -1245,8 +1337,11 @@ pub fn remediate_package_absence<P: PackageProvider>(
     policy: &Policy,
     provider: &P,
 ) -> Result<RemediateResult, Box<dyn Error>> {
-    let package_name = policy.package_name.as_ref().ok_or("package_name required")?;
-    
+    let package_name = policy
+        .package_name
+        .as_ref()
+        .ok_or("package_name required")?;
+
     provider.remove(package_name)?;
 
     Ok(RemediateResult::Success(format!(
@@ -1291,8 +1386,11 @@ pub fn check_service_status<S: ServiceManager>(
     policy: &Policy,
     service_mgr: &S,
 ) -> Result<AuditResult, Box<dyn Error>> {
-    let service_name = policy.service_name.as_ref().ok_or("service_name required")?;
-    
+    let service_name = policy
+        .service_name
+        .as_ref()
+        .ok_or("service_name required")?;
+
     let expected_state_str = match policy.expected_state.as_ref() {
         Some(crate::types::ExpectedState::String(s)) => s.as_str(),
         Some(crate::types::ExpectedState::Map { .. }) => {
@@ -1313,10 +1411,15 @@ pub fn check_service_status<S: ServiceManager>(
     };
 
     let message = if passed {
-        format!("Service {} is in expected state: {}", service_name, expected_state_str)
+        format!(
+            "Service {} is in expected state: {}",
+            service_name, expected_state_str
+        )
     } else {
-        format!("Service {} is not in expected state: {} (running={}, enabled={})",
-            service_name, expected_state_str, is_running, is_enabled)
+        format!(
+            "Service {} is not in expected state: {} (running={}, enabled={})",
+            service_name, expected_state_str, is_running, is_enabled
+        )
     };
 
     Ok(AuditResult {
@@ -1330,8 +1433,11 @@ pub fn remediate_service_status<S: ServiceManager>(
     policy: &Policy,
     service_mgr: &S,
 ) -> Result<RemediateResult, Box<dyn Error>> {
-    let service_name = policy.service_name.as_ref().ok_or("service_name required")?;
-    
+    let service_name = policy
+        .service_name
+        .as_ref()
+        .ok_or("service_name required")?;
+
     let expected_state_str = match policy.expected_state.as_ref() {
         Some(crate::types::ExpectedState::String(s)) => s.as_str(),
         Some(crate::types::ExpectedState::Map { .. }) => {
@@ -1452,7 +1558,9 @@ mod tests {
 
         assert_eq!(result.policy_id, "B.3.a.xx");
         assert!(result.passed);
-        assert!(result.message.contains("does not contain vulnerable pattern"));
+        assert!(result
+            .message
+            .contains("does not contain vulnerable pattern"));
     }
 
     #[test]

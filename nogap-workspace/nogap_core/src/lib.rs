@@ -1,18 +1,18 @@
 // This file contains the core logic, snapshot engine, YAML parser, and policy manager for the NoGap project.
 
 // Week 1 Security Primitives
-pub mod self_check;
-pub mod types;
 pub mod policy_parser;
 pub mod secure_workspace;
-pub mod snapshot;
+pub mod self_check;
 pub mod signing;
+pub mod snapshot;
+pub mod types;
 
 // Week 2 Advanced Features
 // pub mod policy_sandbox;
 pub mod auto_signer;
-pub mod platforms;
 pub mod engine;
+pub mod platforms;
 
 // Legacy API functions (preserved for backward compatibility)
 pub fn audit_system() -> String {

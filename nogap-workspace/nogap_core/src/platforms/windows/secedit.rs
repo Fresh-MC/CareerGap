@@ -4,7 +4,7 @@ use std::error::Error;
 pub trait SeceditExecutor {
     /// Export current security policy as INF file content
     fn export_security_policy(&self) -> Result<String, Box<dyn Error>>;
-    
+
     /// Configure security policy from INF file content
     fn configure_security_policy(&self, inf_content: &str) -> Result<(), Box<dyn Error>>;
 }
@@ -16,12 +16,12 @@ pub struct RealSeceditExecutor;
 #[cfg(target_os = "windows")]
 impl SeceditExecutor for RealSeceditExecutor {
     fn export_security_policy(&self) -> Result<String, Box<dyn Error>> {
-        use std::process::Command;
         use std::fs;
-        
+        use std::process::Command;
+
         let temp_dir = std::env::temp_dir();
         let export_path = temp_dir.join(format!("nogap_secedit_export_{}.inf", std::process::id()));
-        
+
         // Export current security policy
         let output = Command::new("secedit")
             .args(&["/export", "/cfg", export_path.to_str().unwrap()])
@@ -40,16 +40,17 @@ impl SeceditExecutor for RealSeceditExecutor {
                 output.status.code(),
                 stderr_msg.trim(),
                 stdout_msg.trim()
-            ).into());
+            )
+            .into());
         }
 
         // Read the exported INF file (secedit exports as UTF-16LE with BOM)
         let raw_bytes = fs::read(&export_path)
             .map_err(|e| format!("Failed to read secedit export file: {}", e))?;
-        
+
         // Cleanup temp file
         let _ = fs::remove_file(&export_path);
-        
+
         // Detect encoding and decode appropriately
         let content = if raw_bytes.len() >= 2 && raw_bytes[0] == 0xFF && raw_bytes[1] == 0xFE {
             // UTF-16LE with BOM - skip BOM and decode
@@ -57,7 +58,7 @@ impl SeceditExecutor for RealSeceditExecutor {
                 .chunks_exact(2)
                 .map(|chunk| u16::from_le_bytes([chunk[0], chunk[1]]))
                 .collect();
-            
+
             char::decode_utf16(u16_values)
                 .collect::<Result<String, _>>()
                 .map_err(|e| format!("UTF-16 decode error: {:?}", e))?
@@ -65,15 +66,15 @@ impl SeceditExecutor for RealSeceditExecutor {
             // Fallback to UTF-8 (or lossy conversion)
             String::from_utf8_lossy(&raw_bytes).to_string()
         };
-        
+
         Ok(content)
     }
 
     fn configure_security_policy(&self, inf_content: &str) -> Result<(), Box<dyn Error>> {
-        use std::process::Command;
         use std::fs;
         use std::io::Write;
-        
+        use std::process::Command;
+
         let temp_dir = std::env::temp_dir();
         let inf_path = temp_dir.join(format!("nogap_secedit_patch_{}.inf", std::process::id()));
         let db_path = temp_dir.join(format!("nogap_secedit_{}.sdb", std::process::id()));
@@ -104,12 +105,14 @@ impl SeceditExecutor for RealSeceditExecutor {
         if !output.status.success() {
             let stderr_msg = String::from_utf8_lossy(&output.stderr);
             let stdout_msg = String::from_utf8_lossy(&output.stdout);
-            
+
             // Check for access denied
             if stderr_msg.contains("Access is denied") || stdout_msg.contains("Access is denied") {
-                return Err("Administrator privileges required to modify Local Security Policy".into());
+                return Err(
+                    "Administrator privileges required to modify Local Security Policy".into(),
+                );
             }
-            
+
             return Err(format!(
                 "secedit configure failed:\n\
                  Exit Code: {:?}\n\
@@ -118,7 +121,8 @@ impl SeceditExecutor for RealSeceditExecutor {
                 output.status.code(),
                 stderr_msg.trim(),
                 stdout_msg.trim()
-            ).into());
+            )
+            .into());
         }
 
         Ok(())
@@ -130,6 +134,12 @@ impl SeceditExecutor for RealSeceditExecutor {
 pub struct MockSeceditExecutor {
     pub export_content: std::cell::RefCell<String>,
     pub last_configured_inf: std::cell::RefCell<Option<String>>,
+}
+
+impl Default for MockSeceditExecutor {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl MockSeceditExecutor {
@@ -147,7 +157,8 @@ impl MockSeceditExecutor {
                  \n\
                  [Version]\n\
                  signature=\"$CHICAGO$\"\n\
-                 Revision=1\n".to_string()
+                 Revision=1\n"
+                    .to_string(),
             ),
             last_configured_inf: std::cell::RefCell::new(None),
         }
@@ -170,23 +181,23 @@ impl SeceditExecutor for MockSeceditExecutor {
     fn configure_security_policy(&self, inf_content: &str) -> Result<(), Box<dyn Error>> {
         // Store the INF content for test assertions
         *self.last_configured_inf.borrow_mut() = Some(inf_content.to_string());
-        
+
         // Parse the INF to update our mock state
         let mut in_system_access = false;
         let mut new_values = std::collections::HashMap::new();
-        
+
         for line in inf_content.lines() {
             let trimmed = line.trim();
-            
+
             if trimmed.starts_with('[') {
                 in_system_access = trimmed.eq_ignore_ascii_case("[System Access]");
                 continue;
             }
-            
+
             if trimmed.is_empty() || trimmed.starts_with(';') {
                 continue;
             }
-            
+
             if in_system_access {
                 if let Some(eq_pos) = trimmed.find('=') {
                     let key = trimmed[..eq_pos].trim();
@@ -195,20 +206,20 @@ impl SeceditExecutor for MockSeceditExecutor {
                 }
             }
         }
-        
+
         // Update export_content with new values
         let mut lines = vec![];
         let mut in_system_access = false;
-        
+
         for line in self.export_content.borrow().lines() {
             let trimmed = line.trim();
-            
+
             if trimmed.starts_with('[') {
                 in_system_access = trimmed.eq_ignore_ascii_case("[System Access]");
                 lines.push(line.to_string());
                 continue;
             }
-            
+
             if in_system_access && !trimmed.is_empty() && !trimmed.starts_with(';') {
                 if let Some(eq_pos) = trimmed.find('=') {
                     let key = trimmed[..eq_pos].trim();
@@ -218,12 +229,12 @@ impl SeceditExecutor for MockSeceditExecutor {
                     }
                 }
             }
-            
+
             lines.push(line.to_string());
         }
-        
+
         *self.export_content.borrow_mut() = lines.join("\n");
-        
+
         Ok(())
     }
 }

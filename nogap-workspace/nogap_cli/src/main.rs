@@ -1,9 +1,8 @@
+use anyhow::Result;
 /// NoGap CLI - Operator Cockpit Terminal UI
 ///
 /// Provides TUI, audit, and remediate commands for the NoGap security platform.
-
 use clap::{Parser, Subcommand};
-use anyhow::Result;
 use nogap_cli::ui;
 
 #[derive(Parser)]
@@ -65,58 +64,59 @@ fn main() -> Result<()> {
 
 fn run_audit_cli(policies_path: &str, filter: Option<&str>) -> Result<()> {
     use nogap_core::policy_parser;
-    
+
     let policies = policy_parser::load_policy(policies_path)?;
-    
+
     let filtered: Vec<_> = if let Some(f) = filter {
         policies.iter().filter(|p| p.id.contains(f)).collect()
     } else {
         policies.iter().collect()
     };
-    
+
     println!("Running audit on {} policies...", filtered.len());
-    
+
     for policy in &filtered {
         let title = policy.title.as_deref().unwrap_or("Untitled");
         println!("\n  Policy: {} [{}]", title, policy.id);
         println!("  Platform: {}", policy.platform);
         println!("  Status: [MOCK AUDIT - Not yet implemented]");
     }
-    
+
     println!("\nAudit complete.");
     Ok(())
 }
 
 fn run_remediate_cli(policies_path: &str, policy_id: &str, skip_confirm: bool) -> Result<()> {
     use nogap_core::policy_parser;
-    
+
     let policies = policy_parser::load_policy(policies_path)?;
-    
-    let policy = policies.iter()
+
+    let policy = policies
+        .iter()
         .find(|p| p.id == policy_id)
         .ok_or_else(|| anyhow::anyhow!("Policy {} not found", policy_id))?;
-    
+
     let title = policy.title.as_deref().unwrap_or("Untitled");
-    
+
     if !skip_confirm {
         println!("Remediate policy: {} [{}]", title, policy_id);
         println!("Platform: {}", policy.platform);
         println!("\nProceed? (y/N): ");
-        
+
         use std::io::{self, BufRead};
         let stdin = io::stdin();
         let mut line = String::new();
         stdin.lock().read_line(&mut line)?;
-        
+
         if !line.trim().eq_ignore_ascii_case("y") {
             println!("Cancelled.");
             return Ok(());
         }
     }
-    
+
     println!("Running remediation...");
     println!("[MOCK REMEDIATE - Not yet implemented]");
     println!("Remediation complete.");
-    
+
     Ok(())
 }

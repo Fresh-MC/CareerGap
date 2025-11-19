@@ -138,9 +138,7 @@ impl ServiceManager for RealServiceManager {
         #[cfg(windows)]
         {
             use std::process::Command;
-            let output = Command::new("sc")
-                .args(&["query", service_name])
-                .output()?;
+            let output = Command::new("sc").args(&["query", service_name]).output()?;
             let stdout = String::from_utf8_lossy(&output.stdout);
             Ok(stdout.contains("RUNNING"))
         }
@@ -155,9 +153,7 @@ impl ServiceManager for RealServiceManager {
         #[cfg(windows)]
         {
             use std::process::Command;
-            let output = Command::new("sc")
-                .args(&["qc", service_name])
-                .output()?;
+            let output = Command::new("sc").args(&["qc", service_name]).output()?;
             let stdout = String::from_utf8_lossy(&output.stdout);
             Ok(!stdout.contains("DISABLED"))
         }
@@ -172,13 +168,15 @@ impl ServiceManager for RealServiceManager {
         #[cfg(windows)]
         {
             use std::process::Command;
-            let output = Command::new("sc")
-                .args(&["stop", service_name])
-                .output()?;
+            let output = Command::new("sc").args(&["stop", service_name]).output()?;
             if output.status.success() {
                 Ok(())
             } else {
-                Err(format!("Failed to stop service: {}", String::from_utf8_lossy(&output.stderr)).into())
+                Err(format!(
+                    "Failed to stop service: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                )
+                .into())
             }
         }
         #[cfg(not(windows))]
@@ -198,7 +196,11 @@ impl ServiceManager for RealServiceManager {
             if output.status.success() {
                 Ok(())
             } else {
-                Err(format!("Failed to disable service: {}", String::from_utf8_lossy(&output.stderr)).into())
+                Err(format!(
+                    "Failed to disable service: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                )
+                .into())
             }
         }
         #[cfg(not(windows))]
@@ -212,13 +214,15 @@ impl ServiceManager for RealServiceManager {
         #[cfg(windows)]
         {
             use std::process::Command;
-            let output = Command::new("sc")
-                .args(&["start", service_name])
-                .output()?;
+            let output = Command::new("sc").args(&["start", service_name]).output()?;
             if output.status.success() {
                 Ok(())
             } else {
-                Err(format!("Failed to start service: {}", String::from_utf8_lossy(&output.stderr)).into())
+                Err(format!(
+                    "Failed to start service: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                )
+                .into())
             }
         }
         #[cfg(not(windows))]
@@ -238,7 +242,11 @@ impl ServiceManager for RealServiceManager {
             if output.status.success() {
                 Ok(())
             } else {
-                Err(format!("Failed to enable service: {}", String::from_utf8_lossy(&output.stderr)).into())
+                Err(format!(
+                    "Failed to enable service: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                )
+                .into())
             }
         }
         #[cfg(not(windows))]
@@ -256,6 +264,12 @@ pub struct MockServiceManager {
     pub disabled_services: std::cell::RefCell<Vec<String>>,
 }
 
+impl Default for MockServiceManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MockServiceManager {
     pub fn new() -> Self {
         Self {
@@ -269,36 +283,64 @@ impl MockServiceManager {
 
 impl ServiceManager for MockServiceManager {
     fn is_running(&self, service_name: &str) -> Result<bool, Box<dyn Error>> {
-        Ok(self.running_services.borrow().contains(&service_name.to_string())
-            && !self.stopped_services.borrow().contains(&service_name.to_string()))
+        Ok(self
+            .running_services
+            .borrow()
+            .contains(&service_name.to_string())
+            && !self
+                .stopped_services
+                .borrow()
+                .contains(&service_name.to_string()))
     }
 
     fn is_enabled(&self, service_name: &str) -> Result<bool, Box<dyn Error>> {
-        Ok(self.enabled_services.borrow().contains(&service_name.to_string())
-            && !self.disabled_services.borrow().contains(&service_name.to_string()))
+        Ok(self
+            .enabled_services
+            .borrow()
+            .contains(&service_name.to_string())
+            && !self
+                .disabled_services
+                .borrow()
+                .contains(&service_name.to_string()))
     }
 
     fn stop(&self, service_name: &str) -> Result<(), Box<dyn Error>> {
-        self.stopped_services.borrow_mut().push(service_name.to_string());
-        self.running_services.borrow_mut().retain(|s| s != service_name);
+        self.stopped_services
+            .borrow_mut()
+            .push(service_name.to_string());
+        self.running_services
+            .borrow_mut()
+            .retain(|s| s != service_name);
         Ok(())
     }
 
     fn disable(&self, service_name: &str) -> Result<(), Box<dyn Error>> {
-        self.disabled_services.borrow_mut().push(service_name.to_string());
-        self.enabled_services.borrow_mut().retain(|s| s != service_name);
+        self.disabled_services
+            .borrow_mut()
+            .push(service_name.to_string());
+        self.enabled_services
+            .borrow_mut()
+            .retain(|s| s != service_name);
         Ok(())
     }
 
     fn start(&self, service_name: &str) -> Result<(), Box<dyn Error>> {
-        self.stopped_services.borrow_mut().retain(|s| s != service_name);
-        self.running_services.borrow_mut().push(service_name.to_string());
+        self.stopped_services
+            .borrow_mut()
+            .retain(|s| s != service_name);
+        self.running_services
+            .borrow_mut()
+            .push(service_name.to_string());
         Ok(())
     }
 
     fn enable(&self, service_name: &str) -> Result<(), Box<dyn Error>> {
-        self.disabled_services.borrow_mut().retain(|s| s != service_name);
-        self.enabled_services.borrow_mut().push(service_name.to_string());
+        self.disabled_services
+            .borrow_mut()
+            .retain(|s| s != service_name);
+        self.enabled_services
+            .borrow_mut()
+            .push(service_name.to_string());
         Ok(())
     }
 }
@@ -335,7 +377,10 @@ pub fn check_service_status(
     };
 
     let message = if passed {
-        format!("Service '{}' is in expected state: {}", service_name, expected_state_str)
+        format!(
+            "Service '{}' is in expected state: {}",
+            service_name, expected_state_str
+        )
     } else {
         format!(
             "Service '{}' is not in expected state. Running: {}, Enabled: {}",
@@ -413,11 +458,15 @@ fn split_registry_path(path: &str) -> Result<(&str, &str), Box<dyn Error>> {
 fn open_hive(hive_name: &str) -> Result<winreg::RegKey, Box<dyn Error>> {
     use winreg::enums::*;
     use winreg::RegKey;
-    
+
     match hive_name.to_uppercase().as_str() {
         "HKEY_LOCAL_MACHINE" | "HKLM" => Ok(RegKey::predef(HKEY_LOCAL_MACHINE)),
         "HKEY_CURRENT_USER" | "HKCU" => Ok(RegKey::predef(HKEY_CURRENT_USER)),
-        _ => Err(format!("Unsupported registry hive: {}. Only HKLM and HKCU are supported.", hive_name).into()),
+        _ => Err(format!(
+            "Unsupported registry hive: {}. Only HKLM and HKCU are supported.",
+            hive_name
+        )
+        .into()),
     }
 }
 
@@ -425,7 +474,7 @@ fn open_hive(hive_name: &str) -> Result<winreg::RegKey, Box<dyn Error>> {
 impl Registry for RealRegistry {
     fn get_dword(&self, path: &str, value_name: &str) -> Result<u32, Box<dyn Error>> {
         use winreg::enums::*;
-        
+
         let (hive_name, subkey) = split_registry_path(path)?;
         let hive = open_hive(hive_name)?;
         let key = hive.open_subkey_with_flags(subkey, KEY_READ)?;
@@ -435,7 +484,7 @@ impl Registry for RealRegistry {
 
     fn set_dword(&self, path: &str, value_name: &str, value: u32) -> Result<(), Box<dyn Error>> {
         use winreg::enums::*;
-        
+
         let (hive_name, subkey) = split_registry_path(path)?;
         let hive = open_hive(hive_name)?;
         let key = hive.open_subkey_with_flags(subkey, KEY_WRITE)?;
@@ -445,7 +494,7 @@ impl Registry for RealRegistry {
 
     fn get_string(&self, path: &str, value_name: &str) -> Result<String, Box<dyn Error>> {
         use winreg::enums::*;
-        
+
         let (hive_name, subkey) = split_registry_path(path)?;
         let hive = open_hive(hive_name)?;
         let key = hive.open_subkey_with_flags(subkey, KEY_READ)?;
@@ -455,7 +504,7 @@ impl Registry for RealRegistry {
 
     fn set_string(&self, path: &str, value_name: &str, value: &str) -> Result<(), Box<dyn Error>> {
         use winreg::enums::*;
-        
+
         let (hive_name, subkey) = split_registry_path(path)?;
         let hive = open_hive(hive_name)?;
         let key = hive.open_subkey_with_flags(subkey, KEY_WRITE)?;
@@ -478,7 +527,12 @@ impl Registry for RealRegistry {
         Err("Registry operations not supported on this platform".into())
     }
 
-    fn set_string(&self, _path: &str, _value_name: &str, _value: &str) -> Result<(), Box<dyn Error>> {
+    fn set_string(
+        &self,
+        _path: &str,
+        _value_name: &str,
+        _value: &str,
+    ) -> Result<(), Box<dyn Error>> {
         Err("Registry operations not supported on this platform".into())
     }
 }
@@ -486,6 +540,12 @@ impl Registry for RealRegistry {
 pub struct MockRegistry {
     pub dword_values: std::cell::RefCell<std::collections::HashMap<(String, String), u32>>,
     pub string_values: std::cell::RefCell<std::collections::HashMap<(String, String), String>>,
+}
+
+impl Default for MockRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl MockRegistry {
@@ -497,11 +557,16 @@ impl MockRegistry {
     }
 
     pub fn set_mock_dword(&mut self, path: &str, value_name: &str, value: u32) {
-        self.dword_values.borrow_mut().insert((path.to_string(), value_name.to_string()), value);
+        self.dword_values
+            .borrow_mut()
+            .insert((path.to_string(), value_name.to_string()), value);
     }
 
     pub fn set_mock_string(&mut self, path: &str, value_name: &str, value: &str) {
-        self.string_values.borrow_mut().insert((path.to_string(), value_name.to_string()), value.to_string());
+        self.string_values.borrow_mut().insert(
+            (path.to_string(), value_name.to_string()),
+            value.to_string(),
+        );
     }
 }
 
@@ -515,7 +580,9 @@ impl Registry for MockRegistry {
     }
 
     fn set_dword(&self, path: &str, value_name: &str, value: u32) -> Result<(), Box<dyn Error>> {
-        self.dword_values.borrow_mut().insert((path.to_string(), value_name.to_string()), value);
+        self.dword_values
+            .borrow_mut()
+            .insert((path.to_string(), value_name.to_string()), value);
         Ok(())
     }
 
@@ -528,7 +595,10 @@ impl Registry for MockRegistry {
     }
 
     fn set_string(&self, path: &str, value_name: &str, value: &str) -> Result<(), Box<dyn Error>> {
-        self.string_values.borrow_mut().insert((path.to_string(), value_name.to_string()), value.to_string());
+        self.string_values.borrow_mut().insert(
+            (path.to_string(), value_name.to_string()),
+            value.to_string(),
+        );
         Ok(())
     }
 }
@@ -562,31 +632,31 @@ pub fn audit_local_policy<E: SeceditExecutor>(
 
     // Export current security policy via executor
     let inf_content = executor.export_security_policy()?;
-    
+
     // Parse the INF content
     let mut in_system_access = false;
     let mut found_value: Option<String> = None;
 
     for line in inf_content.lines() {
         let trimmed = line.trim();
-        
+
         // Track section
         if trimmed.starts_with('[') {
             in_system_access = trimmed.eq_ignore_ascii_case("[System Access]");
             continue;
         }
-        
+
         // Skip comments and empty lines
         if trimmed.is_empty() || trimmed.starts_with(';') {
             continue;
         }
-        
+
         // Parse key=value in [System Access] section
         if in_system_access {
             if let Some(eq_pos) = trimmed.find('=') {
                 let key = trimmed[..eq_pos].trim();
                 let value = trimmed[eq_pos + 1..].trim();
-                
+
                 if key.eq_ignore_ascii_case(inf_key) {
                     found_value = Some(value.to_string());
                     break;
@@ -596,29 +666,33 @@ pub fn audit_local_policy<E: SeceditExecutor>(
     }
 
     // Compare with expected state
-    let current_value = found_value
-        .ok_or(format!("Policy '{}' not found in secedit export", policy_name))?;
+    let current_value = found_value.ok_or(format!(
+        "Policy '{}' not found in secedit export",
+        policy_name
+    ))?;
 
     let passed = if let Some(expected) = &policy.expected_state {
         match expected {
-            crate::types::ExpectedState::String(expected_str) => {
-                current_value == *expected_str
-            }
+            crate::types::ExpectedState::String(expected_str) => current_value == *expected_str,
             crate::types::ExpectedState::Map { operator, value } => {
-                let current_num: i64 = current_value.parse()
-                    .map_err(|_| format!("Failed to parse current value '{}' as number", current_value))?;
-                
+                let current_num: i64 = current_value.parse().map_err(|_| {
+                    format!(
+                        "Failed to parse current value '{}' as number",
+                        current_value
+                    )
+                })?;
+
                 // Convert serde_yaml::Value to i64
                 let expected_num: i64 = match value {
                     serde_yaml::Value::Number(n) => {
                         n.as_i64().ok_or("Expected value is not a valid integer")?
                     }
-                    serde_yaml::Value::String(s) => {
-                        s.parse().map_err(|_| "Failed to parse expected value as integer")?
-                    }
+                    serde_yaml::Value::String(s) => s
+                        .parse()
+                        .map_err(|_| "Failed to parse expected value as integer")?,
                     _ => return Err("Expected value must be a number or string".into()),
                 };
-                
+
                 match operator.as_str() {
                     "eq" => current_num == expected_num,
                     "gte" => current_num >= expected_num,
@@ -699,7 +773,7 @@ pub fn remediate_local_policy<E: SeceditExecutor>(
     if let Err(e) = executor.configure_security_policy(&inf_content) {
         if e.to_string().contains("Administrator privileges required") {
             return Ok(RemediateResult::Failed(
-                "Administrator privileges required to modify Local Security Policy".to_string()
+                "Administrator privileges required to modify Local Security Policy".to_string(),
             ));
         }
         return Ok(RemediateResult::Failed(format!(
@@ -710,24 +784,18 @@ pub fn remediate_local_policy<E: SeceditExecutor>(
 
     // Verify the change
     match audit_local_policy(policy, executor) {
-        Ok(audit_result) if audit_result.passed => {
-            Ok(RemediateResult::Success(format!(
-                "Local policy '{}' set to {} successfully",
-                policy_name, set_value_str
-            )))
-        }
-        Ok(audit_result) => {
-            Ok(RemediateResult::Failed(format!(
-                "Policy applied but verification failed: {}",
-                audit_result.message
-            )))
-        }
-        Err(e) => {
-            Ok(RemediateResult::Failed(format!(
-                "Policy applied but verification error: {}",
-                e
-            )))
-        }
+        Ok(audit_result) if audit_result.passed => Ok(RemediateResult::Success(format!(
+            "Local policy '{}' set to {} successfully",
+            policy_name, set_value_str
+        ))),
+        Ok(audit_result) => Ok(RemediateResult::Failed(format!(
+            "Policy applied but verification failed: {}",
+            audit_result.message
+        ))),
+        Err(e) => Ok(RemediateResult::Failed(format!(
+            "Policy applied but verification error: {}",
+            e
+        ))),
     }
 }
 
@@ -994,10 +1062,7 @@ pub fn check_backup_privilege<R: Registry>(
 
     let passed = current_value.contains(expected);
     let message = if passed {
-        format!(
-            "SeBackupPrivilege is correctly assigned: {}",
-            current_value
-        )
+        format!("SeBackupPrivilege is correctly assigned: {}", current_value)
     } else {
         format!(
             "SeBackupPrivilege is misconfigured: {} (expected to contain '{}')",
@@ -1042,7 +1107,7 @@ pub fn check_password_complexity<R: Registry>(
 ) -> Result<AuditResult, Box<dyn Error>> {
     let path = "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa";
     let value_name = "PasswordComplexity";
-    
+
     let current_value = registry.get_dword(path, value_name)?;
     let passed = current_value == 1;
 
@@ -1062,7 +1127,7 @@ pub fn remediate_password_complexity<R: Registry>(
 ) -> Result<RemediateResult, Box<dyn Error>> {
     let path = "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa";
     let value_name = "PasswordComplexity";
-    
+
     registry.set_dword(path, value_name, 1)?;
 
     Ok(RemediateResult::Success(format!(
@@ -1076,15 +1141,9 @@ pub fn check_min_password_length<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<AuditResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     let current_value = registry.get_dword(target_path, value_name)?;
     let passed = current_value >= 14;
 
@@ -1102,15 +1161,9 @@ pub fn remediate_min_password_length<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<RemediateResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     registry.set_dword(target_path, value_name, 14)?;
 
     Ok(RemediateResult::Success(format!(
@@ -1124,15 +1177,9 @@ pub fn check_max_password_age<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<AuditResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     let current_value = registry.get_dword(target_path, value_name)?;
     let passed = current_value > 0 && current_value <= 60;
 
@@ -1150,15 +1197,9 @@ pub fn remediate_max_password_age<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<RemediateResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     registry.set_dword(target_path, value_name, 60)?;
 
     Ok(RemediateResult::Success(format!(
@@ -1172,15 +1213,9 @@ pub fn check_admin_account_renamed<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<AuditResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     let current_value = registry.get_string(target_path, value_name)?;
     let passed = current_value != "Administrator";
 
@@ -1198,15 +1233,9 @@ pub fn remediate_admin_account_renamed<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<RemediateResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     registry.set_string(target_path, value_name, "WinAdmin")?;
 
     Ok(RemediateResult::Success(format!(
@@ -1220,15 +1249,9 @@ pub fn check_lockout_threshold<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<AuditResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     let current_value = registry.get_dword(target_path, value_name)?;
     let passed = current_value > 0 && current_value <= 5;
 
@@ -1246,15 +1269,9 @@ pub fn remediate_lockout_threshold<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<RemediateResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     registry.set_dword(target_path, value_name, 5)?;
 
     Ok(RemediateResult::Success(format!(
@@ -1268,15 +1285,9 @@ pub fn check_lockout_duration<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<AuditResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     let current_value = registry.get_dword(target_path, value_name)?;
     let passed = current_value >= 15;
 
@@ -1294,15 +1305,9 @@ pub fn remediate_lockout_duration<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<RemediateResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     registry.set_dword(target_path, value_name, 15)?;
 
     Ok(RemediateResult::Success(format!(
@@ -1316,15 +1321,9 @@ pub fn check_smb1_disabled<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<AuditResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     let current_value = registry.get_dword(target_path, value_name)?;
     let passed = current_value == 0;
 
@@ -1342,15 +1341,9 @@ pub fn remediate_smb1_disabled<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<RemediateResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     registry.set_dword(target_path, value_name, 0)?;
 
     Ok(RemediateResult::Success(format!(
@@ -1364,15 +1357,9 @@ pub fn check_firewall_domain_profile<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<AuditResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     let current_value = registry.get_dword(target_path, value_name)?;
     let passed = current_value == 1;
 
@@ -1390,15 +1377,9 @@ pub fn remediate_firewall_domain_profile<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<RemediateResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     registry.set_dword(target_path, value_name, 1)?;
 
     Ok(RemediateResult::Success(format!(
@@ -1412,15 +1393,9 @@ pub fn check_firewall_public_profile<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<AuditResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     let current_value = registry.get_dword(target_path, value_name)?;
     let passed = current_value == 1;
 
@@ -1438,15 +1413,9 @@ pub fn remediate_firewall_public_profile<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<RemediateResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     registry.set_dword(target_path, value_name, 1)?;
 
     Ok(RemediateResult::Success(format!(
@@ -1460,15 +1429,9 @@ pub fn check_restrict_anonymous_sam<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<AuditResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     let current_value = registry.get_dword(target_path, value_name)?;
     let passed = current_value == 1;
 
@@ -1486,15 +1449,9 @@ pub fn remediate_restrict_anonymous_sam<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<RemediateResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     registry.set_dword(target_path, value_name, 1)?;
 
     Ok(RemediateResult::Success(format!(
@@ -1508,15 +1465,9 @@ pub fn check_restrict_anonymous<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<AuditResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     let current_value = registry.get_dword(target_path, value_name)?;
     let passed = current_value == 1;
 
@@ -1534,15 +1485,9 @@ pub fn remediate_restrict_anonymous<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<RemediateResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     registry.set_dword(target_path, value_name, 1)?;
 
     Ok(RemediateResult::Success(format!(
@@ -1556,15 +1501,9 @@ pub fn check_lm_compatibility<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<AuditResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     let current_value = registry.get_dword(target_path, value_name)?;
     let passed = current_value >= 5;
 
@@ -1582,15 +1521,9 @@ pub fn remediate_lm_compatibility<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<RemediateResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     registry.set_dword(target_path, value_name, 5)?;
 
     Ok(RemediateResult::Success(format!(
@@ -1604,15 +1537,9 @@ pub fn check_uac_elevation<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<AuditResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     let current_value = registry.get_dword(target_path, value_name)?;
     let passed = current_value >= 2;
 
@@ -1630,15 +1557,9 @@ pub fn remediate_uac_elevation<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<RemediateResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     registry.set_dword(target_path, value_name, 2)?;
 
     Ok(RemediateResult::Success(format!(
@@ -1652,15 +1573,9 @@ pub fn check_autoplay_disabled<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<AuditResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     let current_value = registry.get_dword(target_path, value_name)?;
     let passed = current_value == 255;
 
@@ -1678,15 +1593,9 @@ pub fn remediate_autoplay_disabled<R: Registry>(
     policy: &Policy,
     registry: &R,
 ) -> Result<RemediateResult, Box<dyn Error>> {
-    let target_path = policy
-        .target_path
-        .as_ref()
-        .ok_or("target_path required")?;
-    let value_name = policy
-        .value_name
-        .as_ref()
-        .ok_or("value_name required")?;
-    
+    let target_path = policy.target_path.as_ref().ok_or("target_path required")?;
+    let value_name = policy.value_name.as_ref().ok_or("value_name required")?;
+
     registry.set_dword(target_path, value_name, 255)?;
 
     Ok(RemediateResult::Success(format!(
@@ -1736,7 +1645,7 @@ pub fn check_w32time_enabled<S: ServiceManager>(
         .service_name
         .as_ref()
         .ok_or("service_name required")?;
-    
+
     let is_running = service_manager.is_running(service_name)?;
     let is_enabled = service_manager.is_enabled(service_name)?;
     let passed = is_running && is_enabled;
@@ -1759,7 +1668,7 @@ pub fn remediate_w32time_enabled<S: ServiceManager>(
         .service_name
         .as_ref()
         .ok_or("service_name required")?;
-    
+
     // Start and enable the service
     match service_manager.start(service_name) {
         Ok(_) => {}
@@ -1780,7 +1689,7 @@ pub fn remediate_w32time_enabled<S: ServiceManager>(
             )));
         }
     }
-    
+
     Ok(RemediateResult::Success(format!(
         "Service '{}' started and enabled successfully",
         service_name
@@ -1818,7 +1727,9 @@ mod tests {
             reversible: Some(true),
             check_type: "service_status".to_string(),
             service_name: Some("RemoteRegistry".to_string()),
-            expected_state: Some(crate::types::ExpectedState::String("stopped_disabled".into())),
+            expected_state: Some(crate::types::ExpectedState::String(
+                "stopped_disabled".into(),
+            )),
             remediate_type: Some("service_disable".to_string()),
             ..Default::default()
         };
@@ -1881,8 +1792,7 @@ mod tests {
         assert_eq!(read_value, test_value, "DWORD roundtrip failed");
 
         // Delete the subkey at the end
-        hkcu
-            .delete_subkey_all(test_subkey)
+        hkcu.delete_subkey_all(test_subkey)
             .expect("Failed to delete test subkey");
     }
 }

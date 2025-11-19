@@ -1,5 +1,4 @@
 /// Multi-select component for batch policy operations
-
 use std::collections::HashSet;
 
 #[derive(Debug, Clone)]
@@ -76,10 +75,10 @@ mod tests {
     #[test]
     fn test_enter_exit_mode() {
         let mut state = MultiSelectState::new();
-        
+
         state.enter_mode();
         assert!(state.active);
-        
+
         state.exit_mode();
         assert!(!state.active);
         assert_eq!(state.selected_count(), 0);
@@ -89,11 +88,11 @@ mod tests {
     fn test_toggle_selection() {
         let mut state = MultiSelectState::new();
         state.enter_mode();
-        
+
         state.toggle(0);
         assert!(state.is_selected(0));
         assert_eq!(state.selected_count(), 1);
-        
+
         state.toggle(0);
         assert!(!state.is_selected(0));
         assert_eq!(state.selected_count(), 0);
@@ -103,10 +102,10 @@ mod tests {
     fn test_select_all() {
         let mut state = MultiSelectState::new();
         state.enter_mode();
-        
+
         let indices = vec![0, 1, 2, 3];
         state.select_all(&indices);
-        
+
         assert_eq!(state.selected_count(), 4);
         assert!(state.is_selected(0));
         assert!(state.is_selected(3));
@@ -116,11 +115,11 @@ mod tests {
     fn test_clear_all() {
         let mut state = MultiSelectState::new();
         state.enter_mode();
-        
+
         state.toggle(0);
         state.toggle(1);
         assert_eq!(state.selected_count(), 2);
-        
+
         state.clear_all();
         assert_eq!(state.selected_count(), 0);
     }
@@ -129,11 +128,11 @@ mod tests {
     fn test_get_selected_indices_sorted() {
         let mut state = MultiSelectState::new();
         state.enter_mode();
-        
+
         state.toggle(3);
         state.toggle(1);
         state.toggle(5);
-        
+
         let indices = state.get_selected_indices();
         assert_eq!(indices, vec![1, 3, 5]);
     }

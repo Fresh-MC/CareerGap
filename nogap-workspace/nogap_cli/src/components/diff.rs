@@ -1,5 +1,4 @@
 /// Line-by-line diff viewer component
-
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
@@ -148,8 +147,7 @@ impl<'a> Widget for DiffViewer<'a> {
             .map(|diff_line| diff_line.to_line())
             .collect();
 
-        let paragraph = Paragraph::new(visible_lines)
-            .wrap(Wrap { trim: false });
+        let paragraph = Paragraph::new(visible_lines).wrap(Wrap { trim: false });
 
         Widget::render(paragraph, inner, buf);
     }
@@ -164,7 +162,7 @@ mod tests {
         let before = "line1\nline2\nline3";
         let after = "line1\nline2\nline3";
         let state = DiffViewerState::new(before, after);
-        
+
         assert_eq!(state.lines.len(), 3);
         assert!(matches!(state.lines[0], DiffLine::Same(_)));
     }
@@ -174,7 +172,7 @@ mod tests {
         let before = "line1\nline2";
         let after = "line1\nline2\nline3";
         let state = DiffViewerState::new(before, after);
-        
+
         assert_eq!(state.lines.len(), 3);
         assert!(matches!(state.lines[2], DiffLine::Added(_)));
     }
@@ -184,7 +182,7 @@ mod tests {
         let before = "line1\nline2\nline3";
         let after = "line1\nline2";
         let state = DiffViewerState::new(before, after);
-        
+
         assert_eq!(state.lines.len(), 3);
         assert!(matches!(state.lines[2], DiffLine::Removed(_)));
     }
@@ -194,7 +192,7 @@ mod tests {
         let before = "line1\nold content\nline3";
         let after = "line1\nnew content\nline3";
         let state = DiffViewerState::new(before, after);
-        
+
         assert_eq!(state.lines.len(), 3);
         assert!(matches!(state.lines[1], DiffLine::Changed(_, _)));
     }
@@ -204,10 +202,10 @@ mod tests {
         let before = "line1\nline2\nline3\nline4\nline5";
         let after = "line1\nline2\nline3\nline4\nline5";
         let mut state = DiffViewerState::new(before, after);
-        
+
         state.scroll_down(2);
         assert_eq!(state.scroll_offset, 2);
-        
+
         state.scroll_down(10);
         assert_eq!(state.scroll_offset, 4); // max is lines.len() - 1
     }
@@ -217,11 +215,11 @@ mod tests {
         let before = "line1\nline2\nline3";
         let after = "line1\nline2\nline3";
         let mut state = DiffViewerState::new(before, after);
-        
+
         state.scroll_offset = 2;
         state.scroll_up(1);
         assert_eq!(state.scroll_offset, 1);
-        
+
         state.scroll_up(10);
         assert_eq!(state.scroll_offset, 0);
     }

@@ -1,9 +1,8 @@
 /// NoGap Week 2 - Auto-Signer Background Monitor Demo
-/// 
+///
 /// Demonstrates the background batch file signing system that queues
 /// .aegispack files for asynchronous signing and provides real-time
 /// status updates via non-blocking handles.
-
 use nogap_core::auto_signer::{AutoSigner, SigningStatus};
 use std::fs;
 use std::thread;
@@ -18,7 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create temporary workspace
     let temp_dir = TempDir::new()?;
     let workspace = temp_dir.path();
-    
+
     println!("🔐 Initializing Auto-Signer with RSA-2048 keypair...");
     let signer = AutoSigner::new()?;
     println!("✅ Auto-Signer ready (keypair generated)\n");
@@ -29,47 +28,56 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|i| {
             let input_path = workspace.join(format!("policy_{}.aegispack", i));
             let output_path = workspace.join(format!("policy_{}.signed", i));
-            
-            fs::write(&input_path, format!("NoGap Policy Package #{}\nRules: [...]\nVersion: 1.0", i))?;
+
+            fs::write(
+                &input_path,
+                format!("NoGap Policy Package #{}\nRules: [...]\nVersion: 1.0", i),
+            )?;
             println!("   Created: policy_{}.aegispack", i);
-            
+
             Ok::<_, std::io::Error>((
                 input_path.to_str().unwrap().to_string(),
-                output_path.to_str().unwrap().to_string()
+                output_path.to_str().unwrap().to_string(),
             ))
         })
         .collect::<Result<Vec<_>, _>>()?;
-    
+
     println!("\n🚀 Submitting batch signing job (5 files in parallel)...");
-    let handles = signer.sign_batch(&files.iter()
-        .map(|(i, o)| (i.as_str(), o.as_str()))
-        .collect::<Vec<_>>());
-    
+    let handles = signer.sign_batch(
+        &files
+            .iter()
+            .map(|(i, o)| (i.as_str(), o.as_str()))
+            .collect::<Vec<_>>(),
+    );
+
     println!("✅ All jobs queued (returned immediately)\n");
 
     // Monitor signing progress
     println!("📊 Monitoring signing progress (non-blocking)...");
     println!("─────────────────────────────────────────────────\n");
-    
+
     let mut completed = vec![false; 5];
     let mut all_done = false;
-    
+
     while !all_done {
         thread::sleep(Duration::from_millis(300));
-        
-        println!("🔄 Polling status at T+{:.1}s...", 
-                 std::time::SystemTime::now()
-                     .duration_since(std::time::UNIX_EPOCH)
-                     .unwrap()
-                     .as_secs_f64() % 100.0);
-        
+
+        println!(
+            "🔄 Polling status at T+{:.1}s...",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs_f64()
+                % 100.0
+        );
+
         all_done = true;
-        
+
         for (idx, handle) in handles.iter().enumerate() {
             if completed[idx] {
                 continue;
             }
-            
+
             match handle.poll_status() {
                 SigningStatus::Pending => {
                     println!("   File {}: ⏳ Pending (waiting in queue)", idx + 1);
@@ -81,7 +89,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 SigningStatus::Completed { signature } => {
                     if !completed[idx] {
-                        println!("   File {}: ✅ Completed (signature: {} bytes)", idx + 1, signature.len());
+                        println!(
+                            "   File {}: ✅ Completed (signature: {} bytes)",
+                            idx + 1,
+                            signature.len()
+                        );
                         completed[idx] = true;
                     }
                 }
@@ -93,7 +105,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
         }
-        
+
         if !all_done {
             println!();
         }
@@ -116,20 +128,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Demonstrate individual file signing
     println!("\n───────────────────────────────────────────────────────\n");
     println!("🔐 Demonstrating individual file signing...");
-    
+
     let single_input = workspace.join("urgent_policy.aegispack");
     let single_output = workspace.join("urgent_policy.signed");
-    
+
     fs::write(&single_input, b"URGENT: Critical security policy update")?;
-    
+
     let handle = signer.sign_file_async(
         single_input.to_str().unwrap(),
-        single_output.to_str().unwrap()
+        single_output.to_str().unwrap(),
     );
-    
+
     println!("📤 Submitted: urgent_policy.aegispack");
     println!("⏳ Waiting for completion...\n");
-    
+
     match handle.wait_for_completion() {
         SigningStatus::Completed { signature } => {
             println!("✅ Signed successfully!");

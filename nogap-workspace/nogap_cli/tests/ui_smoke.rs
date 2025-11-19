@@ -1,7 +1,6 @@
-/// Smoke tests for UI rendering using ratatui buffer snapshots
-
-use nogap_cli::screens::{Dashboard, DashboardState, PolicyFilter, PolicyStatus, SortMode};
 use nogap_cli::components::MultiSelectState;
+/// Smoke tests for UI rendering using ratatui buffer snapshots
+use nogap_cli::screens::{Dashboard, DashboardState, PolicyFilter, PolicyStatus, SortMode};
 use nogap_core::types::Policy;
 use ratatui::{backend::TestBackend, Terminal};
 
@@ -150,12 +149,16 @@ fn test_dashboard_renders_without_panic() {
     let buffer = terminal.backend().buffer();
 
     // Check that the buffer contains expected text
-    let buffer_str = buffer.content().iter().map(|c| c.symbol()).collect::<String>();
-    
+    let buffer_str = buffer
+        .content()
+        .iter()
+        .map(|c| c.symbol())
+        .collect::<String>();
+
     // Should contain policy IDs
     assert!(buffer_str.contains("SSH-H-001"));
     assert!(buffer_str.contains("FW-M-002"));
-    
+
     // Should contain title
     assert!(buffer_str.contains("NoGap Policies"));
 }
@@ -171,7 +174,10 @@ fn test_policy_status_colors() {
     // Normal mode
     assert_eq!(pass.color(false), ratatui::style::Color::Green);
     assert_eq!(fail.color(false), ratatui::style::Color::Red);
-    assert_eq!(warning.color(false), ratatui::style::Color::Rgb(251, 146, 60));
+    assert_eq!(
+        warning.color(false),
+        ratatui::style::Color::Rgb(251, 146, 60)
+    );
     assert_eq!(unknown.color(false), ratatui::style::Color::Gray);
 
     // High contrast mode
@@ -197,25 +203,25 @@ fn test_policy_status_symbols() {
 fn test_search_filtering() {
     let policies = create_test_policies();
     let mut state = DashboardState::new(policies);
-    
+
     // No search - all policies visible
     state.filter = String::new();
     state.compute_filtered_indices();
     assert_eq!(state.filtered_indices.len(), 5);
-    
+
     // Search for "ssh" - should match SSH-H-001 and SSH-M-004
     state.filter = "ssh".to_string();
     state.compute_filtered_indices();
     assert_eq!(state.filtered_indices.len(), 2);
     assert_eq!(state.policies[state.filtered_indices[0]].id, "SSH-H-001");
     assert_eq!(state.policies[state.filtered_indices[1]].id, "SSH-M-004");
-    
+
     // Search for "firewall" - should match FW-M-002
     state.filter = "firewall".to_string();
     state.compute_filtered_indices();
     assert_eq!(state.filtered_indices.len(), 1);
     assert_eq!(state.policies[state.filtered_indices[0]].id, "FW-M-002");
-    
+
     // Search for nonexistent - should match nothing
     state.filter = "nonexistent".to_string();
     state.compute_filtered_indices();
@@ -226,28 +232,38 @@ fn test_search_filtering() {
 fn test_severity_filter() {
     let policies = create_test_policies();
     let mut state = DashboardState::new(policies);
-    
+
     // All severities enabled - all policies visible
     state.policy_filter = PolicyFilter::default();
     state.compute_filtered_indices();
     assert_eq!(state.filtered_indices.len(), 5);
-    
+
     // Only high severity - should match SSH-H-001 and UAC-H-005
     state.policy_filter.severity_high = true;
     state.policy_filter.severity_medium = false;
     state.policy_filter.severity_low = false;
     state.compute_filtered_indices();
     assert_eq!(state.filtered_indices.len(), 2);
-    assert!(state.policies[state.filtered_indices[0]].severity.as_deref() == Some("high"));
-    assert!(state.policies[state.filtered_indices[1]].severity.as_deref() == Some("high"));
-    
+    assert!(
+        state.policies[state.filtered_indices[0]]
+            .severity
+            .as_deref()
+            == Some("high")
+    );
+    assert!(
+        state.policies[state.filtered_indices[1]]
+            .severity
+            .as_deref()
+            == Some("high")
+    );
+
     // Only medium severity - should match FW-M-002 and SSH-M-004
     state.policy_filter.severity_high = false;
     state.policy_filter.severity_medium = true;
     state.policy_filter.severity_low = false;
     state.compute_filtered_indices();
     assert_eq!(state.filtered_indices.len(), 2);
-    
+
     // Only low severity - should match REG-L-003
     state.policy_filter.severity_high = false;
     state.policy_filter.severity_medium = false;
@@ -261,12 +277,12 @@ fn test_severity_filter() {
 fn test_platform_filter() {
     let policies = create_test_policies();
     let mut state = DashboardState::new(policies);
-    
+
     // All platforms enabled - all policies visible
     state.policy_filter = PolicyFilter::default();
     state.compute_filtered_indices();
     assert_eq!(state.filtered_indices.len(), 5);
-    
+
     // Only Linux - should match SSH-H-001 and SSH-M-004
     state.policy_filter.platform_windows = false;
     state.policy_filter.platform_linux = true;
@@ -275,16 +291,22 @@ fn test_platform_filter() {
     assert_eq!(state.filtered_indices.len(), 2);
     assert_eq!(state.policies[state.filtered_indices[0]].platform, "Linux");
     assert_eq!(state.policies[state.filtered_indices[1]].platform, "Linux");
-    
+
     // Only Windows - should match REG-L-003 and UAC-H-005
     state.policy_filter.platform_windows = true;
     state.policy_filter.platform_linux = false;
     state.policy_filter.platform_macos = false;
     state.compute_filtered_indices();
     assert_eq!(state.filtered_indices.len(), 2);
-    assert_eq!(state.policies[state.filtered_indices[0]].platform, "Windows");
-    assert_eq!(state.policies[state.filtered_indices[1]].platform, "Windows");
-    
+    assert_eq!(
+        state.policies[state.filtered_indices[0]].platform,
+        "Windows"
+    );
+    assert_eq!(
+        state.policies[state.filtered_indices[1]].platform,
+        "Windows"
+    );
+
     // Only macOS - should match FW-M-002
     state.policy_filter.platform_windows = false;
     state.policy_filter.platform_linux = false;
@@ -298,7 +320,7 @@ fn test_platform_filter() {
 fn test_combined_filters() {
     let policies = create_test_policies();
     let mut state = DashboardState::new(policies);
-    
+
     // Search "ssh" + only high severity - should match SSH-H-001
     state.filter = "ssh".to_string();
     state.policy_filter.severity_high = true;
@@ -307,7 +329,7 @@ fn test_combined_filters() {
     state.compute_filtered_indices();
     assert_eq!(state.filtered_indices.len(), 1);
     assert_eq!(state.policies[state.filtered_indices[0]].id, "SSH-H-001");
-    
+
     // Search "ssh" + only Linux - should match SSH-H-001 and SSH-M-004
     state.filter = "ssh".to_string();
     state.policy_filter = PolicyFilter::default();
@@ -323,18 +345,18 @@ fn test_sort_mode_cycling() {
     let policies = create_test_policies();
     let mut state = DashboardState::new(policies);
     state.compute_filtered_indices();
-    
+
     // Initial sort mode is IdAscending
     assert!(matches!(state.sort_mode, SortMode::IdAscending));
-    
+
     // First cycle -> SeverityDescending
     state.cycle_sort();
     assert!(matches!(state.sort_mode, SortMode::SeverityDescending));
-    
+
     // Second cycle -> PlatformAscending
     state.cycle_sort();
     assert!(matches!(state.sort_mode, SortMode::PlatformAscending));
-    
+
     // Third cycle -> back to IdAscending
     state.cycle_sort();
     assert!(matches!(state.sort_mode, SortMode::IdAscending));
@@ -347,7 +369,7 @@ fn test_sort_by_id_ascending() {
     state.sort_mode = SortMode::IdAscending;
     state.compute_filtered_indices();
     state.apply_sort();
-    
+
     // Should be sorted: FW-M-002, REG-L-003, SSH-H-001, SSH-M-004, UAC-H-005
     assert_eq!(state.policies[state.filtered_indices[0]].id, "FW-M-002");
     assert_eq!(state.policies[state.filtered_indices[1]].id, "REG-L-003");
@@ -363,22 +385,22 @@ fn test_sort_by_severity_descending() {
     state.sort_mode = SortMode::SeverityDescending;
     state.compute_filtered_indices();
     state.apply_sort();
-    
+
     // Should be sorted: high (SSH-H-001, UAC-H-005), medium (FW-M-002, SSH-M-004), low (REG-L-003)
     let first_two = &state.filtered_indices[0..2];
     let middle_two = &state.filtered_indices[2..4];
     let last_one = state.filtered_indices[4];
-    
+
     // First two should be high severity
     for &idx in first_two {
         assert_eq!(state.policies[idx].severity.as_deref(), Some("high"));
     }
-    
+
     // Middle two should be medium severity
     for &idx in middle_two {
         assert_eq!(state.policies[idx].severity.as_deref(), Some("medium"));
     }
-    
+
     // Last should be low severity
     assert_eq!(state.policies[last_one].severity.as_deref(), Some("low"));
 }
@@ -390,21 +412,23 @@ fn test_sort_by_platform_ascending() {
     state.sort_mode = SortMode::PlatformAscending;
     state.compute_filtered_indices();
     state.apply_sort();
-    
+
     // Should be sorted by platform: Linux (2), Windows (2), macOS (1)
     // Linux: SSH-H-001, SSH-M-004
     // Windows: REG-L-003, UAC-H-005
     // macOS: FW-M-002
-    
-    let platforms: Vec<_> = state.filtered_indices.iter()
+
+    let platforms: Vec<_> = state
+        .filtered_indices
+        .iter()
         .map(|&idx| state.policies[idx].platform.as_str())
         .collect();
-    
+
     // Check that Linux comes before Windows, Windows before macOS
     let linux_count = platforms.iter().filter(|&&p| p == "Linux").count();
     let windows_start = platforms.iter().position(|&p| p == "Windows").unwrap();
     let macos_start = platforms.iter().position(|&p| p == "macOS").unwrap();
-    
+
     assert_eq!(linux_count, 2);
     assert!(windows_start >= linux_count);
     assert!(macos_start > windows_start);
@@ -414,28 +438,28 @@ fn test_sort_by_platform_ascending() {
 fn test_filtered_navigation() {
     let policies = create_test_policies();
     let mut state = DashboardState::new(policies);
-    
+
     // Filter to only "ssh" - should have 2 results
     state.filter = "ssh".to_string();
     state.compute_filtered_indices();
     assert_eq!(state.filtered_indices.len(), 2);
-    
+
     // Initial selection should be 0
     state.selected = 0;
     assert_eq!(state.selected, 0);
-    
+
     // Move down once
     state.move_down();
     assert_eq!(state.selected, 1);
-    
+
     // Move down again - should clamp at last filtered index
     state.move_down();
     assert_eq!(state.selected, 1); // Stays at 1 (last index in filtered list)
-    
+
     // Move up
     state.move_up();
     assert_eq!(state.selected, 0);
-    
+
     // Move up again - should clamp at 0
     state.move_up();
     assert_eq!(state.selected, 0);
@@ -445,16 +469,16 @@ fn test_filtered_navigation() {
 fn test_get_selected_index_with_filter() {
     let policies = create_test_policies();
     let mut state = DashboardState::new(policies);
-    
+
     // Filter to only "ssh"
     state.filter = "ssh".to_string();
     state.compute_filtered_indices();
-    
+
     // Select first filtered item (should be SSH-H-001 at original index 0)
     state.selected = 0;
     let actual_idx = state.get_selected_index().unwrap();
     assert_eq!(state.policies[actual_idx].id, "SSH-H-001");
-    
+
     // Select second filtered item (should be SSH-M-004 at original index 3)
     state.selected = 1;
     let actual_idx = state.get_selected_index().unwrap();
@@ -497,45 +521,53 @@ fn test_local_policy_display() {
             ..Default::default()
         },
     ];
-    
+
     let mut state = DashboardState::new(policies);
     state.compute_filtered_indices();
-    
+
     // Verify all policies are loaded
     assert_eq!(state.policies.len(), 3);
     assert_eq!(state.filtered_indices.len(), 3);
-    
+
     // Verify local_policy entries have correct check_type
     assert_eq!(state.policies[0].check_type, "local_policy");
     assert_eq!(state.policies[1].check_type, "local_policy");
     assert_eq!(state.policies[2].check_type, "registry_key");
-    
+
     // Verify local_policy entries have policy_name set
-    assert_eq!(state.policies[0].policy_name, Some("PasswordComplexity".to_string()));
-    assert_eq!(state.policies[1].policy_name, Some("LockoutDuration".to_string()));
-    
+    assert_eq!(
+        state.policies[0].policy_name,
+        Some("PasswordComplexity".to_string())
+    );
+    assert_eq!(
+        state.policies[1].policy_name,
+        Some("LockoutDuration".to_string())
+    );
+
     // Verify we can navigate to local_policy entries
     state.selected = 0;
     let policy = state.get_selected_policy();
     assert!(policy.is_some());
     assert_eq!(policy.unwrap().check_type, "local_policy");
-    
+
     state.move_down();
     let policy = state.get_selected_policy();
     assert!(policy.is_some());
     assert_eq!(policy.unwrap().check_type, "local_policy");
-    
+
     // Render the dashboard to verify no crashes with local_policy entries
     let multiselect = MultiSelectState::new();
     let dashboard = Dashboard::new(&state, &multiselect);
-    
+
     let backend = TestBackend::new(80, 24);
     let mut terminal = Terminal::new(backend).unwrap();
-    
-    terminal.draw(|f| {
-        f.render_widget(dashboard, f.area());
-    }).unwrap();
-    
+
+    terminal
+        .draw(|f| {
+            f.render_widget(dashboard, f.area());
+        })
+        .unwrap();
+
     // If we get here without panicking, local_policy entries render correctly
     // This proves the TUI can display local_policy check types on all platforms
 }

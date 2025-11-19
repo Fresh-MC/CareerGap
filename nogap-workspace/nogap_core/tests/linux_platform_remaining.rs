@@ -126,13 +126,19 @@ fn test_b2_a_ii_icmp_redirects() {
     };
 
     let mock_sysctl = linux::MockSysctlProvider {
-        values: vec![("net.ipv4.conf.all.accept_redirects".to_string(), "1".to_string())]
-            .into_iter()
-            .collect(),
+        values: vec![(
+            "net.ipv4.conf.all.accept_redirects".to_string(),
+            "1".to_string(),
+        )]
+        .into_iter()
+        .collect(),
     };
 
     let result = linux::check_icmp_redirects(&policy, &mock_sysctl).unwrap();
-    assert!(!result.passed, "B.2.a.ii: Should fail when accept_redirects = 1");
+    assert!(
+        !result.passed,
+        "B.2.a.ii: Should fail when accept_redirects = 1"
+    );
 }
 
 #[test]
@@ -147,13 +153,19 @@ fn test_b2_a_iii_secure_icmp_redirects() {
     };
 
     let mock_sysctl = linux::MockSysctlProvider {
-        values: vec![("net.ipv4.conf.all.secure_redirects".to_string(), "1".to_string())]
-            .into_iter()
-            .collect(),
+        values: vec![(
+            "net.ipv4.conf.all.secure_redirects".to_string(),
+            "1".to_string(),
+        )]
+        .into_iter()
+        .collect(),
     };
 
     let result = linux::check_sysctl_generic(&policy, &mock_sysctl).unwrap();
-    assert!(!result.passed, "B.2.a.iii: Should fail when secure_redirects = 1");
+    assert!(
+        !result.passed,
+        "B.2.a.iii: Should fail when secure_redirects = 1"
+    );
 }
 
 #[test]
@@ -174,7 +186,10 @@ fn test_b2_b_i_tcp_syn_cookies() {
     };
 
     let result = linux::check_tcp_syn_cookies(&policy, &mock_sysctl).unwrap();
-    assert!(!result.passed, "B.2.b.i: Should fail when tcp_syncookies = 0");
+    assert!(
+        !result.passed,
+        "B.2.b.i: Should fail when tcp_syncookies = 0"
+    );
 }
 
 #[test]
@@ -231,13 +246,19 @@ fn test_b8_b_i_source_routed_packets() {
     };
 
     let mock_sysctl = linux::MockSysctlProvider {
-        values: vec![("net.ipv4.conf.all.accept_source_route".to_string(), "1".to_string())]
-            .into_iter()
-            .collect(),
+        values: vec![(
+            "net.ipv4.conf.all.accept_source_route".to_string(),
+            "1".to_string(),
+        )]
+        .into_iter()
+        .collect(),
     };
 
     let result = linux::check_source_route(&policy, &mock_sysctl).unwrap();
-    assert!(!result.passed, "B.8.b.i: Should fail when accept_source_route = 1");
+    assert!(
+        !result.passed,
+        "B.8.b.i: Should fail when accept_source_route = 1"
+    );
 }
 
 #[test]
@@ -252,9 +273,12 @@ fn test_b9_a_i_log_martians() {
     };
 
     let mock_sysctl = linux::MockSysctlProvider {
-        values: vec![("net.ipv4.conf.all.log_martians".to_string(), "0".to_string())]
-            .into_iter()
-            .collect(),
+        values: vec![(
+            "net.ipv4.conf.all.log_martians".to_string(),
+            "0".to_string(),
+        )]
+        .into_iter()
+        .collect(),
     };
 
     let result = linux::check_log_martians(&policy, &mock_sysctl).unwrap();
@@ -273,13 +297,19 @@ fn test_b9_b_i_ignore_broadcast_icmp() {
     };
 
     let mock_sysctl = linux::MockSysctlProvider {
-        values: vec![("net.ipv4.icmp_echo_ignore_broadcasts".to_string(), "0".to_string())]
-            .into_iter()
-            .collect(),
+        values: vec![(
+            "net.ipv4.icmp_echo_ignore_broadcasts".to_string(),
+            "0".to_string(),
+        )]
+        .into_iter()
+        .collect(),
     };
 
     let result = linux::check_icmp_echo_ignore(&policy, &mock_sysctl).unwrap();
-    assert!(!result.passed, "B.9.b.i: Should fail when icmp_echo_ignore_broadcasts = 0");
+    assert!(
+        !result.passed,
+        "B.9.b.i: Should fail when icmp_echo_ignore_broadcasts = 0"
+    );
 }
 
 // ============================================================================
@@ -317,7 +347,10 @@ fn test_b3_a_ii_rsh_client_absent() {
     mock_pkg.set_installed("rsh-client", true);
 
     let result = linux::check_rsh_absent(&policy, &mock_pkg).unwrap();
-    assert!(!result.passed, "B.3.a.ii: Should fail when rsh-client installed");
+    assert!(
+        !result.passed,
+        "B.3.a.ii: Should fail when rsh-client installed"
+    );
 }
 
 // ============================================================================
@@ -331,7 +364,9 @@ fn test_b3_b_i_avahi_daemon_disabled() {
         platform: "linux".to_string(),
         check_type: "service_status".to_string(),
         service_name: Some("avahi-daemon".to_string()),
-        expected_state: Some(nogap_core::types::ExpectedState::String("stopped_disabled".to_string())),
+        expected_state: Some(nogap_core::types::ExpectedState::String(
+            "stopped_disabled".to_string(),
+        )),
         ..Default::default()
     };
 
@@ -341,7 +376,10 @@ fn test_b3_b_i_avahi_daemon_disabled() {
     };
 
     let result = linux::check_avahi_disabled(&policy, &mock_svc).unwrap();
-    assert!(!result.passed, "B.3.b.i: Should fail when avahi-daemon running");
+    assert!(
+        !result.passed,
+        "B.3.b.i: Should fail when avahi-daemon running"
+    );
 }
 
 #[test]
@@ -351,7 +389,9 @@ fn test_b6_a_i_rsyslog_enabled() {
         platform: "linux".to_string(),
         check_type: "service_status".to_string(),
         service_name: Some("rsyslog".to_string()),
-        expected_state: Some(nogap_core::types::ExpectedState::String("running".to_string())),
+        expected_state: Some(nogap_core::types::ExpectedState::String(
+            "running".to_string(),
+        )),
         ..Default::default()
     };
 
@@ -361,7 +401,10 @@ fn test_b6_a_i_rsyslog_enabled() {
     };
 
     let result = linux::check_rsyslog_enabled(&policy, &mock_svc).unwrap();
-    assert!(!result.passed, "B.6.a.i: Should fail when rsyslog not running");
+    assert!(
+        !result.passed,
+        "B.6.a.i: Should fail when rsyslog not running"
+    );
 }
 
 // ============================================================================
@@ -375,13 +418,16 @@ fn test_b4_a_iii_group_permissions() {
         platform: "linux".to_string(),
         check_type: "file_permissions_glob".to_string(),
         target_glob: Some("/etc/group".to_string()),
-        expected_state: Some(nogap_core::types::ExpectedState::String("o+w".to_string())),  // forbidden_permissions
+        expected_state: Some(nogap_core::types::ExpectedState::String("o+w".to_string())), // forbidden_permissions
         ..Default::default()
     };
 
     // Note: This test checks real /etc/group - may vary by system
     let result = linux::check_group_perms(&policy);
-    assert!(result.is_ok(), "B.4.a.iii: Should successfully check /etc/group permissions");
+    assert!(
+        result.is_ok(),
+        "B.4.a.iii: Should successfully check /etc/group permissions"
+    );
 }
 
 #[test]
@@ -391,14 +437,19 @@ fn test_b4_a_ii_shadow_permissions() {
         platform: "linux".to_string(),
         check_type: "file_permissions_glob".to_string(),
         target_glob: Some("/etc/shadow".to_string()),
-        expected_state: Some(nogap_core::types::ExpectedState::String("go+rwx".to_string())),  // forbidden_permissions
+        expected_state: Some(nogap_core::types::ExpectedState::String(
+            "go+rwx".to_string(),
+        )), // forbidden_permissions
         ..Default::default()
     };
 
     // Note: This test checks real /etc/shadow - requires root in production
     let result = linux::check_shadow_perms(&policy);
     // May fail in test env without root - just verify function exists
-    assert!(result.is_ok() || result.is_err(), "B.4.a.ii: Function callable");
+    assert!(
+        result.is_ok() || result.is_err(),
+        "B.4.a.ii: Function callable"
+    );
 }
 
 #[test]
@@ -413,7 +464,10 @@ fn test_b4_b_i_sshd_config_permissions() {
     };
 
     let result = linux::check_sshd_config_perms(&policy);
-    assert!(result.is_ok() || result.is_err(), "B.4.b.i: Function callable");
+    assert!(
+        result.is_ok() || result.is_err(),
+        "B.4.b.i: Function callable"
+    );
 }
 
 // ============================================================================
@@ -431,12 +485,15 @@ fn test_b5_a_i_core_dumps_disabled() {
         platform: "linux".to_string(),
         check_type: "file_regex".to_string(),
         target_file: Some(temp_file.path().to_string_lossy().to_string()),
-        regex: Some(r"^\s*\*\s+hard\s+core\s+0".to_string()),  // Should match "0" for secure state
+        regex: Some(r"^\s*\*\s+hard\s+core\s+0".to_string()), // Should match "0" for secure state
         ..Default::default()
     };
 
     let result = linux::check_core_dumps(&policy).unwrap();
-    assert!(!result.passed, "B.5.a.i: Should fail when core dump limit > 0");
+    assert!(
+        !result.passed,
+        "B.5.a.i: Should fail when core dump limit > 0"
+    );
 }
 
 #[test]
@@ -455,7 +512,10 @@ fn test_b7_a_i_password_max_age() {
     };
 
     let result = linux::check_file_regex(&policy).unwrap();
-    assert!(!result.passed, "B.7.a.i: Should fail when PASS_MAX_DAYS > 90");
+    assert!(
+        !result.passed,
+        "B.7.a.i: Should fail when PASS_MAX_DAYS > 90"
+    );
 }
 
 #[test]
@@ -474,7 +534,10 @@ fn test_b7_a_ii_password_min_days() {
     };
 
     let result = linux::check_file_regex(&policy).unwrap();
-    assert!(!result.passed, "B.7.a.ii: Should fail when PASS_MIN_DAYS < 7");
+    assert!(
+        !result.passed,
+        "B.7.a.ii: Should fail when PASS_MIN_DAYS < 7"
+    );
 }
 
 #[test]
@@ -493,7 +556,10 @@ fn test_b7_b_i_password_warning_age() {
     };
 
     let result = linux::check_file_regex(&policy).unwrap();
-    assert!(!result.passed, "B.7.b.i: Should fail when PASS_WARN_AGE < 7");
+    assert!(
+        !result.passed,
+        "B.7.b.i: Should fail when PASS_WARN_AGE < 7"
+    );
 }
 
 #[test]
@@ -543,5 +609,8 @@ fn test_linux_engine_snapshot_calls() {
     // We're just testing that the engine calls snapshot_provider.save_snapshot()
     let result = engine::remediate(&policies, &mock_snapshot);
     // Engine should either succeed or fail gracefully - no panics
-    assert!(result.is_ok() || result.is_err(), "Engine snapshot integration works");
+    assert!(
+        result.is_ok() || result.is_err(),
+        "Engine snapshot integration works"
+    );
 }

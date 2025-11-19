@@ -1,0 +1,8 @@
+{
+  "id": "skill-manager",
+  "name": "Skill Manager MCP",
+  "command": "skill-manager",
+  "args": ["--help"],
+  "workingDirectory": "${workspaceFolder}",
+  "description": "Loads and manages local skills for ${workspaceFolder}"
+}

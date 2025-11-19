@@ -1,9 +1,8 @@
 /// NoGap Week 2 - Async Integrity Verification Demo
-/// 
+///
 /// Demonstrates the non-blocking threaded hash verifier that allows
 /// the application to start immediately while binary integrity check
 /// runs in the background.
-
 use nogap_core::self_check;
 use std::thread;
 use std::time::Duration;
@@ -25,7 +24,7 @@ fn main() {
     for i in 1..=5 {
         println!("   Task {}/5: Loading configuration...", i);
         thread::sleep(Duration::from_millis(200));
-        
+
         // Poll integrity status (non-blocking)
         match handle.poll_integrity_status() {
             self_check::IntegrityStatus::Pending => {
@@ -44,14 +43,14 @@ fn main() {
     }
 
     println!("\n⏳ Waiting for final integrity result...");
-    
+
     // Block until verification completes (if still running)
     let final_status = handle.wait_for_result();
-    
+
     println!("\n╔═══════════════════════════════════════════════════════╗");
     println!("║              Final Integrity Status                   ║");
     println!("╠═══════════════════════════════════════════════════════╣");
-    
+
     match final_status {
         self_check::IntegrityStatus::Verified => {
             println!("║  ✅ VERIFIED: Binary integrity confirmed             ║");
@@ -65,7 +64,7 @@ fn main() {
             println!("║  ⏳ PENDING: Check still in progress (unlikely)      ║");
         }
     }
-    
+
     println!("╚═══════════════════════════════════════════════════════╝\n");
 
     println!("📊 Performance Benefits:");

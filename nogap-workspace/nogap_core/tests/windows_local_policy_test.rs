@@ -1,3 +1,5 @@
+use nogap_core::platforms::windows::secedit::MockSeceditExecutor;
+use nogap_core::platforms::windows::{audit_local_policy, remediate_local_policy, RemediateResult};
 /// Integration tests for Windows Local Security Policy (secedit-based)
 ///
 /// These tests validate the audit_local_policy() and remediate_local_policy()
@@ -7,10 +9,7 @@
 /// ALL tests use MockSeceditExecutor - NO real secedit.exe calls
 /// ALL tests run on Windows, macOS, and Linux
 /// NO tests require Administrator privileges
-
 use nogap_core::types::{ExpectedState, Policy};
-use nogap_core::platforms::windows::{audit_local_policy, remediate_local_policy, RemediateResult};
-use nogap_core::platforms::windows::secedit::MockSeceditExecutor;
 
 // Helper macro for creating test policies
 macro_rules! test_policy {
@@ -41,7 +40,7 @@ macro_rules! test_policy {
 fn test_password_complexity_policy() {
     // Test PasswordComplexity: start non-compliant, remediate, verify compliant
     let executor = MockSeceditExecutor::new();
-    
+
     // Set initial state: PasswordComplexity = 0 (disabled)
     executor.set_export_content(
         "[Unicode]\n\
@@ -52,20 +51,23 @@ fn test_password_complexity_policy() {
          \n\
          [Version]\n\
          signature=\"$CHICAGO$\"\n\
-         Revision=1\n".to_string()
+         Revision=1\n"
+            .to_string(),
     );
-    
+
     // Audit - expect it to be enabled (1)
     let audit_policy = test_policy!(
         "A.1.a.i",
         "PasswordComplexity",
         ExpectedState::String("1".to_string())
     );
-    
-    let result = audit_local_policy(&audit_policy, &executor)
-        .expect("Audit should not error");
-    assert!(!result.passed, "Should fail: PasswordComplexity is 0, expected 1");
-    
+
+    let result = audit_local_policy(&audit_policy, &executor).expect("Audit should not error");
+    assert!(
+        !result.passed,
+        "Should fail: PasswordComplexity is 0, expected 1"
+    );
+
     // Remediate - enable password complexity
     let remediate_policy = test_policy!(
         "A.1.a.i",
@@ -73,14 +75,14 @@ fn test_password_complexity_policy() {
         ExpectedState::String("1".to_string()),
         serde_yaml::Value::Number(serde_yaml::Number::from(1))
     );
-    
-    let remediate_result = remediate_local_policy(&remediate_policy, &executor)
-        .expect("Remediation should not error");
+
+    let remediate_result =
+        remediate_local_policy(&remediate_policy, &executor).expect("Remediation should not error");
     assert!(matches!(remediate_result, RemediateResult::Success(_)));
-    
+
     // Verify - should now pass
-    let verify_result = audit_local_policy(&audit_policy, &executor)
-        .expect("Verification audit should not error");
+    let verify_result =
+        audit_local_policy(&audit_policy, &executor).expect("Verification audit should not error");
     assert!(verify_result.passed, "Should pass after remediation");
 }
 
@@ -88,7 +90,7 @@ fn test_password_complexity_policy() {
 fn test_lockout_duration_policy() {
     // Test LockoutDuration: start with 5 minutes, remediate to 15, verify
     let executor = MockSeceditExecutor::new();
-    
+
     // Initial state from MockSeceditExecutor::new() has LockoutDuration = 5
     let audit_policy = test_policy!(
         "A.2.b.ii",
@@ -98,12 +100,14 @@ fn test_lockout_duration_policy() {
             value: serde_yaml::Value::Number(serde_yaml::Number::from(15)),
         }
     );
-    
+
     // Should fail: 5 < 15
-    let result = audit_local_policy(&audit_policy, &executor)
-        .expect("Audit should not error");
-    assert!(!result.passed, "Should fail: LockoutDuration is 5, expected >= 15");
-    
+    let result = audit_local_policy(&audit_policy, &executor).expect("Audit should not error");
+    assert!(
+        !result.passed,
+        "Should fail: LockoutDuration is 5, expected >= 15"
+    );
+
     // Remediate to 15
     let remediate_policy = test_policy!(
         "A.2.b.ii",
@@ -114,14 +118,14 @@ fn test_lockout_duration_policy() {
         },
         serde_yaml::Value::Number(serde_yaml::Number::from(15))
     );
-    
-    let remediate_result = remediate_local_policy(&remediate_policy, &executor)
-        .expect("Remediation should not error");
+
+    let remediate_result =
+        remediate_local_policy(&remediate_policy, &executor).expect("Remediation should not error");
     assert!(matches!(remediate_result, RemediateResult::Success(_)));
-    
+
     // Verify
-    let verify_result = audit_local_policy(&audit_policy, &executor)
-        .expect("Verification should not error");
+    let verify_result =
+        audit_local_policy(&audit_policy, &executor).expect("Verification should not error");
     assert!(verify_result.passed, "Should pass: LockoutDuration now 15");
 }
 
@@ -129,7 +133,7 @@ fn test_lockout_duration_policy() {
 fn test_history_policy() {
     // Test PasswordHistorySize
     let executor = MockSeceditExecutor::new();
-    
+
     // Set initial state: PasswordHistorySize = 5
     executor.set_export_content(
         "[Unicode]\n\
@@ -140,9 +144,10 @@ fn test_history_policy() {
          \n\
          [Version]\n\
          signature=\"$CHICAGO$\"\n\
-         Revision=1\n".to_string()
+         Revision=1\n"
+            .to_string(),
     );
-    
+
     // Audit - expect >= 24
     let audit_policy = test_policy!(
         "A.1.b.i",
@@ -152,11 +157,10 @@ fn test_history_policy() {
             value: serde_yaml::Value::Number(serde_yaml::Number::from(24)),
         }
     );
-    
-    let result = audit_local_policy(&audit_policy, &executor)
-        .expect("Audit should not error");
+
+    let result = audit_local_policy(&audit_policy, &executor).expect("Audit should not error");
     assert!(!result.passed, "Should fail: 5 < 24");
-    
+
     // Remediate to 24
     let remediate_policy = test_policy!(
         "A.1.b.i",
@@ -167,14 +171,14 @@ fn test_history_policy() {
         },
         serde_yaml::Value::Number(serde_yaml::Number::from(24))
     );
-    
-    let remediate_result = remediate_local_policy(&remediate_policy, &executor)
-        .expect("Remediation should not error");
+
+    let remediate_result =
+        remediate_local_policy(&remediate_policy, &executor).expect("Remediation should not error");
     assert!(matches!(remediate_result, RemediateResult::Success(_)));
-    
+
     // Verify
-    let verify_result = audit_local_policy(&audit_policy, &executor)
-        .expect("Verification should not error");
+    let verify_result =
+        audit_local_policy(&audit_policy, &executor).expect("Verification should not error");
     assert!(verify_result.passed, "Should pass after remediation");
 }
 
@@ -182,7 +186,7 @@ fn test_history_policy() {
 fn test_guest_account() {
     // Test EnableGuestAccount
     let executor = MockSeceditExecutor::new();
-    
+
     // Set guest account enabled (non-compliant)
     executor.set_export_content(
         "[Unicode]\n\
@@ -193,20 +197,20 @@ fn test_guest_account() {
          \n\
          [Version]\n\
          signature=\"$CHICAGO$\"\n\
-         Revision=1\n".to_string()
+         Revision=1\n"
+            .to_string(),
     );
-    
+
     // Audit - expect disabled (0)
     let audit_policy = test_policy!(
         "A.2.a.i",
         "EnableGuestAccount",
         ExpectedState::String("0".to_string())
     );
-    
-    let result = audit_local_policy(&audit_policy, &executor)
-        .expect("Audit should not error");
+
+    let result = audit_local_policy(&audit_policy, &executor).expect("Audit should not error");
     assert!(!result.passed, "Should fail: guest account is enabled");
-    
+
     // Remediate - disable guest account
     let remediate_policy = test_policy!(
         "A.2.a.i",
@@ -214,14 +218,14 @@ fn test_guest_account() {
         ExpectedState::String("0".to_string()),
         serde_yaml::Value::Number(serde_yaml::Number::from(0))
     );
-    
-    let remediate_result = remediate_local_policy(&remediate_policy, &executor)
-        .expect("Remediation should not error");
+
+    let remediate_result =
+        remediate_local_policy(&remediate_policy, &executor).expect("Remediation should not error");
     assert!(matches!(remediate_result, RemediateResult::Success(_)));
-    
+
     // Verify
-    let verify_result = audit_local_policy(&audit_policy, &executor)
-        .expect("Verification should not error");
+    let verify_result =
+        audit_local_policy(&audit_policy, &executor).expect("Verification should not error");
     assert!(verify_result.passed, "Guest account should be disabled");
 }
 
@@ -229,7 +233,7 @@ fn test_guest_account() {
 fn test_invalid_inf_missing_key() {
     // Test error handling when INF is missing the required key
     let executor = MockSeceditExecutor::new();
-    
+
     // Set INF without LockoutDuration
     executor.set_export_content(
         "[Unicode]\n\
@@ -240,15 +244,16 @@ fn test_invalid_inf_missing_key() {
          \n\
          [Version]\n\
          signature=\"$CHICAGO$\"\n\
-         Revision=1\n".to_string()
+         Revision=1\n"
+            .to_string(),
     );
-    
+
     let policy = test_policy!(
         "A.2.b.ii",
         "LockoutDuration",
         ExpectedState::String("15".to_string())
     );
-    
+
     let result = audit_local_policy(&policy, &executor);
     assert!(result.is_err(), "Should error when key is missing");
     assert!(result.unwrap_err().to_string().contains("not found"));
@@ -258,7 +263,7 @@ fn test_invalid_inf_missing_key() {
 fn test_invalid_value_non_numeric() {
     // Test error handling when INF value is non-numeric but comparison expects numeric
     let executor = MockSeceditExecutor::new();
-    
+
     // Set INF with invalid non-numeric value
     executor.set_export_content(
         "[Unicode]\n\
@@ -269,9 +274,10 @@ fn test_invalid_value_non_numeric() {
          \n\
          [Version]\n\
          signature=\"$CHICAGO$\"\n\
-         Revision=1\n".to_string()
+         Revision=1\n"
+            .to_string(),
     );
-    
+
     let policy = test_policy!(
         "A.2.b.ii",
         "LockoutDuration",
@@ -280,7 +286,7 @@ fn test_invalid_value_non_numeric() {
             value: serde_yaml::Value::Number(serde_yaml::Number::from(15)),
         }
     );
-    
+
     let result = audit_local_policy(&policy, &executor);
     assert!(result.is_err(), "Should error when value is non-numeric");
     assert!(result.unwrap_err().to_string().contains("Failed to parse"));
@@ -290,7 +296,7 @@ fn test_invalid_value_non_numeric() {
 fn test_roundtrip_all_policies() {
     // Test multiple policies in sequence: audit non-compliant, remediate all, verify all compliant
     let executor = MockSeceditExecutor::new();
-    
+
     // Set initial non-compliant state for all policies
     executor.set_export_content(
         "[Unicode]\n\
@@ -310,9 +316,10 @@ fn test_roundtrip_all_policies() {
          \n\
          [Version]\n\
          signature=\"$CHICAGO$\"\n\
-         Revision=1\n".to_string()
+         Revision=1\n"
+            .to_string(),
     );
-    
+
     // Define all policies with expected compliant states
     let policies = vec![
         ("PasswordComplexity", "1", 1),
@@ -326,7 +333,7 @@ fn test_roundtrip_all_policies() {
         ("LmCompatibilityLevel", "5", 5),
         ("ConsentPromptBehaviorAdmin", "2", 2),
     ];
-    
+
     // Phase 1: Audit all - should all fail
     for (policy_name, expected_str, _) in &policies {
         let policy = test_policy!(
@@ -334,12 +341,12 @@ fn test_roundtrip_all_policies() {
             policy_name,
             ExpectedState::String(expected_str.to_string())
         );
-        
+
         let result = audit_local_policy(&policy, &executor)
             .expect(&format!("Audit {} should not error", policy_name));
         assert!(!result.passed, "{} should fail initial audit", policy_name);
     }
-    
+
     // Phase 2: Remediate all
     for (policy_name, expected_str, set_value) in &policies {
         let policy = test_policy!(
@@ -348,13 +355,16 @@ fn test_roundtrip_all_policies() {
             ExpectedState::String(expected_str.to_string()),
             serde_yaml::Value::Number(serde_yaml::Number::from(*set_value))
         );
-        
+
         let result = remediate_local_policy(&policy, &executor)
             .expect(&format!("Remediate {} should not error", policy_name));
-        assert!(matches!(result, RemediateResult::Success(_)), 
-                "{} remediation should succeed", policy_name);
+        assert!(
+            matches!(result, RemediateResult::Success(_)),
+            "{} remediation should succeed",
+            policy_name
+        );
     }
-    
+
     // Phase 3: Audit all again - should all pass
     for (policy_name, expected_str, _) in &policies {
         let policy = test_policy!(
@@ -362,7 +372,7 @@ fn test_roundtrip_all_policies() {
             policy_name,
             ExpectedState::String(expected_str.to_string())
         );
-        
+
         let result = audit_local_policy(&policy, &executor)
             .expect(&format!("Final audit {} should not error", policy_name));
         assert!(result.passed, "{} should pass final audit", policy_name);

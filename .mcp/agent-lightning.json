@@ -1,0 +1,8 @@
+{
+  "id": "agent-lightning",
+  "name": "Agent Lightning MCP",
+  "command": "agent-lightning",
+  "args": ["--version"],
+  "workingDirectory": "${workspaceFolder}",
+  "description": "Runs distributed tasks for ${workspaceFolder}"
+}

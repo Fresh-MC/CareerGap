@@ -1,7 +1,7 @@
-use sha2::{Digest, Sha256};
-use std::{env, fs};
-use std::thread::{self, JoinHandle};
 use crossbeam_channel::{bounded, Receiver};
+use sha2::{Digest, Sha256};
+use std::thread::{self, JoinHandle};
+use std::{env, fs};
 
 /// Result type for integrity checks
 #[derive(Debug, Clone, PartialEq)]
@@ -33,7 +33,9 @@ impl IntegrityCheckHandle {
         if let Some(handle) = self.thread_handle {
             match handle.join() {
                 Ok(status) => status,
-                Err(_) => IntegrityStatus::Failed("Thread panicked during verification".to_string()),
+                Err(_) => {
+                    IntegrityStatus::Failed("Thread panicked during verification".to_string())
+                }
             }
         } else {
             // Get result from channel
@@ -45,29 +47,29 @@ impl IntegrityCheckHandle {
 }
 
 /// Starts integrity check on a background thread (non-blocking)
-/// 
+///
 /// Returns a handle that can be polled for results without blocking the main thread.
 /// Use `poll_integrity_status()` for non-blocking checks or `wait_for_result()` to block.
 pub fn start_integrity_check() -> IntegrityCheckHandle {
     let (sender, receiver) = bounded(1);
-    
+
     let thread_handle = thread::spawn(move || {
         let status = match verify_integrity_internal() {
             Ok(_) => IntegrityStatus::Verified,
             Err(e) => IntegrityStatus::Failed(e),
         };
-        
+
         // Send result through channel
         let _ = sender.send(status.clone());
-        
+
         // Trigger critical alert on failure
         if let IntegrityStatus::Failed(ref msg) = status {
             critical_alert(msg);
         }
-        
+
         status
     });
-    
+
     IntegrityCheckHandle {
         thread_handle: Some(thread_handle),
         receiver,
@@ -78,17 +80,17 @@ pub fn start_integrity_check() -> IntegrityCheckHandle {
 fn verify_integrity_internal() -> Result<(), String> {
     let exe = env::current_exe().map_err(|e| format!("Failed to get executable path: {}", e))?;
     let data = fs::read(&exe).map_err(|e| format!("Failed to read executable: {}", e))?;
-    
+
     let mut hasher = Sha256::new();
     hasher.update(&data);
     let current = hasher.finalize();
 
     let expected = include_bytes!("../expected_hash.bin");
-    
-    if &current[..] != &expected[..] {
+
+    if current[..] != expected[..] {
         return Err("Binary integrity check failed: executable has been tampered with".into());
     }
-    
+
     Ok(())
 }
 
@@ -101,7 +103,7 @@ fn critical_alert(message: &str) {
 
 /// Verifies the integrity of the current executable by comparing its SHA256 hash
 /// against an embedded reference hash.
-/// 
+///
 /// This is the blocking version - for non-blocking checks use `start_integrity_check()`
 pub fn verify_self_integrity() -> Result<(), String> {
     verify_integrity_internal()?;
@@ -113,7 +115,7 @@ pub fn verify_self_integrity() -> Result<(), String> {
 pub fn generate_self_hash() -> Result<Vec<u8>, String> {
     let exe = env::current_exe().map_err(|e| format!("Failed to get executable path: {}", e))?;
     let data = fs::read(&exe).map_err(|e| format!("Failed to read executable: {}", e))?;
-    
+
     let mut hasher = Sha256::new();
     hasher.update(&data);
     Ok(hasher.finalize().to_vec())
@@ -135,7 +137,7 @@ mod tests {
     #[test]
     fn test_threaded_integrity_check() {
         let handle = start_integrity_check();
-        
+
         // Initially should be pending
         match handle.poll_integrity_status() {
             IntegrityStatus::Pending => {
@@ -144,18 +146,21 @@ mod tests {
             }
             _ => {}
         }
-        
+
         // Wait for final result
         let status = handle.wait_for_result();
-        
+
         // Should either verify or fail (depending on hash match)
-        assert!(matches!(status, IntegrityStatus::Verified | IntegrityStatus::Failed(_)));
+        assert!(matches!(
+            status,
+            IntegrityStatus::Verified | IntegrityStatus::Failed(_)
+        ));
     }
 
     #[test]
     fn test_poll_integrity_status() {
         let handle = start_integrity_check();
-        
+
         // Poll multiple times and wait for completion
         let mut final_status = IntegrityStatus::Pending;
         for _ in 0..100 {
@@ -165,7 +170,7 @@ mod tests {
             }
             thread::sleep(Duration::from_millis(50));
         }
-        
+
         // Should eventually complete (either verify or fail)
         assert!(matches!(
             final_status,

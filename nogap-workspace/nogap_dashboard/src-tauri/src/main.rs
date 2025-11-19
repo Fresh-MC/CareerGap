@@ -1,18 +1,6 @@
-use nogap_core;
-
-#[tauri::command]
-fn run_audit() -> String {
-    nogap_core::audit_system()
-}
-
-#[tauri::command]
-fn get_version() -> String {
-    nogap_core::get_version()
-}
+// Prevents additional console window on Windows in release, DO NOT REMOVE!!
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![run_audit, get_version])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+    nogap_dashboard_lib::run()
 }

@@ -1,5 +1,4 @@
 /// Snapshot Browser and Snapshot Preview screens
-
 use crate::components::{create_row, TableWidget};
 use ratatui::{
     buffer::Buffer,
@@ -80,13 +79,9 @@ impl<'a> SnapshotBrowser<'a> {
             .map(|snapshot| {
                 let timestamp_str = format!("{}", snapshot.timestamp);
                 let desc = snapshot.description.clone();
-                
+
                 create_row(
-                    vec![
-                        snapshot.id.to_string(),
-                        timestamp_str,
-                        desc,
-                    ],
+                    vec![snapshot.id.to_string(), timestamp_str, desc],
                     Color::White,
                 )
             })

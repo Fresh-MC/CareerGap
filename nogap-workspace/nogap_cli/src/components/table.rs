@@ -1,5 +1,4 @@
 /// Reusable table component with sort and filter capabilities
-
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
@@ -111,7 +110,7 @@ impl<'a> Widget for TableWidget<'a> {
             .block(block);
 
         Widget::render(table, area, buf);
-        
+
         // Render scrollbar if needed
         if self.total_rows > 0 && area.height > 4 {
             self.render_scrollbar(area, buf);
@@ -139,7 +138,8 @@ impl<'a> TableWidget<'a> {
             return;
         }
 
-        let scroll_position = (self.selected as f32 / self.total_rows.max(1) as f32 * scrollbar_height as f32) as u16;
+        let scroll_position =
+            (self.selected as f32 / self.total_rows.max(1) as f32 * scrollbar_height as f32) as u16;
         let thumb_y = scrollbar_start + scroll_position.min(scrollbar_height.saturating_sub(1));
 
         let scrollbar_color = if self.high_contrast {

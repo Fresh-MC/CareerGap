@@ -1,0 +1,8 @@
+{
+  "id": "git",
+  "name": "Git MCP",
+  "command": "git",
+  "args": ["status"],
+  "workingDirectory": "${workspaceFolder}",
+  "description": "Checks Git repo status for ${workspaceFolder}"
+}

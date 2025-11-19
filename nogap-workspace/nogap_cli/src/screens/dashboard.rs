@@ -1,5 +1,4 @@
 /// Dashboard screen - main policy list view with status
-
 use crate::components::{create_row, MultiSelectState, TableWidget};
 use nogap_core::types::Policy;
 use ratatui::{
@@ -133,7 +132,9 @@ impl DashboardState {
                 // Text search filter
                 let text_match = self.filter.is_empty()
                     || p.id.to_lowercase().contains(&self.filter.to_lowercase())
-                    || p.description.as_ref().map_or(false, |d| d.to_lowercase().contains(&self.filter.to_lowercase()));
+                    || p.description.as_ref().is_some_and(|d| {
+                        d.to_lowercase().contains(&self.filter.to_lowercase())
+                    });
 
                 // Severity filter - check the severity field
                 let severity_match = if let Some(sev) = &p.severity {
@@ -165,7 +166,7 @@ impl DashboardState {
             .collect();
 
         self.apply_sort();
-        
+
         // Clamp selection to valid range
         if !self.filtered_indices.is_empty() && self.selected >= self.filtered_indices.len() {
             self.selected = self.filtered_indices.len() - 1;
@@ -175,15 +176,14 @@ impl DashboardState {
     pub fn apply_sort(&mut self) {
         match self.sort_mode {
             SortMode::IdAscending => {
-                self.filtered_indices.sort_by(|&a, &b| {
-                    self.policies[a].id.cmp(&self.policies[b].id)
-                });
+                self.filtered_indices
+                    .sort_by(|&a, &b| self.policies[a].id.cmp(&self.policies[b].id));
             }
             SortMode::SeverityDescending => {
                 self.filtered_indices.sort_by(|&a, &b| {
                     let sev_a = self.policies[a].severity.as_deref().unwrap_or("unknown");
                     let sev_b = self.policies[b].severity.as_deref().unwrap_or("unknown");
-                    
+
                     // Map severity to ordering: high=3, medium=2, low=1, unknown=0
                     let order_a = match sev_a {
                         "high" => 3,
@@ -197,15 +197,14 @@ impl DashboardState {
                         "low" => 1,
                         _ => 0,
                     };
-                    
+
                     // Sort descending (high to low)
                     order_b.cmp(&order_a)
                 });
             }
             SortMode::PlatformAscending => {
-                self.filtered_indices.sort_by(|&a, &b| {
-                    self.policies[a].platform.cmp(&self.policies[b].platform)
-                });
+                self.filtered_indices
+                    .sort_by(|&a, &b| self.policies[a].platform.cmp(&self.policies[b].platform));
             }
         }
     }
@@ -216,7 +215,9 @@ impl DashboardState {
     }
 
     pub fn move_down(&mut self) {
-        if !self.filtered_indices.is_empty() && self.selected < self.filtered_indices.len().saturating_sub(1) {
+        if !self.filtered_indices.is_empty()
+            && self.selected < self.filtered_indices.len().saturating_sub(1)
+        {
             self.selected += 1;
         }
     }
@@ -335,15 +336,11 @@ impl<'a> Dashboard<'a> {
             vec![12, 40, 3, 3]
         };
 
-        let table = TableWidget::new(
-            " NoGap Policies ",
-            header_cols,
-            col_widths,
-        )
-        .rows(rows)
-        .selected(self.state.selected)
-        .high_contrast(self.state.high_contrast)
-        .total_rows(self.state.filtered_indices.len());
+        let table = TableWidget::new(" NoGap Policies ", header_cols, col_widths)
+            .rows(rows)
+            .selected(self.state.selected)
+            .high_contrast(self.state.high_contrast)
+            .total_rows(self.state.filtered_indices.len());
 
         Widget::render(table, area, buf);
     }
@@ -384,12 +381,15 @@ impl<'a> Dashboard<'a> {
                     Style::default().fg(accent).add_modifier(Modifier::BOLD),
                 )),
                 Line::from(""),
-                Line::from(Span::styled("ID: ", Style::default().add_modifier(Modifier::DIM)))
-                    .spans
-                    .into_iter()
-                    .chain([Span::raw(&policy.id)])
-                    .collect::<Vec<_>>()
-                    .into(),
+                Line::from(Span::styled(
+                    "ID: ",
+                    Style::default().add_modifier(Modifier::DIM),
+                ))
+                .spans
+                .into_iter()
+                .chain([Span::raw(&policy.id)])
+                .collect::<Vec<_>>()
+                .into(),
                 Line::from(vec![
                     Span::styled("Platform: ", Style::default().add_modifier(Modifier::DIM)),
                     Span::raw(platform),
