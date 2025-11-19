@@ -2,7 +2,6 @@
 members = [
     "nogap_core",
     "nogap_cli",
-    "nogap_mcp",
     "nogap_dashboard/src-tauri",
 ]
 resolver = "2"

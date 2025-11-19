@@ -1,7 +1,0 @@
-[package]
-name = "nogap_mcp"
-version = "0.1.0"
-edition = "2024"
-
-[dependencies]
-nogap_core = { path = "../nogap_core" }

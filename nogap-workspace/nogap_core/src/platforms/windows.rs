@@ -72,6 +72,15 @@ pub fn audit_policy(policy: &Policy) -> Result<AuditResult, Box<dyn Error>> {
 }
 
 pub fn remediate_policy(policy: &Policy) -> Result<RemediateResult, Box<dyn Error>> {
+    // Ensure admin privileges on Windows
+    #[cfg(target_os = "windows")]
+    {
+        use crate::privilege::ensure_admin;
+        if let Err(e) = ensure_admin() {
+            return Ok(RemediateResult::Failed(e));
+        }
+    }
+
     match policy.check_type.as_str() {
         "registry_key" => {
             let registry = RealRegistry;

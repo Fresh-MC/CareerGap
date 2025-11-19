@@ -15,7 +15,6 @@ mod windows_secedit;
 use serde::{Deserialize, Serialize};
 use serde_yaml::Value as YamlValue;
 use std::collections::HashMap;
-use tauri::Manager;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Policy {
@@ -71,6 +70,13 @@ pub struct RemediateResult {
     pub reboot_required: bool,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RollbackResult {
+    pub policy_id: String,
+    pub success: bool,
+    pub message: String,
+}
+
 // Load policies from YAML/JSON
 #[tauri::command]
 fn load_policies(app_handle: tauri::AppHandle) -> Result<Vec<Policy>, String> {
@@ -92,28 +98,11 @@ fn load_policies(app_handle: tauri::AppHandle) -> Result<Vec<Policy>, String> {
 }
 
 // Internal: Load full policy details for audit/remediation
-fn load_full_policies(app_handle: &tauri::AppHandle) -> Result<Vec<FullPolicy>, String> {
+fn load_full_policies(_app_handle: &tauri::AppHandle) -> Result<Vec<FullPolicy>, String> {
     use std::fs;
 
-    let policies_path = if cfg!(debug_assertions) {
-        // Development: use local copy in src-tauri/assets
-        app_handle
-            .path()
-            .app_config_dir()
-            .map_err(|e| format!("Failed to get app config dir: {}", e))?
-            .parent()
-            .ok_or_else(|| "Failed to get parent directory".to_string())?
-            .parent()
-            .ok_or_else(|| "Failed to get parent directory".to_string())?
-            .join("src-tauri/assets/policies.yaml")
-    } else {
-        // Production: resolve from bundled resources
-        app_handle
-            .path()
-            .resource_dir()
-            .map_err(|e| format!("Failed to get resource dir: {}", e))?
-            .join("assets/policies.yaml")
-    };
+    // Use standardized policy path resolution from nogap_core
+    let policies_path = nogap_core::policy_parser::resolve_policy_path();
 
     let yaml_content = fs::read_to_string(&policies_path)
         .map_err(|e| format!("Failed to read policies.yaml at {:?}: {}", policies_path, e))?;
@@ -203,6 +192,27 @@ fn remediate_policy(
     app_handle: tauri::AppHandle,
     policy_id: String,
 ) -> Result<RemediateResult, String> {
+    // Check privileges before attempting remediation
+    #[cfg(target_os = "windows")]
+    if let Err(e) = privilege::ensure_admin() {
+        return Ok(RemediateResult {
+            policy_id,
+            success: false,
+            message: e,
+            reboot_required: false,
+        });
+    }
+
+    #[cfg(target_os = "linux")]
+    if let Err(e) = privilege::ensure_root() {
+        return Ok(RemediateResult {
+            policy_id,
+            success: false,
+            message: e,
+            reboot_required: false,
+        });
+    }
+
     let policy = find_policy(&app_handle, &policy_id)?;
 
     // Detect current OS
@@ -275,6 +285,130 @@ fn get_system_info() -> Result<String, String> {
     Ok(format!("{} ({})", os, arch))
 }
 
+// Rollback a single policy to its previous state
+#[tauri::command]
+fn rollback_policy(policy_id: String) -> Result<RollbackResult, String> {
+    log::info!("[ROLLBACK] Attempting rollback for policy: {}", policy_id);
+    
+    // Load all policies to find the one being rolled back
+    let policies_yaml = match std::fs::read_to_string("../../nogap_core/policies.yaml") {
+        Ok(content) => content,
+        Err(e) => return Err(format!("Failed to load policies: {}", e)),
+    };
+    
+    let policies: Vec<FullPolicy> = match serde_yaml::from_str(&policies_yaml) {
+        Ok(p) => p,
+        Err(e) => return Err(format!("Failed to parse policies: {}", e)),
+    };
+    
+    // Convert FullPolicy to nogap_core Policy
+    let policy = policies.iter()
+        .find(|p| p.id == policy_id)
+        .ok_or_else(|| format!("Policy {} not found", policy_id))?;
+    
+    let core_policy = convert_to_core_policy(policy);
+    
+    // Perform rollback using engine
+    let state_provider = nogap_core::engine::DefaultPolicyStateProvider;
+    let result = nogap_core::engine::rollback(&policy_id, &[core_policy], &state_provider)
+        .map_err(|e| format!("Rollback failed: {}", e))?;
+    
+    log::info!(
+        "[ROLLBACK] Policy {} rollback result: success={}",
+        policy_id,
+        result.success
+    );
+    
+    Ok(RollbackResult {
+        policy_id: result.policy_id,
+        success: result.success,
+        message: result.message,
+    })
+}
+
+// Rollback all policies that have rollback snapshots
+#[tauri::command]
+fn rollback_all() -> Result<Vec<RollbackResult>, String> {
+    log::info!("[ROLLBACK] Attempting rollback for all policies");
+    
+    // Load all policies
+    let policies_yaml = match std::fs::read_to_string("../../nogap_core/policies.yaml") {
+        Ok(content) => content,
+        Err(e) => return Err(format!("Failed to load policies: {}", e)),
+    };
+    
+    let policies: Vec<FullPolicy> = match serde_yaml::from_str(&policies_yaml) {
+        Ok(p) => p,
+        Err(e) => return Err(format!("Failed to parse policies: {}", e)),
+    };
+    
+    let mut results = Vec::new();
+    let state_provider = nogap_core::engine::DefaultPolicyStateProvider;
+    
+    // Try to rollback each policy
+    for policy in &policies {
+        let core_policy = convert_to_core_policy(policy);
+        
+        match nogap_core::engine::rollback(&policy.id, &[core_policy], &state_provider) {
+            Ok(result) => results.push(RollbackResult {
+                policy_id: result.policy_id,
+                success: result.success,
+                message: result.message,
+            }),
+            Err(e) => {
+                // Skip policies without rollback snapshots
+                log::debug!("[ROLLBACK] Skipping policy {}: {}", policy.id, e);
+            }
+        }
+    }
+    
+    log::info!("[ROLLBACK] Rolled back {} policies", results.len());
+    Ok(results)
+}
+
+// Helper function to convert FullPolicy to nogap_core::types::Policy
+fn convert_to_core_policy(policy: &FullPolicy) -> nogap_core::types::Policy {
+    nogap_core::types::Policy {
+        id: policy.id.clone(),
+        title: Some(policy.title.clone()),
+        description: Some(policy.description.clone()),
+        platform: policy.platform.clone(),
+        severity: Some(policy.severity.clone()),
+        reversible: Some(policy.reversible),
+        check_type: policy.check_type.clone(),
+        target_file: None,
+        target_glob: None,
+        regex: None,
+        replace_regex: None,
+        replace_with: None,
+        key: None,
+        expected_state: None, // Not needed for rollback
+        package_name: None,
+        service_name: policy.service_name.clone(),
+        value_name: policy.value_name.clone(),
+        target_path: policy.target_path.clone(),
+        policy_name: policy.policy_name.clone(),
+        right_name: None,
+        port: None,
+        protocol: None,
+        remediate_type: Some(policy.remediate_type.clone()),
+        value: None,
+        set_value: policy.set_value.as_ref().map(|v| v.clone()),
+        set_type: policy.set_type.clone(),
+        remediate_params: policy.remediate_params.as_ref().map(|map| {
+            nogap_core::types::RemediateParams {
+                stop: map.get("stop").and_then(|v| v.as_bool()),
+                disable: map.get("disable").and_then(|v| v.as_bool()),
+                start: map.get("start").and_then(|v| v.as_bool()),
+                enable: map.get("enable").and_then(|v| v.as_bool()),
+            }
+        }),
+        chmod_mode: None,
+        reference: Some(policy.reference.clone()),
+        post_reboot_required: Some(policy.post_reboot_required),
+    }
+}
+
 // Helper function to check for admin privileges (stub for now)
 #[cfg(target_os = "windows")]
 fn ensure_admin() -> anyhow::Result<()> {
@@ -308,12 +442,8 @@ fn audit_local_policy(policy: &FullPolicy) -> Result<AuditResult, String> {
         .to_str()
         .ok_or_else(|| "Failed to get temp path".to_string())?;
 
-    match windows_secedit::export_secedit_cfg(temp_cfg_path) {
-        Ok(_) => {
-            // Read the exported configuration
-            let cfg_content = std::fs::read_to_string(temp_cfg_path)
-                .map_err(|e| format!("Failed to read secedit config: {}", e))?;
-
+    match windows_secedit::export_secedit_cfg() {
+        Ok(cfg_content) => {
             // Parse the current value
             let current_value = windows_secedit::parse_secedit_value(&cfg_content, policy_name);
 
@@ -396,9 +526,9 @@ fn audit_registry_key(policy: &FullPolicy) -> Result<AuditResult, String> {
         .ok_or_else(|| format!("No target_path for policy {}", policy.id))?;
 
     let value_name = policy
-        .policy_name
+        .value_name
         .as_ref()
-        .ok_or_else(|| format!("No policy_name for policy {}", policy.id))?;
+        .ok_or_else(|| format!("No value_name for policy {}", policy.id))?;
 
     match windows_registry::audit_registry_value(target_path, value_name, &policy.expected_state) {
         Ok(compliant) => {
@@ -439,8 +569,6 @@ fn audit_registry_key(policy: &FullPolicy) -> Result<AuditResult, String> {
 
 #[cfg(target_os = "windows")]
 fn audit_service_status(policy: &FullPolicy) -> Result<AuditResult, String> {
-    use std::process::Command;
-
     log::info!(
         "[policy:{}] Audit start: check_type=service_status",
         policy.id
@@ -941,25 +1069,14 @@ fn remediate_local_policy(policy: &FullPolicy) -> Result<RemediateResult, String
         .to_str()
         .ok_or_else(|| "Failed to get temp path".to_string())?;
 
-    match windows_secedit::export_secedit_cfg(temp_cfg_path) {
-        Ok(_) => {
-            // Read the exported configuration
-            let cfg_content = std::fs::read_to_string(temp_cfg_path)
-                .map_err(|e| format!("Failed to read secedit config: {}", e))?;
-
+    match windows_secedit::export_secedit_cfg() {
+        Ok(cfg_content) => {
             // Update the configuration
             match windows_secedit::update_secedit_cfg(&cfg_content, policy_name, &value_str) {
                 Ok(updated_cfg) => {
-                    // Write the updated configuration back
-                    std::fs::write(temp_cfg_path, updated_cfg)
-                        .map_err(|e| format!("Failed to write secedit config: {}", e))?;
-
                     // Apply the configuration
-                    match windows_secedit::apply_secedit_cfg(temp_cfg_path) {
+                    match windows_secedit::apply_secedit_cfg(&updated_cfg) {
                         Ok(_) => {
-                            // Clean up temp file
-                            let _ = std::fs::remove_file(temp_cfg_path);
-
                             log::info!(
                                 "[policy:{}] Remediate success: set {} to {}",
                                 policy.id,
@@ -1061,9 +1178,9 @@ fn remediate_registry_set(policy: &FullPolicy) -> Result<RemediateResult, String
         .ok_or_else(|| format!("No target_path for policy {}", policy.id))?;
 
     let value_name = policy
-        .policy_name
+        .value_name
         .as_ref()
-        .ok_or_else(|| format!("No policy_name for policy {}", policy.id))?;
+        .ok_or_else(|| format!("No value_name for policy {}", policy.id))?;
 
     let set_value = policy
         .set_value
@@ -1116,8 +1233,6 @@ fn remediate_registry_set(policy: &FullPolicy) -> Result<RemediateResult, String
 
 #[cfg(target_os = "windows")]
 fn remediate_service_disable(policy: &FullPolicy) -> Result<RemediateResult, String> {
-    use std::process::Command;
-
     log::info!(
         "[policy:{}] Remediate start: remediate_type=service_disable",
         policy.id
@@ -1595,6 +1710,8 @@ pub fn run() {
             audit_all_policies,
             remediate_policy,
             remediate_all_policies,
+            rollback_policy,
+            rollback_all,
             get_system_info
         ])
         .run(tauri::generate_context!())

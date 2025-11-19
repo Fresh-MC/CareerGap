@@ -2,6 +2,7 @@
 
 // Week 1 Security Primitives
 pub mod policy_parser;
+pub mod privilege;
 pub mod secure_workspace;
 pub mod self_check;
 pub mod signing;

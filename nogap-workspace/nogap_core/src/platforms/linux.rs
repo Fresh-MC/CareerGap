@@ -56,6 +56,15 @@ pub fn audit_policy(policy: &Policy) -> Result<AuditResult, Box<dyn Error>> {
 }
 
 pub fn remediate_policy(policy: &Policy) -> Result<RemediateResult, Box<dyn Error>> {
+    // Ensure root privileges on Linux
+    #[cfg(target_os = "linux")]
+    {
+        use crate::privilege::ensure_root;
+        if let Err(e) = ensure_root() {
+            return Ok(RemediateResult::Failed(e));
+        }
+    }
+
     match policy.check_type.as_str() {
         "file_regex" => remediate_file_replace(policy),
         "sysctl" => {

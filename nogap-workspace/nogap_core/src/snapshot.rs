@@ -1,4 +1,5 @@
 use rusqlite::{params, Connection, Result};
+use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -63,12 +64,20 @@ impl Default for SnapshotDiff {
     }
 }
 
+/// Rollback state for a policy
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RollbackState {
+    pub policy_id: String,
+    pub value: Value,
+}
+
 /// Initializes the snapshot database with required schema
 pub fn init_db() -> Result<Connection> {
     let conn = Connection::open("snapshots.db")?;
     conn.execute(
         "CREATE TABLE IF NOT EXISTS snapshots (
             id INTEGER PRIMARY KEY,
+            policy_id TEXT,
             timestamp INTEGER,
             description TEXT,
             before_state TEXT,
@@ -84,19 +93,20 @@ pub fn init_db() -> Result<Connection> {
 ///
 /// # Arguments
 /// * `conn` - Database connection
+/// * `policy_id` - Policy identifier (optional for backwards compatibility)
 /// * `desc` - Description of the operation
 /// * `before` - State before the operation
 /// * `after` - State after the operation
-pub fn save_snapshot(conn: &Connection, desc: &str, before: &str, after: &str) -> Result<()> {
+pub fn save_snapshot(conn: &Connection, policy_id: Option<&str>, desc: &str, before: &str, after: &str) -> Result<()> {
     let ts = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs();
 
     conn.execute(
-        "INSERT INTO snapshots (timestamp, description, before_state, after_state)
-         VALUES (?1, ?2, ?3, ?4)",
-        params![ts, desc, before, after],
+        "INSERT INTO snapshots (policy_id, timestamp, description, before_state, after_state)
+         VALUES (?1, ?2, ?3, ?4, ?5)",
+        params![policy_id, ts, desc, before, after],
     )?;
 
     println!("📸 Snapshot saved: {}", desc);
@@ -135,6 +145,54 @@ pub fn rollback_snapshot(conn: &Connection, id: i64) -> Result<()> {
     println!("   Timestamp: {}", timestamp);
     println!("   Restoring state: {}", before_state);
     Ok(())
+}
+
+/// Saves a rollback state for a specific policy
+///
+/// # Arguments
+/// * `conn` - Database connection
+/// * `policy_id` - Policy identifier
+/// * `before_state_json` - JSON representation of state before remediation
+pub fn save_rollback(conn: &Connection, policy_id: &str, before_state_json: &str) -> Result<()> {
+    let ts = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+
+    conn.execute(
+        "INSERT INTO snapshots (policy_id, timestamp, description, before_state, after_state)
+         VALUES (?1, ?2, ?3, ?4, ?5)",
+        params![policy_id, ts, format!("Rollback point for {}", policy_id), before_state_json, ""],
+    )?;
+
+    Ok(())
+}
+
+/// Loads the last rollback snapshot for a specific policy
+///
+/// # Arguments
+/// * `conn` - Database connection
+/// * `policy_id` - Policy identifier
+///
+/// # Returns
+/// `Some(RollbackState)` if found, `None` otherwise
+pub fn load_last_snapshot(conn: &Connection, policy_id: &str) -> Option<RollbackState> {
+    let mut stmt = conn.prepare(
+        "SELECT policy_id, before_state FROM snapshots 
+         WHERE policy_id = ?1 AND before_state != '' 
+         ORDER BY timestamp DESC LIMIT 1"
+    ).ok()?;
+
+    stmt.query_row(params![policy_id], |row| {
+        let pid: String = row.get(0)?;
+        let before_json: String = row.get(1)?;
+        let value: Value = serde_json::from_str(&before_json).unwrap_or(Value::Null);
+        
+        Ok(RollbackState {
+            policy_id: pid,
+            value,
+        })
+    }).ok()
 }
 
 /// Compares two snapshots and produces a structured diff
@@ -230,7 +288,7 @@ mod tests {
     fn test_save_and_retrieve_snapshot() {
         let conn = init_db().unwrap();
 
-        let result = save_snapshot(&conn, "Test operation", "state_before", "state_after");
+        let result = save_snapshot(&conn, Some("TEST.1"), "Test operation", "state_before", "state_after");
         assert!(result.is_ok());
 
         let snapshots = list_snapshots(&conn).unwrap();
@@ -249,7 +307,7 @@ mod tests {
     #[test]
     fn test_rollback_snapshot() {
         let conn = init_db().unwrap();
-        save_snapshot(&conn, "Test", "before", "after").unwrap();
+        save_snapshot(&conn, Some("TEST.1"), "Test", "before", "after").unwrap();
 
         let snapshots = list_snapshots(&conn).unwrap();
         let (id, _, _) = snapshots[0];
@@ -266,8 +324,8 @@ mod tests {
         let state1 = r#"{"key1": "value1", "key2": "value2"}"#;
         let state2 = r#"{"key1": "modified", "key3": "new"}"#;
 
-        save_snapshot(&conn, "Snapshot 1", "{}", state1).unwrap();
-        save_snapshot(&conn, "Snapshot 2", "{}", state2).unwrap();
+        save_snapshot(&conn, Some("TEST.1"), "Snapshot 1", "{}", state1).unwrap();
+        save_snapshot(&conn, Some("TEST.2"), "Snapshot 2", "{}", state2).unwrap();
 
         let snapshots = list_snapshots(&conn).unwrap();
         let id1 = snapshots[1].0; // older
@@ -292,7 +350,7 @@ mod tests {
         let before = r#"{"config": "old", "setting": "value"}"#;
         let after = r#"{"config": "new", "feature": "enabled"}"#;
 
-        save_snapshot(&conn, "Config change", before, after).unwrap();
+        save_snapshot(&conn, Some("TEST.1"), "Config change", before, after).unwrap();
 
         let snapshots = list_snapshots(&conn).unwrap();
         let id = snapshots[0].0;

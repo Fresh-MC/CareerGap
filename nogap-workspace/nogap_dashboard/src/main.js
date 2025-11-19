@@ -9,6 +9,8 @@ let filteredPolicies = [];
 let loadPoliciesBtn;
 let auditAllBtn;
 let remediateAllBtn;
+let rollbackAllBtn;
+let rollbackOneBtn;
 let policiesContainer;
 let loadingEl;
 let searchInput;
@@ -32,6 +34,8 @@ function initializeElements() {
   loadPoliciesBtn = document.getElementById("load-policies-btn");
   auditAllBtn = document.getElementById("audit-all-btn");
   remediateAllBtn = document.getElementById("remediate-all-btn");
+  rollbackAllBtn = document.getElementById("rollbackAllBtn");
+  rollbackOneBtn = document.getElementById("rollbackOneBtn");
   policiesContainer = document.getElementById("policies-container");
   loadingEl = document.getElementById("loading");
   searchInput = document.getElementById("search-input");
@@ -49,6 +53,7 @@ function attachEventListeners() {
   loadPoliciesBtn.addEventListener("click", loadPolicies);
   auditAllBtn.addEventListener("click", auditAllPolicies);
   remediateAllBtn.addEventListener("click", remediateAllPolicies);
+  rollbackAllBtn.addEventListener("click", rollbackAll);
   searchInput.addEventListener("input", applyFilters);
   platformFilter.addEventListener("change", applyFilters);
   severityFilter.addEventListener("change", applyFilters);
@@ -79,6 +84,7 @@ async function loadPolicies() {
     updatePolicyCount();
     auditAllBtn.disabled = false;
     remediateAllBtn.disabled = false;
+    rollbackAllBtn.disabled = false;
     showNotification("Policies loaded successfully", "success");
   } catch (error) {
     showNotification(`Failed to load policies: ${error}`, "error");
@@ -259,8 +265,13 @@ function showPolicyDetails(policyId) {
         <div class="detail-row"><strong>Status:</strong> ${audit.compliant ? 'Compliant ✓' : 'Non-Compliant ✗'}</div>
         <div class="detail-row"><strong>Message:</strong> ${audit.message}</div>
       ` : '<div class="detail-row"><strong>Status:</strong> Not audited yet</div>'}
+      <div id="rollback-result" class="rollback-result"></div>
     </div>
   `;
+
+  // Show rollback button and attach handler
+  rollbackOneBtn.style.display = "block";
+  rollbackOneBtn.onclick = () => rollbackPolicy(policy.id);
 
   modal.style.display = "block";
 }
@@ -307,7 +318,99 @@ function showNotification(message, type = "info") {
   }, 3000);
 }
 
+// Rollback functions
+async function rollbackPolicy(policyId) {
+  if (!confirm(`Are you sure you want to rollback policy ${policyId}? This will restore the previous state.`)) {
+    return;
+  }
+  showLoading(true);
+  try {
+    const result = await invoke("rollback_policy", { policyId });
+    const resultDiv = document.getElementById("rollback-result");
+    
+    if (result.success) {
+      if (resultDiv) {
+        resultDiv.innerHTML = `<p class="rollback-success">✓ ${result.message}</p>`;
+      }
+      showNotification(`Policy ${policyId} rolled back successfully`, "success");
+      // Re-audit this policy
+      await auditPolicy(policyId);
+    } else {
+      if (resultDiv) {
+        resultDiv.innerHTML = `<p class="rollback-failed">✗ ${result.message}</p>`;
+      }
+      showNotification(`Rollback failed: ${result.message}`, "error");
+    }
+  } catch (error) {
+    const resultDiv = document.getElementById("rollback-result");
+    if (resultDiv) {
+      resultDiv.innerHTML = `<p class="rollback-failed">✗ ${error}</p>`;
+    }
+    showNotification(`Rollback failed: ${error}`, "error");
+    console.error("Error rolling back policy:", error);
+  }
+  showLoading(false);
+}
+
+async function rollbackAll() {
+  if (!confirm("Are you sure you want to rollback all recent changes? This will restore previous states for all modified policies.")) {
+    return;
+  }
+  showLoading(true);
+  try {
+    const results = await invoke("rollback_all");
+    let successCount = 0;
+    let failedPolicies = [];
+    
+    results.forEach(result => {
+      if (result.success) {
+        successCount++;
+      } else {
+        failedPolicies.push(result.policy_id);
+      }
+    });
+    
+    let message = `Rollback complete: ${successCount}/${results.length} policies restored`;
+    if (failedPolicies.length > 0) {
+      message += `\nFailed: ${failedPolicies.join(", ")}`;
+    }
+    
+    // Show detailed modal with results
+    const modalTitle = document.getElementById("modal-title");
+    const modalBody = document.getElementById("modal-body");
+    
+    modalTitle.textContent = "Rollback Summary";
+    modalBody.innerHTML = `
+      <div class="rollback-summary">
+        <p><strong>Total Policies:</strong> ${results.length}</p>
+        <p><strong>Successfully Rolled Back:</strong> ${successCount}</p>
+        <p><strong>Failed:</strong> ${failedPolicies.length}</p>
+        <div class="rollback-details">
+          ${results.map(r => `
+            <div class="detail-row ${r.success ? 'rollback-success' : 'rollback-failed'}">
+              <strong>${r.policy_id}:</strong> ${r.message}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    rollbackOneBtn.style.display = "none";
+    modal.style.display = "block";
+    
+    showNotification(message, successCount === results.length ? "success" : "warning");
+    
+    // Re-audit all policies
+    await auditAllPolicies();
+  } catch (error) {
+    showNotification(`Rollback failed: ${error}`, "error");
+    console.error("Error rolling back all policies:", error);
+  }
+  showLoading(false);
+}
+
 // Make functions global for onclick handlers
 window.auditPolicy = auditPolicy;
 window.remediatePolicy = remediatePolicy;
 window.showPolicyDetails = showPolicyDetails;
+window.rollbackPolicy = rollbackPolicy;
+window.rollbackAll = rollbackAll;
