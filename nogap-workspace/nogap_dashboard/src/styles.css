@@ -1,112 +1,485 @@
-.logo.vanilla:hover {
-  filter: drop-shadow(0 0 2em #ffe21c);
-}
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-.container {
+* {
   margin: 0;
-  padding-top: 10vh;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary: #3b82f6;
+  --secondary: #6366f1;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --danger: #dc2626;
+  --info: #06b6d4;
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border: #475569;
+  --shadow: rgba(0, 0, 0, 0.3);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+.app {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
+/* Header */
+.header {
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+  padding: 1.5rem 2rem;
+  border-bottom: 2px solid var(--border);
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 6px var(--shadow);
+}
+
+.header-content h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.system-info {
+  background: var(--bg-primary);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.status-summary {
+  margin-left: auto;
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* Filter Bar */
+.filter-bar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-bar input,
+.filter-bar select {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: white;
+  box-shadow: 0 2px 4px var(--shadow);
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px var(--shadow);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary { background-color: var(--primary); }
+.btn-secondary { background-color: var(--secondary); }
+.btn-success { background-color: var(--success); }
+.btn-danger { background-color: var(--danger); }
+.btn-info { background-color: var(--info); }
+
+.btn-small {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+}
+
+/* Input Fields */
+input[type="text"],
+select {
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input[type="text"]:focus,
+select:focus {
+  border-color: var(--primary);
+}
+
+/* Loading */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  gap: 1rem;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--bg-tertiary);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Policies Container */
+.policies-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 1.5rem;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-muted);
+  font-size: 1.125rem;
+}
+
+/* Policy Card */
+.policy-card {
+  background-color: var(--bg-secondary);
+  border: 2px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px var(--shadow);
+}
+
+.policy-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.policy-card.compliant {
+  border-left: 4px solid var(--success);
+}
+
+.policy-card.non-compliant {
+  border-left: 4px solid var(--error);
+}
+
+.policy-card.pending {
+  border-left: 4px solid var(--warning);
+}
+
+.policy-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.policy-title-section h3 {
+  font-size: 1.125rem;
+  margin-bottom: 0.25rem;
+  color: var(--text-primary);
+}
+
+.policy-id {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: 'Courier New', monospace;
+}
+
+.policy-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.badge {
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-platform {
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.badge-status {
+  font-weight: 700;
+}
+
+.badge-status.compliant {
+  background-color: var(--success);
+  color: white;
+}
+
+.badge-status.non-compliant {
+  background-color: var(--error);
+  color: white;
+}
+
+.badge-status.pending {
+  background-color: var(--warning);
+  color: white;
+}
+
+.severity-critical {
+  background-color: var(--danger);
+  color: white;
+}
+
+.severity-high {
+  background-color: var(--error);
+  color: white;
+}
+
+.severity-medium {
+  background-color: var(--warning);
+  color: white;
+}
+
+.severity-low {
+  background-color: var(--info);
+  color: white;
+}
+
+.policy-description {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+}
+
+.audit-message {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-style: italic;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background-color: var(--bg-tertiary);
+  border-radius: 0.375rem;
+}
+
+.policy-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Compliance Status */
+.compliance-success {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.compliance-warning {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.compliance-error {
+  color: var(--error);
+  font-weight: 600;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
   justify-content: center;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+.modal-content {
+  background-color: var(--bg-secondary);
+  padding: 2rem;
+  border-radius: 0.75rem;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 10px 40px var(--shadow);
 }
 
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
-
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
+.close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--text-muted);
   cursor: pointer;
+  line-height: 1;
 }
 
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
+.close:hover {
+  color: var(--text-primary);
 }
 
-input,
-button {
-  outline: none;
+.policy-details {
+  margin-top: 1.5rem;
 }
 
-#greet-input {
-  margin-right: 5px;
+.detail-row {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-row strong {
+  color: var(--text-primary);
+  margin-right: 0.5rem;
+}
+
+/* Footer */
+.footer {
+  background-color: var(--bg-secondary);
+  padding: 1rem 2rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  border-top: 1px solid var(--border);
+}
+
+/* Notifications */
+.notification {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  padding: 1rem 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px var(--shadow);
+  font-weight: 600;
+  opacity: 0;
+  transform: translateX(400px);
+  transition: all 0.3s;
+  z-index: 2000;
+  max-width: 400px;
+}
+
+.notification.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.notification-success {
+  background-color: var(--success);
+  color: white;
+}
+
+.notification-error {
+  background-color: var(--error);
+  color: white;
+}
+
+.notification-warning {
+  background-color: var(--warning);
+  color: white;
+}
+
+.notification-info {
+  background-color: var(--info);
+  color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
-
-  a:hover {
-    color: #24c8db;
+  
+  .controls {
+    flex-direction: column;
   }
-
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
+  
+  .status-summary {
+    margin-left: 0;
+    flex-direction: column;
   }
-  button:active {
-    background-color: #0f0f0f69;
+  
+  .policies-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .notification {
+    right: 1rem;
+    left: 1rem;
+    max-width: none;
   }
 }

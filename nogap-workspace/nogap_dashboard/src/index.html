@@ -4,36 +4,79 @@
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="styles.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tauri App</title>
+    <title>NoGap Dashboard - Security Policy Management</title>
     <script type="module" src="/main.js" defer></script>
   </head>
 
   <body>
-    <main class="container">
-      <h1>Welcome to Tauri</h1>
+    <div class="app">
+      <header class="header">
+        <div class="header-content">
+          <h1>🛡️ NoGap Dashboard</h1>
+          <p class="subtitle">Security Policy Audit & Remediation</p>
+        </div>
+        <div class="system-info">
+          <span id="system-info">Loading...</span>
+        </div>
+      </header>
 
-      <div class="row">
-        <a href="https://tauri.app" target="_blank">
-          <img src="/assets/tauri.svg" class="logo tauri" alt="Tauri logo" />
-        </a>
-        <a
-          href="https://developer.mozilla.org/en-US/docs/Web/JavaScript"
-          target="_blank"
-        >
-          <img
-            src="/assets/javascript.svg"
-            class="logo vanilla"
-            alt="JavaScript logo"
-          />
-        </a>
+      <main class="main-content">
+        <div class="controls">
+          <button id="load-policies-btn" class="btn btn-primary">Load Policies</button>
+          <button id="audit-all-btn" class="btn btn-secondary" disabled>Audit All Policies</button>
+          <button id="remediate-all-btn" class="btn btn-danger" disabled>Remediate All Policies</button>
+          <div class="status-summary">
+            <span id="policy-count">0 policies loaded</span>
+            <span id="compliance-status"></span>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <input type="text" id="search-input" placeholder="Search policies..." />
+          <select id="platform-filter">
+            <option value="all">All Platforms</option>
+            <option value="windows">Windows</option>
+            <option value="linux">Linux</option>
+          </select>
+          <select id="severity-filter">
+            <option value="all">All Severities</option>
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+          <select id="status-filter">
+            <option value="all">All Status</option>
+            <option value="compliant">Compliant</option>
+            <option value="non-compliant">Non-Compliant</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+          <div class="spinner"></div>
+          <p>Processing...</p>
+        </div>
+
+        <div id="policies-container" class="policies-container">
+          <div class="empty-state">
+            <p>Click "Load Policies" to begin</p>
+          </div>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <p>NoGap Security Policy Manager | Built with Tauri & Rust</p>
+      </footer>
+    </div>
+
+    <!-- Policy Detail Modal -->
+    <div id="policy-modal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="modal-title"></h2>
+        <div id="modal-body"></div>
       </div>
-      <p>Click on the Tauri logo to learn more about the framework</p>
-
-      <form class="row" id="greet-form">
-        <input id="greet-input" placeholder="Enter a name..." />
-        <button type="submit">Greet</button>
-      </form>
-      <p id="greet-msg"></p>
-    </main>
+    </div>
   </body>
 </html>
