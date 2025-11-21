@@ -21,6 +21,7 @@ pub struct TableWidget<'a> {
     total_rows: usize,
     title: &'a str,
     high_contrast: bool,
+    scroll_offset: usize,
 }
 
 impl<'a> TableWidget<'a> {
@@ -33,6 +34,7 @@ impl<'a> TableWidget<'a> {
             total_rows: 0,
             title,
             high_contrast: false,
+            scroll_offset: 0,
         }
     }
 
@@ -88,12 +90,30 @@ impl<'a> Widget for TableWidget<'a> {
             .map(|h| Span::styled(*h, Style::default().fg(accent).add_modifier(Modifier::BOLD)));
         let header = Row::new(header_cells).height(1);
 
-        let rows: Vec<Row> = self
+        // Calculate viewport: how many rows can fit on screen
+        let viewport_height = area.height.saturating_sub(3).max(1) as usize; // Minus borders and header
+        
+        // Calculate scroll offset to keep selected item visible
+        let offset = if self.rows.is_empty() || viewport_height == 0 {
+            0
+        } else if self.selected < viewport_height {
+            // Selection is in first page, show from beginning
+            0
+        } else {
+            // Scroll just enough to keep selection visible at bottom
+            (self.selected + 1).saturating_sub(viewport_height)
+        };
+
+        // Only render visible rows, marking the selected one
+        let visible_rows: Vec<Row> = self
             .rows
             .iter()
             .enumerate()
-            .map(|(i, row)| {
-                let style = if i == self.selected {
+            .skip(offset)
+            .take(viewport_height)
+            .map(|(absolute_idx, row)| {
+                // Check if this absolute index matches the selected index
+                let style = if absolute_idx == self.selected {
                     Style::default()
                         .bg(accent)
                         .fg(Color::Black)
@@ -105,7 +125,7 @@ impl<'a> Widget for TableWidget<'a> {
             })
             .collect();
 
-        let table = Table::new(rows, self.widths.iter().copied())
+        let table = Table::new(visible_rows, self.widths.iter().copied())
             .header(header)
             .block(block);
 
@@ -138,9 +158,11 @@ impl<'a> TableWidget<'a> {
             return;
         }
 
-        let scroll_position =
-            (self.selected as f32 / self.total_rows.max(1) as f32 * scrollbar_height as f32) as u16;
-        let thumb_y = scrollbar_start + scroll_position.min(scrollbar_height.saturating_sub(1));
+        // Calculate thumb position based on selected item and total rows
+        // This ensures the thumb moves proportionally through the entire list
+        let scroll_ratio = self.selected as f32 / self.total_rows.saturating_sub(1).max(1) as f32;
+        let scroll_position = (scroll_ratio * scrollbar_height.saturating_sub(1) as f32) as u16;
+        let thumb_y = scrollbar_start + scroll_position;
 
         let scrollbar_color = if self.high_contrast {
             Color::White

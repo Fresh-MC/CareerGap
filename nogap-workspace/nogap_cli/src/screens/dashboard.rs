@@ -46,13 +46,26 @@ pub struct PolicyFilter {
 
 impl Default for PolicyFilter {
     fn default() -> Self {
+        // Default to showing only current OS policies
+        #[cfg(target_os = "windows")]
+        let (show_windows, show_linux, show_macos) = (true, false, false);
+        
+        #[cfg(target_os = "linux")]
+        let (show_windows, show_linux, show_macos) = (false, true, false);
+        
+        #[cfg(target_os = "macos")]
+        let (show_windows, show_linux, show_macos) = (false, false, true);
+        
+        #[cfg(not(any(target_os = "windows", target_os = "linux", target_os = "macos")))]
+        let (show_windows, show_linux, show_macos) = (true, true, true);
+        
         Self {
             severity_high: true,
             severity_medium: true,
             severity_low: true,
-            platform_windows: true,
-            platform_linux: true,
-            platform_macos: true,
+            platform_windows: show_windows,
+            platform_linux: show_linux,
+            platform_macos: show_macos,
         }
     }
 }

@@ -64,26 +64,3 @@ mod tests {
         }
     }
 }
-mod tests {
-
-    #[test]
-    fn test_privilege_check_exists() {
-        #[cfg(target_os = "windows")]
-        {
-            // Just verify the function exists and returns a Result
-            let _ = ensure_admin();
-        }
-
-        #[cfg(target_os = "linux")]
-        {
-            // Just verify the function exists and returns a Result
-            let _ = ensure_root();
-        }
-
-        #[cfg(not(any(target_os = "windows", target_os = "linux")))]
-        {
-            // Should always return Ok on unsupported OS
-            assert!(ensure_privs().is_ok());
-        }
-    }
-}

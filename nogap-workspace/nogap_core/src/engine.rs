@@ -1030,12 +1030,12 @@ impl PolicyStateProvider for DefaultPolicyStateProvider {
                 }
             }
             "file_content" | "file_permissions" => {
-                let target_file = policy.target_file.as_ref()
+                let _target_file = policy.target_file.as_ref()
                     .ok_or("target_file required for file check")?;
                 
                 #[cfg(not(target_os = "windows"))]
                 {
-                    platform_helpers::export_file_state(target_file, policy.check_type.as_str())
+                    platform_helpers::export_file_state(_target_file, policy.check_type.as_str())
                 }
                 #[cfg(target_os = "windows")]
                 {
@@ -1108,12 +1108,12 @@ impl PolicyStateProvider for DefaultPolicyStateProvider {
                 }
             }
             "file_content" | "file_permissions" => {
-                let target_file = policy.target_file.as_ref()
+                let _target_file = policy.target_file.as_ref()
                     .ok_or("target_file required for file check")?;
                 
                 #[cfg(not(target_os = "windows"))]
                 {
-                    platform_helpers::apply_file_state(target_file, policy.check_type.as_str(), &state)
+                    platform_helpers::apply_file_state(_target_file, policy.check_type.as_str(), &state)
                 }
                 #[cfg(target_os = "windows")]
                 {
