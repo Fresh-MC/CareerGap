@@ -22,6 +22,13 @@ let complianceStatusEl;
 let systemInfoEl;
 let modal;
 let modalClose;
+let generateReportBtn;
+let exportCsvBtn;
+let reportModal;
+let reportModalClose;
+let reportPreviewFrame;
+let exportPdfBtn;
+let currentReportPath = null;
 
 // Initialize app
 window.addEventListener("DOMContentLoaded", async () => {
@@ -47,6 +54,12 @@ function initializeElements() {
   systemInfoEl = document.getElementById("system-info");
   modal = document.getElementById("policy-modal");
   modalClose = document.querySelector(".close");
+  generateReportBtn = document.getElementById("generate-report-btn");
+  exportCsvBtn = document.getElementById("export-csv-btn");
+  reportModal = document.getElementById("report-modal");
+  reportModalClose = document.querySelector(".report-close");
+  reportPreviewFrame = document.getElementById("report-preview-frame");
+  exportPdfBtn = document.getElementById("export-pdf-btn");
 }
 
 function attachEventListeners() {
@@ -59,8 +72,21 @@ function attachEventListeners() {
   severityFilter.addEventListener("change", applyFilters);
   statusFilter.addEventListener("change", applyFilters);
   modalClose.addEventListener("click", closeModal);
+  if (reportModalClose) {
+    reportModalClose.addEventListener("click", closeReportModal);
+  }
+  if (generateReportBtn) {
+    generateReportBtn.addEventListener("click", generateReport);
+  }
+  if (exportCsvBtn) {
+    exportCsvBtn.addEventListener("click", exportCsvReport);
+  }
+  if (exportPdfBtn) {
+    exportPdfBtn.addEventListener("click", exportReportToPdf);
+  }
   window.addEventListener("click", (e) => {
     if (e.target === modal) closeModal();
+    if (e.target === reportModal) closeReportModal();
   });
 }
 
@@ -408,9 +434,212 @@ async function rollbackAll() {
   showLoading(false);
 }
 
+// Report generation helper functions
+function extractComplianceStats(audited) {
+  const total = audited.length;
+  const pass = audited.filter(a => a.compliant).length;
+  const fail = total - pass;
+  return { total, pass, fail };
+}
+
+function extractPlatformScores(audited) {
+  const windowsPolicies = audited.filter(a => {
+    const policy = policies.find(p => p.id === a.policy_id);
+    return policy && policy.platform.toLowerCase() === 'windows';
+  });
+  const linuxPolicies = audited.filter(a => {
+    const policy = policies.find(p => p.id === a.policy_id);
+    return policy && policy.platform.toLowerCase() === 'linux';
+  });
+
+  const windowsScore = windowsPolicies.length > 0
+    ? (windowsPolicies.filter(a => a.compliant).length / windowsPolicies.length) * 100
+    : 0;
+  const linuxScore = linuxPolicies.length > 0
+    ? (linuxPolicies.filter(a => a.compliant).length / linuxPolicies.length) * 100
+    : 0;
+
+  return { windowsScore, linuxScore };
+}
+
+function openReportPreviewModal(htmlPath) {
+  currentReportPath = htmlPath;
+  if (reportModal && reportPreviewFrame) {
+    // Convert file path to file:// URL for iframe
+    const fileUrl = htmlPath.startsWith('file://') ? htmlPath : `file://${htmlPath}`;
+    reportPreviewFrame.src = fileUrl;
+    reportModal.style.display = "block";
+    if (exportPdfBtn) {
+      exportPdfBtn.disabled = false;
+    }
+  }
+}
+
+function closeReportModal() {
+  if (reportModal) {
+    reportModal.style.display = "none";
+  }
+  if (reportPreviewFrame) {
+    reportPreviewFrame.src = "";
+  }
+  currentReportPath = null;
+}
+
+async function generateReport() {
+  // Check if we have audit results
+  const auditedResults = Object.values(auditResults);
+  if (auditedResults.length === 0) {
+    showNotification("Please run an audit before generating a report", "warning");
+    return;
+  }
+
+  showLoading(true);
+  try {
+    // Prepare policy reports from audit results
+    const policyReports = auditedResults.map(audit => {
+      const policy = policies.find(p => p.id === audit.policy_id);
+      return {
+        policy_id: audit.policy_id,
+        title: policy ? policy.title : audit.policy_id,
+        status: audit.compliant ? "pass" : "fail"
+      };
+    });
+
+    // Extract compliance statistics
+    const { total, pass, fail } = extractComplianceStats(auditedResults);
+    const { windowsScore, linuxScore } = extractPlatformScores(auditedResults);
+
+    // Get current timestamp
+    const timestamp = new Date().toISOString();
+
+    // Call backend to generate HTML report
+    const htmlPath = await invoke("generate_html_report", {
+      policies: policyReports,
+      total,
+      pass,
+      fail,
+      windowsScore,
+      linuxScore,
+      timestamp
+    });
+
+    showNotification("Report generated successfully", "success");
+    
+    // Open preview modal
+    openReportPreviewModal(htmlPath);
+  } catch (error) {
+    showNotification(`Failed to generate report: ${error}`, "error");
+    console.error("Error generating report:", error);
+  }
+  showLoading(false);
+}
+
+async function exportReportToPdf() {
+  if (!currentReportPath) {
+    showNotification("No report available to export", "warning");
+    return;
+  }
+
+  showLoading(true);
+  try {
+    // Call backend to prepare PDF export
+    const htmlPath = await invoke("export_pdf", {
+      htmlPath: currentReportPath
+    });
+
+    // Open the HTML in a new window for user to print to PDF
+    // This uses the browser's native print-to-PDF functionality
+    const fileUrl = htmlPath.startsWith('file://') ? htmlPath : `file://${htmlPath}`;
+    
+    // Create a hidden window and trigger print dialog
+    const printWindow = window.open(fileUrl, '_blank');
+    if (printWindow) {
+      printWindow.addEventListener('load', () => {
+        setTimeout(() => {
+          printWindow.print();
+        }, 500);
+      });
+      showNotification("Opening print dialog for PDF export...", "success");
+    } else {
+      showNotification("Please allow popups to export PDF", "warning");
+    }
+  } catch (error) {
+    showNotification(`Failed to export PDF: ${error}`, "error");
+    console.error("Error exporting PDF:", error);
+  }
+  showLoading(false);
+}
+
+async function exportCsvReport() {
+  // Check if we have audit results
+  const auditedResults = Object.values(auditResults);
+  if (auditedResults.length === 0) {
+    showNotification("Please run an audit before exporting CSV", "warning");
+    return;
+  }
+
+  showLoading(true);
+  try {
+    // Prepare policy reports from audit results
+    const policyReports = auditedResults.map(audit => {
+      const policy = policies.find(p => p.id === audit.policy_id);
+      return {
+        policy_id: audit.policy_id,
+        title: policy ? policy.title : audit.policy_id,
+        status: audit.compliant ? "pass" : "fail"
+      };
+    });
+
+    // Extract compliance statistics
+    const { total, pass, fail } = extractComplianceStats(auditedResults);
+
+    // Get current timestamp
+    const timestamp = new Date().toISOString();
+
+    // Call backend to generate CSV report
+    const csvPath = await invoke("generate_csv_report", {
+      policies: policyReports,
+      total,
+      pass,
+      fail,
+      timestamp
+    });
+
+    // Download the CSV file using browser API
+    const fileUrl = csvPath.startsWith('file://') ? csvPath : `file://${csvPath}`;
+    
+    // Fetch the file as a blob
+    const response = await fetch(fileUrl);
+    const blob = await response.blob();
+    
+    // Create object URL for download
+    const objectUrl = URL.createObjectURL(blob);
+    
+    // Create temporary anchor element and trigger download
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = `nogap_report_${timestamp.replace(/[:.\-]/g, '_')}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    // Clean up object URL
+    URL.revokeObjectURL(objectUrl);
+    
+    showNotification("CSV report downloaded successfully", "success");
+  } catch (error) {
+    showNotification(`Failed to export CSV: ${error}`, "error");
+    console.error("Error exporting CSV:", error);
+  }
+  showLoading(false);
+}
+
 // Make functions global for onclick handlers
 window.auditPolicy = auditPolicy;
 window.remediatePolicy = remediatePolicy;
 window.showPolicyDetails = showPolicyDetails;
 window.rollbackPolicy = rollbackPolicy;
 window.rollbackAll = rollbackAll;
+window.generateReport = generateReport;
+window.exportCsvReport = exportCsvReport;
+window.exportReportToPdf = exportReportToPdf;

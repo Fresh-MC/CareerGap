@@ -34,7 +34,8 @@
       "icons/icon.ico"
     ],
     "resources": [
-      "assets/policies.yaml"
+      "assets/policies.yaml",
+      "reports/*"
     ],
     "copyright": "Copyright © 2025 NoGap Project",
     "category": "DeveloperTool",
