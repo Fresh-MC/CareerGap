@@ -4,6 +4,8 @@
 mod atomic;
 mod helpers;
 mod privilege;
+mod reporting;
+mod reporting_csv;
 mod utils;
 
 #[cfg(target_os = "windows")]
@@ -1712,7 +1714,10 @@ pub fn run() {
             remediate_all_policies,
             rollback_policy,
             rollback_all,
-            get_system_info
+            get_system_info,
+            reporting::generate_html_report,
+            reporting::export_pdf,
+            reporting_csv::generate_csv_report
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

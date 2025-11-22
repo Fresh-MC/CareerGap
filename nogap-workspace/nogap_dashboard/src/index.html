@@ -26,6 +26,8 @@
           <button id="audit-all-btn" class="btn btn-secondary" disabled>Audit All Policies</button>
           <button id="remediate-all-btn" class="btn btn-danger" disabled>Remediate All Policies</button>
           <button id="rollbackAllBtn" class="btn btn-warning" disabled>Rollback Last Change</button>
+          <button id="generate-report-btn" class="btn btn-success">📊 Generate Report</button>
+          <button id="export-csv-btn" class="btn btn-info">📄 Export CSV</button>
           <div class="status-summary">
             <span id="policy-count">0 policies loaded</span>
             <span id="compliance-status"></span>
@@ -79,6 +81,21 @@
         <div id="modal-body"></div>
         <div class="modal-actions">
           <button id="rollbackOneBtn" class="btn btn-warning btn-small" style="display: none;">Rollback This Policy</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Report Preview Modal -->
+    <div id="report-modal" class="modal" style="display: none;">
+      <div class="modal-content modal-content-large">
+        <span class="report-close">&times;</span>
+        <h2>📊 Compliance Report Preview</h2>
+        <div class="report-preview-container">
+          <iframe id="report-preview-frame" title="Report Preview"></iframe>
+        </div>
+        <div class="modal-actions">
+          <button id="export-pdf-btn" class="btn btn-success" disabled>🖨️ Export as PDF</button>
+          <button class="btn btn-secondary" onclick="closeReportModal()">Close</button>
         </div>
       </div>
     </div>
