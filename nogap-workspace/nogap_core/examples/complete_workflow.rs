@@ -109,7 +109,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     ];
 
     for (desc, before, after) in states {
-        snapshot::save_snapshot(&conn, desc, before, after)?;
+        snapshot::save_snapshot(&conn, None, desc, before, after)?;
     }
 
     let snapshots = snapshot::list_snapshots(&conn)?;

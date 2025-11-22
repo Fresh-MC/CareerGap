@@ -1,5 +1,4 @@
 use std::error::Error;
-use std::io::Write;
 
 /// Trait for abstracting secedit.exe operations to enable testing
 pub trait SeceditExecutor {

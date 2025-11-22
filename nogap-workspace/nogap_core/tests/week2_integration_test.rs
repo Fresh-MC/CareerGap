@@ -25,13 +25,13 @@ fn test_week2_complete_workflow() {
     // Save snapshot 1 with empty state
     let empty_state = r#"{}"#;
     let state1 = r#"{"system":"initial"}"#;
-    snapshot::save_snapshot(&conn, "test_snapshot_1", empty_state, state1)
+    snapshot::save_snapshot(&conn, None, "test_snapshot_1", empty_state, state1)
         .expect("Failed to save snapshot 1");
     println!("Saved snapshot 1 (initial state)");
 
     // Save snapshot 2 with modified state
     let state2 = r#"{"system":"modified","policy":"applied"}"#;
-    snapshot::save_snapshot(&conn, "test_snapshot_2", state1, state2)
+    snapshot::save_snapshot(&conn, None, "test_snapshot_2", state1, state2)
         .expect("Failed to save snapshot 2");
     println!("Saved snapshot 2 (modified state)");
 

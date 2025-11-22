@@ -21,7 +21,7 @@ pub struct TableWidget<'a> {
     total_rows: usize,
     title: &'a str,
     high_contrast: bool,
-    scroll_offset: usize,
+    _scroll_offset: usize,
 }
 
 impl<'a> TableWidget<'a> {
@@ -34,7 +34,7 @@ impl<'a> TableWidget<'a> {
             total_rows: 0,
             title,
             high_contrast: false,
-            scroll_offset: 0,
+            _scroll_offset: 0,
         }
     }
 
