@@ -15,6 +15,9 @@ pub mod auto_signer;
 pub mod engine;
 pub mod platforms;
 
+// Week 3+ Air-Gap Features
+pub mod ostree_lite;
+
 // Legacy API functions (preserved for backward compatibility)
 pub fn audit_system() -> String {
     "NoGap Audit: System scan complete. No vulnerabilities detected.".to_string()

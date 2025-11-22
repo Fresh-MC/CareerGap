@@ -7,6 +7,7 @@ mod privilege;
 mod reporting;
 mod reporting_csv;
 mod utils;
+mod commands_ostree;
 
 #[cfg(target_os = "windows")]
 mod windows_registry;
@@ -1717,7 +1718,11 @@ pub fn run() {
             get_system_info,
             reporting::generate_html_report,
             reporting::export_pdf,
-            reporting_csv::generate_csv_report
+            reporting_csv::generate_csv_report,
+            commands_ostree::cmd_scan_usb_repos,
+            commands_ostree::cmd_preview_repo,
+            commands_ostree::cmd_import_repo,
+            commands_ostree::cmd_export_commit
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

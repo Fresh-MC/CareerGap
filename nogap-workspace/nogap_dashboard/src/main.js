@@ -84,6 +84,13 @@ function attachEventListeners() {
   if (exportPdfBtn) {
     exportPdfBtn.addEventListener("click", exportReportToPdf);
   }
+  // USB Manager navigation
+  const usbManagerBtn = document.getElementById("usb-manager-btn");
+  if (usbManagerBtn) {
+    usbManagerBtn.addEventListener("click", () => {
+      window.location.href = "usb.html";
+    });
+  }
   window.addEventListener("click", (e) => {
     if (e.target === modal) closeModal();
     if (e.target === reportModal) closeReportModal();
