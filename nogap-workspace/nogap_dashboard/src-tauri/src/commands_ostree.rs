@@ -6,7 +6,7 @@ use nogap_core::ostree_lite::{
     install_manifest, export_commit_to_target, OstreeError
 };
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// Preview information for a USB repository before import
 #[derive(Debug, Serialize, Deserialize)]
@@ -250,4 +250,110 @@ pub async fn cmd_export_commit(
         message: format!("Export completed successfully: commit {}", commit_hash),
         applied_version: Some(commit_hash),
     })
+}
+
+/// List all mounted drives (for development/testing)
+///
+/// Returns all mounted drives/volumes without filtering for aegis_repo.
+/// This is useful for development where test USBs may be empty.
+///
+/// Platform-specific behavior:
+/// - Windows: Enumerates drive letters D: to Z:, includes DRIVE_REMOVABLE and DRIVE_FIXED
+/// - Linux: Lists subdirectories of /media and /run/media
+/// - macOS: Lists subdirectories of /Volumes
+///
+/// Returns only entries that exist and are directories.
+/// Permission errors are silently ignored.
+#[tauri::command]
+pub async fn cmd_list_all_drives() -> Result<Vec<String>, String> {
+    log::info!("Listing all mounted drives");
+    
+    let mut drives = Vec::new();
+    
+    #[cfg(target_os = "windows")]
+    {
+        use std::ffi::OsString;
+        use std::os::windows::ffi::OsStringExt;
+        
+        // Enumerate drive letters from D: to Z:
+        for letter in b'D'..=b'Z' {
+            let drive_path = format!("{}:\\", letter as char);
+            let drive_os_string: Vec<u16> = OsString::from(&drive_path)
+                .encode_wide()
+                .chain(std::iter::once(0))
+                .collect();
+            
+            unsafe {
+                let drive_type = windows_sys::Win32::Storage::FileSystem::GetDriveTypeW(
+                    drive_os_string.as_ptr()
+                );
+                
+                // Include DRIVE_REMOVABLE (2) and DRIVE_FIXED (3)
+                // DRIVE_UNKNOWN = 0, DRIVE_NO_ROOT_DIR = 1, DRIVE_CDROM = 5, etc.
+                if drive_type == 2 || drive_type == 3 {
+                    let path = PathBuf::from(&drive_path);
+                    if path.exists() && path.is_dir() {
+                        drives.push(drive_path);
+                        log::debug!("Found drive: {}", drive_path);
+                    }
+                }
+            }
+        }
+    }
+    
+    #[cfg(target_os = "linux")]
+    {
+        // Check /media
+        if let Ok(entries) = std::fs::read_dir("/media") {
+            for entry in entries.flatten() {
+                if let Ok(metadata) = entry.metadata() {
+                    if metadata.is_dir() {
+                        if let Ok(path) = entry.path().canonicalize() {
+                            drives.push(path.to_string_lossy().to_string());
+                            log::debug!("Found drive: {}", path.display());
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Check /run/media
+        if let Ok(entries) = std::fs::read_dir("/run/media") {
+            for entry in entries.flatten() {
+                // /run/media contains user directories, check subdirectories
+                if let Ok(user_entries) = std::fs::read_dir(entry.path()) {
+                    for user_entry in user_entries.flatten() {
+                        if let Ok(metadata) = user_entry.metadata() {
+                            if metadata.is_dir() {
+                                if let Ok(path) = user_entry.path().canonicalize() {
+                                    drives.push(path.to_string_lossy().to_string());
+                                    log::debug!("Found drive: {}", path.display());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    #[cfg(target_os = "macos")]
+    {
+        // Check /Volumes
+        if let Ok(entries) = std::fs::read_dir("/Volumes") {
+            for entry in entries.flatten() {
+                if let Ok(metadata) = entry.metadata() {
+                    if metadata.is_dir() {
+                        if let Ok(path) = entry.path().canonicalize() {
+                            drives.push(path.to_string_lossy().to_string());
+                            log::debug!("Found drive: {}", path.display());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    log::info!("Found {} drives", drives.len());
+    Ok(drives)
 }

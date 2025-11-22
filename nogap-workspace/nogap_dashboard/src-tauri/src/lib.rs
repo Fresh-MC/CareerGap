@@ -1722,7 +1722,8 @@ pub fn run() {
             commands_ostree::cmd_scan_usb_repos,
             commands_ostree::cmd_preview_repo,
             commands_ostree::cmd_import_repo,
-            commands_ostree::cmd_export_commit
+            commands_ostree::cmd_export_commit,
+            commands_ostree::cmd_list_all_drives
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

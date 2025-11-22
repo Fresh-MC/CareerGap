@@ -22,109 +22,178 @@
         }
 
         .container {
-            max-width: 700px;
+            max-width: 900px;
             width: 100%;
             background: white;
             border-radius: 16px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             padding: 40px;
-            text-align: center;
         }
 
         h1 {
             color: #667eea;
             margin-bottom: 10px;
             font-size: 2.5rem;
+            text-align: center;
         }
 
         .subtitle {
             color: #6c757d;
             margin-bottom: 30px;
             font-size: 1.1rem;
+            text-align: center;
         }
 
-        .status-box {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 30px;
-            margin: 30px 0;
-            min-height: 200px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+        h3 {
+            color: #495057;
+            margin: 25px 0 15px 0;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
         }
 
         .spinner {
-            width: 60px;
-            height: 60px;
-            border: 6px solid rgba(102, 126, 234, 0.2);
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(102, 126, 234, 0.2);
             border-top-color: #667eea;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 10px;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
-        .usb-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            animation: pulse 2s ease-in-out infinite;
+        .loading-container {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.1); }
+        #driveList {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
         }
 
-        .status-text {
+        .drive-item {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .drive-item:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .drive-item.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .drive-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .drive-icon {
+            font-size: 2rem;
+        }
+
+        .drive-path {
+            font-family: "Courier New", monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
             color: #495057;
-            font-size: 1.2rem;
-            margin-bottom: 10px;
+        }
+
+        .drive-status {
+            font-size: 0.9rem;
+            padding: 4px 12px;
+            border-radius: 20px;
             font-weight: 600;
         }
 
-        .status-detail {
-            color: #6c757d;
-            font-size: 0.95rem;
-            line-height: 1.6;
+        .drive-status.has-repo {
+            background: #d4edda;
+            color: #155724;
         }
 
-        .preview-info {
+        .drive-status.empty {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .preview-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 250px;
+        }
+
+        .preview-placeholder {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .preview-content {
             background: #282c34;
             color: #abb2bf;
             padding: 20px;
             border-radius: 8px;
-            text-align: left;
             font-family: "Courier New", monospace;
             font-size: 14px;
             line-height: 1.8;
-            margin-top: 15px;
+            overflow-x: auto;
         }
 
-        .preview-info .key {
+        .preview-content .key {
             color: #61afef;
         }
 
-        .preview-info .value {
+        .preview-content .value {
             color: #98c379;
         }
 
-        .preview-info .success {
+        .preview-content .success {
             color: #98c379;
         }
 
-        .preview-info .error {
+        .preview-content .error {
             color: #e06c75;
         }
 
-        .button-group {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .button-container {
+            text-align: center;
             margin-top: 30px;
         }
 
@@ -138,62 +207,28 @@
             font-weight: 600;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
-            min-width: 140px;
+            min-width: 200px;
         }
 
-        button:hover:not(:disabled) {
+        button:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
         }
 
-        button:active:not(:disabled) {
+        button:active {
             transform: translateY(0);
         }
 
-        button:disabled {
-            background: linear-gradient(135deg, #ccc 0%, #aaa 100%);
-            cursor: not-allowed;
-            transform: none;
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
         }
 
-        button.secondary {
-            background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
-        }
-
-        button.secondary:hover:not(:disabled) {
-            background: #f0f4ff;
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
-        }
-
-        .countdown {
-            color: #667eea;
-            font-weight: bold;
-            margin-top: 15px;
-            font-size: 1rem;
-        }
-
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 15px;
-        }
-
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 15px;
-        }
-
-        .hidden {
-            display: none !important;
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
         }
     </style>
 </head>
@@ -202,42 +237,37 @@
         <h1>🔌 NoGap USB Manager</h1>
         <p class="subtitle">Secure Air-Gapped Repository System</p>
 
-        <div class="status-box" id="statusBox">
-            <div class="spinner" id="spinner"></div>
-            <div class="status-text" id="statusText">Scanning for USB repositories...</div>
-            <div class="status-detail" id="statusDetail">Please wait while we detect connected USB drives</div>
-            <div id="previewInfo" class="hidden"></div>
-            <div id="errorMessage" class="hidden"></div>
-            <div id="countdown" class="hidden countdown"></div>
+        <h3>Available Drives</h3>
+        <div id="driveList">
+            <div class="loading-container">
+                <div class="spinner"></div>
+                <span>Scanning for drives...</span>
+            </div>
         </div>
 
-        <div class="button-group" id="buttonGroup" style="display: none;">
-            <button id="retryBtn" class="hidden">🔄 Retry Scan</button>
-            <button id="skipBtn" class="secondary hidden">⏭️ Skip to Dashboard</button>
-            <button id="importBtn" class="hidden">⬇️ Import Now</button>
+        <h3>Selected Repo Preview</h3>
+        <div class="preview-section">
+            <div id="preview" class="preview-placeholder">
+                Click on a drive with a NoGap repository to preview its contents
+            </div>
+        </div>
+
+        <div class="button-container">
+            <button id="continueDashboard">Continue to Dashboard →</button>
         </div>
     </div>
 
     <script type="module">
-        // Import Tauri API
-        const { invoke } = window.__TAURI__.tauri;
+        // Import Tauri 2.x API
+        import { invoke } from "@tauri-apps/api/core";
 
         // DOM elements
-        const spinner = document.getElementById('spinner');
-        const statusText = document.getElementById('statusText');
-        const statusDetail = document.getElementById('statusDetail');
-        const previewInfo = document.getElementById('previewInfo');
-        const errorMessage = document.getElementById('errorMessage');
-        const countdown = document.getElementById('countdown');
-        const buttonGroup = document.getElementById('buttonGroup');
-        const retryBtn = document.getElementById('retryBtn');
-        const skipBtn = document.getElementById('skipBtn');
-        const importBtn = document.getElementById('importBtn');
+        const driveList = document.getElementById('driveList');
+        const preview = document.getElementById('preview');
+        const continueDashboard = document.getElementById('continueDashboard');
 
         // State
-        let discoveredRepos = [];
-        let previewData = null;
-        let countdownInterval = null;
+        let selectedDrive = null;
 
         // Utility: Format bytes
         function formatBytes(bytes) {
@@ -248,200 +278,138 @@
             return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
         }
 
-        // Show loading state
-        function showLoading(text, detail) {
-            spinner.classList.remove('hidden');
-            statusText.textContent = text;
-            statusDetail.textContent = detail;
-            previewInfo.classList.add('hidden');
-            errorMessage.classList.add('hidden');
-            countdown.classList.add('hidden');
-            buttonGroup.style.display = 'none';
-        }
+        // Handle drive click
+        async function handleDriveClick(drivePath, hasRepo, driveElement) {
+            // Update selected state
+            document.querySelectorAll('.drive-item').forEach(el => {
+                el.classList.remove('selected');
+            });
+            driveElement.classList.add('selected');
+            selectedDrive = drivePath;
 
-        // Show error state
-        function showError(text, detail) {
-            spinner.classList.add('hidden');
-            statusText.innerHTML = '⚠️ ' + text;
-            statusDetail.textContent = '';
-            errorMessage.innerHTML = `<div class="error-message">${detail}</div>`;
-            errorMessage.classList.remove('hidden');
-            previewInfo.classList.add('hidden');
-            countdown.classList.add('hidden');
-            
-            // Show retry and skip buttons
-            buttonGroup.style.display = 'flex';
-            retryBtn.classList.remove('hidden');
-            skipBtn.classList.remove('hidden');
-            importBtn.classList.add('hidden');
-        }
-
-        // Show success state with preview
-        function showSuccess(preview) {
-            spinner.classList.add('hidden');
-            
-            if (preview.verified) {
-                statusText.innerHTML = '✅ Valid USB Repository Detected';
-                statusDetail.textContent = 'Signature verified. Ready to import.';
-                
-                // Build preview display
-                const previewHtml = `
-                    <div class="preview-info">
-                        <div><span class="key">Repository:</span> <span class="value">${preview.repo_path}</span></div>
-                        <div><span class="key">Version:</span> <span class="value">${preview.version}</span></div>
-                        <div><span class="key">Objects:</span> <span class="value">${preview.objects_count}</span></div>
-                        <div><span class="key">Total Size:</span> <span class="value">${formatBytes(preview.total_size)}</span></div>
-                        <div><span class="key">Signature:</span> <span class="success">✅ ${preview.verification_msg}</span></div>
+            if (!hasRepo) {
+                preview.innerHTML = `
+                    <div class="error-message">
+                        No NoGap repository found on this drive.<br>
+                        The drive does not contain an <code>aegis_repo</code> directory.
                     </div>
                 `;
-                previewInfo.innerHTML = previewHtml;
-                previewInfo.classList.remove('hidden');
-                
-                // Show import button
-                buttonGroup.style.display = 'flex';
-                importBtn.classList.remove('hidden');
-                skipBtn.classList.remove('hidden');
-                retryBtn.classList.add('hidden');
-                
-                // Start countdown for auto-redirect
-                startCountdown();
-            } else {
-                statusText.innerHTML = '⚠️ Signature Verification Failed';
-                statusDetail.textContent = 'The USB repository signature is invalid.';
-                
-                const previewHtml = `
-                    <div class="preview-info">
-                        <div><span class="key">Repository:</span> <span class="value">${preview.repo_path}</span></div>
-                        <div><span class="key">Signature:</span> <span class="error">❌ ${preview.verification_msg}</span></div>
-                    </div>
-                `;
-                previewInfo.innerHTML = previewHtml;
-                previewInfo.classList.remove('hidden');
-                
-                errorMessage.innerHTML = '<div class="error-message">Cannot import repository with invalid signature.</div>';
-                errorMessage.classList.remove('hidden');
-                
-                // Show retry and skip buttons
-                buttonGroup.style.display = 'flex';
-                retryBtn.classList.remove('hidden');
-                skipBtn.classList.remove('hidden');
-                importBtn.classList.add('hidden');
-            }
-        }
-
-        // Start countdown for auto-redirect
-        function startCountdown() {
-            let seconds = 3;
-            countdown.textContent = `Redirecting to dashboard in ${seconds} seconds...`;
-            countdown.classList.remove('hidden');
-            
-            countdownInterval = setInterval(() => {
-                seconds--;
-                if (seconds <= 0) {
-                    clearInterval(countdownInterval);
-                    navigateToDashboard();
-                } else {
-                    countdown.textContent = `Redirecting to dashboard in ${seconds} seconds...`;
-                }
-            }, 1000);
-        }
-
-        // Navigate to dashboard
-        function navigateToDashboard() {
-            if (countdownInterval) {
-                clearInterval(countdownInterval);
-            }
-            window.location.href = 'index.html';
-        }
-
-        // Scan USB repositories
-        async function scanUSB() {
-            try {
-                showLoading('Scanning for USB repositories...', 'Please wait while we detect connected USB drives');
-                
-                discoveredRepos = await invoke('cmd_scan_usb_repos');
-                
-                if (discoveredRepos.length === 0) {
-                    showError(
-                        'No USB Repository Detected',
-                        'Please plug in a NoGap USB drive with an aegis_repo directory and click Retry.'
-                    );
-                    return;
-                }
-                
-                // Auto-preview first repository
-                await previewFirstRepo();
-                
-            } catch (error) {
-                console.error('Scan error:', error);
-                showError('Scan Failed', `Error: ${error}`);
-            }
-        }
-
-        // Preview first repository
-        async function previewFirstRepo() {
-            try {
-                showLoading('Verifying repository...', 'Reading manifest and checking signature');
-                
-                const repo = discoveredRepos[0];
-                previewData = await invoke('cmd_preview_repo', { repoPath: repo });
-                
-                showSuccess(previewData);
-                
-            } catch (error) {
-                console.error('Preview error:', error);
-                showError('Preview Failed', `Error: ${error}`);
-            }
-        }
-
-        // Import repository
-        async function importRepo() {
-            if (!previewData || !discoveredRepos[0]) {
-                showError('Import Failed', 'No repository selected');
                 return;
             }
 
+            // Show loading
+            preview.innerHTML = `
+                <div class="loading-container">
+                    <div class="spinner"></div>
+                    <span>Loading repository preview...</span>
+                </div>
+            `;
+
             try {
-                // Stop countdown if running
-                if (countdownInterval) {
-                    clearInterval(countdownInterval);
-                }
-                
-                showLoading('Importing repository...', 'This may take a while depending on the size');
-                
-                const result = await invoke('cmd_import_repo', { repoPath: discoveredRepos[0] });
-                
-                if (result.ok) {
-                    spinner.classList.add('hidden');
-                    statusText.innerHTML = '✅ Import Successful';
-                    statusDetail.textContent = result.message;
-                    
-                    errorMessage.innerHTML = `<div class="success-message">${result.message}</div>`;
-                    errorMessage.classList.remove('hidden');
-                    
-                    // Redirect to dashboard after 2 seconds
-                    setTimeout(() => {
-                        navigateToDashboard();
-                    }, 2000);
+                // Get preview
+                const previewData = await invoke('cmd_preview_repo', { repoPath: drivePath });
+
+                // Build preview display
+                let previewHtml = `
+                    <div class="preview-content">
+                        <div><span class="key">Repository:</span> <span class="value">${previewData.repo_path}</span></div>
+                        <div><span class="key">Version:</span> <span class="value">${previewData.version}</span></div>
+                        <div><span class="key">Objects:</span> <span class="value">${previewData.objects_count}</span></div>
+                        <div><span class="key">Total Size:</span> <span class="value">${formatBytes(previewData.total_size)}</span></div>
+                `;
+
+                if (previewData.verified) {
+                    previewHtml += `
+                        <div><span class="key">Signature:</span> <span class="success">✅ ${previewData.verification_msg}</span></div>
+                    `;
                 } else {
-                    showError('Import Failed', result.message);
+                    previewHtml += `
+                        <div><span class="key">Signature:</span> <span class="error">❌ ${previewData.verification_msg}</span></div>
+                    `;
                 }
-                
+
+                previewHtml += `</div>`;
+                preview.innerHTML = previewHtml;
+
             } catch (error) {
-                console.error('Import error:', error);
-                showError('Import Failed', `Error: ${error}`);
+                console.error('Preview error:', error);
+                preview.innerHTML = `
+                    <div class="error-message">
+                        Failed to preview repository:<br>
+                        ${error}
+                    </div>
+                `;
             }
         }
 
-        // Event listeners
-        retryBtn.addEventListener('click', scanUSB);
-        skipBtn.addEventListener('click', navigateToDashboard);
-        importBtn.addEventListener('click', importRepo);
+        // Load drives
+        async function loadDrives() {
+            try {
+                // Get all drives
+                const allDrives = await invoke('cmd_list_all_drives');
+                
+                // Get repos
+                const repos = await invoke('cmd_scan_usb_repos');
 
-        // Auto-scan on load
+                if (allDrives.length === 0) {
+                    driveList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">💾</div>
+                            <div>No drives detected</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Build drive list
+                let html = '';
+                for (const drive of allDrives) {
+                    const hasRepo = repos.includes(drive);
+                    const icon = hasRepo ? '✅' : '💾';
+                    const statusClass = hasRepo ? 'has-repo' : 'empty';
+                    const statusText = hasRepo ? 'NoGap Repo Found' : 'empty';
+
+                    html += `
+                        <div class="drive-item" data-drive="${drive}" data-has-repo="${hasRepo}">
+                            <div class="drive-info">
+                                <div class="drive-icon">${icon}</div>
+                                <div class="drive-path">${drive}</div>
+                            </div>
+                            <div class="drive-status ${statusClass}">${statusText}</div>
+                        </div>
+                    `;
+                }
+
+                driveList.innerHTML = html;
+
+                // Attach click handlers
+                document.querySelectorAll('.drive-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const drive = item.getAttribute('data-drive');
+                        const hasRepo = item.getAttribute('data-has-repo') === 'true';
+                        handleDriveClick(drive, hasRepo, item);
+                    });
+                });
+
+            } catch (error) {
+                console.error('Load drives error:', error);
+                driveList.innerHTML = `
+                    <div class="error-message">
+                        Failed to load drives:<br>
+                        ${error}
+                    </div>
+                `;
+            }
+        }
+
+        // Continue to dashboard
+        continueDashboard.addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+
+        // Auto-load on page load
         window.addEventListener('DOMContentLoaded', () => {
-            // Small delay to show initial UI
-            setTimeout(scanUSB, 500);
+            loadDrives();
         });
     </script>
 </body>
