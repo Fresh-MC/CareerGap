@@ -1639,7 +1639,8 @@
   check_type: "manual"
   expected_state: "disabled"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.a.i"
+  reference: "Annexure B Page 24, Item 1.a.i"  
+  post_reboot_required: false
 
 - id: "B.1.a.ii"
   title: "Ensure freevxfs kernel module is not available"
@@ -1651,6 +1652,8 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.a.ii"
+  post_reboot_required: false
+  
 
 - id: "B.1.a.iii"
   title: "Ensure hfs kernel module is not available"
@@ -1662,6 +1665,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.a.iii"
+  post_reboot_required: false
 
 - id: "B.1.a.iv"
   title: "Ensure hfsplus kernel module is not available"
@@ -1673,6 +1677,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.a.iv"
+  post_reboot_required: false
 
 - id: "B.1.a.v"
   title: "Ensure jffs2 kernel module is not available"
@@ -1683,7 +1688,8 @@
   check_type: "manual"
   expected_state: "disabled"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.a.v"
+  reference: "Annexure B Page 24, Item 1.a.v" 
+  post_reboot_required: false
 
 - id: "B.1.a.vi"
   title: "Ensure overlayfs kernel module is not available"
@@ -1694,7 +1700,8 @@
   check_type: "manual"
   expected_state: "disabled"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.a.vi"
+  reference: "Annexure B Page 24, Item 1.a.vi"  
+  post_reboot_required: false
 
 - id: "B.1.a.vii"
   title: "Ensure squashfs kernel module is not available"
@@ -1705,7 +1712,8 @@
   check_type: "manual"
   expected_state: "disabled"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.a.vii"
+  reference: "Annexure B Page 24, Item 1.a.vii"  
+  post_reboot_required: false
 
 - id: "B.1.a.viii"
   title: "Ensure udf kernel module is not available"
@@ -1716,7 +1724,8 @@
   check_type: "manual"
   expected_state: "disabled"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.a.viii"
+  reference: "Annexure B Page 24, Item 1.a.viii" 
+  post_reboot_required: false
 
 - id: "B.1.a.ix"
   title: "Ensure usb-storage kernel module is not available"
@@ -1727,7 +1736,8 @@
   check_type: "manual"
   expected_state: "disabled"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.a.ix"
+  reference: "Annexure B Page 24, Item 1.a.ix"  
+  post_reboot_required: false
 
 - id: "B.1.a.x"
   title: "Ensure unused filesystems kernel modules are not available"
@@ -1738,7 +1748,8 @@
   check_type: "manual"
   expected_state: "disabled"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.a.x"
+  reference: "Annexure B Page 24, Item 1.a.x"  
+  post_reboot_required: false
 
 - id: "B.1.b.i"
   title: "Ensure /tmp is a separate partition"
@@ -1749,7 +1760,8 @@
   check_type: "manual"
   expected_state: "mounted"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.b.i"
+  reference: "Annexure B Page 24, Item 1.b.i"  
+  post_reboot_required: false
 
 - id: "B.1.b.ii"
   title: "Ensure nodev option set on /tmp partition"
@@ -1760,7 +1772,8 @@
   check_type: "manual"
   expected_state: "present"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.b.ii"
+  reference: "Annexure B Page 24, Item 1.b.ii"  
+  post_reboot_required: false
 
 - id: "B.1.b.iii"
   title: "Ensure nosuid option set on /tmp partition"
@@ -1772,6 +1785,7 @@
   expected_state: "present"
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.b.iii"
+  post_reboot_required: false
 
 - id: "B.1.b.iv"
   title: "Ensure noexec option set on /tmp partition"
@@ -1782,7 +1796,8 @@
   check_type: "manual"
   expected_state: "present"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.b.iv"
+  reference: "Annexure B Page 24, Item 1.b.iv"  
+  post_reboot_required: false
 
 - id: "B.1.c.i"
   title: "Ensure /dev/shm is a separate partition"
@@ -1794,6 +1809,7 @@
   expected_state: "mounted"
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.c.i"
+  post_reboot_required: false
 
 - id: "B.1.c.ii"
   title: "Ensure nodev option set on /dev/shm partition"
@@ -1805,6 +1821,7 @@
   expected_state: "present"
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.c.ii"
+  post_reboot_required: false
 
 - id: "B.1.c.iii"
   title: "Ensure nosuid option set on /dev/shm partition"
@@ -1815,7 +1832,8 @@
   check_type: "manual"
   expected_state: "present"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.c.iii"
+  reference: "Annexure B Page 24, Item 1.c.iii"  
+  post_reboot_required: false
 
 - id: "B.1.c.iv"
   title: "Ensure noexec option set on /dev/shm partition"
@@ -1827,6 +1845,7 @@
   expected_state: "present"
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.c.iv"
+  post_reboot_required: false
 
 - id: "B.1.d.i"
   title: "Ensure separate partition exists for /home"
@@ -1837,7 +1856,8 @@
   check_type: "manual"
   expected_state: "mounted"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.d.i"
+  reference: "Annexure B Page 24, Item 1.d.i"  
+  post_reboot_required: false
 
 - id: "B.1.d.ii"
   title: "Ensure nodev option set on /home partition"
@@ -1849,6 +1869,7 @@
   expected_state: "present"
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.d.ii"
+  post_reboot_required: false
 
 - id: "B.1.d.iii"
   title: "Ensure nosuid option set on /home partition"
@@ -1859,7 +1880,8 @@
   check_type: "manual"
   expected_state: "present"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.d.iii"
+  reference: "Annexure B Page 24, Item 1.d.iii" 
+  post_reboot_required: false
 
 - id: "B.1.e.i"
   title: "Ensure separate partition exists for /var"
@@ -1871,6 +1893,7 @@
   expected_state: "mounted"
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.e.i"
+  post_reboot_required: false
 
 - id: "B.1.e.ii"
   title: "Ensure nodev option set on /var partition"
@@ -1882,6 +1905,7 @@
   expected_state: "present"
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.e.ii"
+  post_reboot_required: false
 
 - id: "B.1.e.iii"
   title: "Ensure nosuid option set on /var partition"
@@ -1893,6 +1917,7 @@
   expected_state: "present"
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.e.iii"
+  post_reboot_required: false
 
 - id: "B.1.f.i"
   title: "Ensure separate partition exists for /var/tmp"
@@ -1904,6 +1929,7 @@
   expected_state: "mounted"
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.f.i"
+  post_reboot_required: false
 
 - id: "B.1.f.ii"
   title: "Ensure nodev option set on /var/tmp partition"
@@ -1914,7 +1940,8 @@
   check_type: "manual"
   expected_state: "present"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.f.ii"
+  reference: "Annexure B Page 24, Item 1.f.ii" 
+  post_reboot_required: false
 
 - id: "B.1.f.iii"
   title: "Ensure nosuid option set on /var/tmp partition"
@@ -1926,6 +1953,7 @@
   expected_state: "present"
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.f.iii"
+  post_reboot_required: false
 
 - id: "B.1.f.iv"
   title: "Ensure noexec option set on /var/tmp partition"
@@ -1937,6 +1965,7 @@
   expected_state: "present"
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 1.f.iv"
+  post_reboot_required: false
 
 - id: "B.1.g.i"
   title: "Ensure separate partition exists for /var/log"
@@ -1948,6 +1977,7 @@
   expected_state: "mounted"
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 1.g.i"
+  post_reboot_required: false
 
 - id: "B.1.g.ii"
   title: "Ensure nodev option set on /var/log partition"
@@ -1959,6 +1989,7 @@
   expected_state: "present"
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 1.g.ii"
+  post_reboot_required: false
 
 - id: "B.1.g.iii"
   title: "Ensure nosuid option set on /var/log partition"
@@ -1969,7 +2000,8 @@
   check_type: "manual"
   expected_state: "present"
   remediate_type: "manual"
-  reference: "Annexure B Page 25, Item 1.g.iii"
+  reference: "Annexure B Page 25, Item 1.g.iii" 
+  post_reboot_required: false
 
 - id: "B.1.g.iv"
   title: "Ensure noexec option set on /var/log partition"
@@ -1981,6 +2013,7 @@
   expected_state: "present"
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 1.g.iv"
+  post_reboot_required: false
 
 - id: "B.1.h.i"
   title: "Ensure separate partition exists for /var/log/audit"
@@ -1992,6 +2025,7 @@
   expected_state: "mounted"
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 1.h.i"
+  post_reboot_required: false
 
 - id: "B.1.h.ii"
   title: "Ensure nodev option set on /var/log/audit partition"
@@ -2003,6 +2037,7 @@
   expected_state: "present"
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 1.h.ii"
+  post_reboot_required: false
 
 - id: "B.1.h.iii"
   title: "Ensure nosuid option set on /var/log/audit partition"
@@ -2014,6 +2049,7 @@
   expected_state: "present"
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 1.h.iii"
+  post_reboot_required: false
 
 - id: "B.1.h.iv"
   title: "Ensure noexec option set on /var/log/audit partition"
@@ -2025,6 +2061,7 @@
   expected_state: "present"
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 1.h.iv"
+  post_reboot_required: false
 - id: "B.2.a.i"
   title: "Ensure bootloader password is set"
   description: "Set a password for the bootloader to prevent unauthorized access"
@@ -2035,6 +2072,7 @@
   expected_state: "set"
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.a.i"
+  post_reboot_required: false
 
 - id: "B.2.a.ii"
   title: "Ensure access to bootloader config is configured"
@@ -2046,6 +2084,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.a.ii"
+  post_reboot_required: false
 
 - id: "B.2.b.i"
   title: "Ensure address space layout randomization is enabled"
@@ -2057,6 +2096,7 @@
   expected_state: "enabled"
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.b.i"
+  post_reboot_required: false
 
 - id: "B.2.b.ii"
   title: "Ensure ptrace_scope is restricted"
@@ -2068,6 +2108,7 @@
   expected_state: "restricted"
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.b.ii"
+  post_reboot_required: false
 
 - id: "B.2.b.iii"
   title: "Ensure core dumps are restricted"
@@ -2079,6 +2120,7 @@
   expected_state: "restricted"
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.b.iii"
+  post_reboot_required: false
 
 - id: "B.2.b.iv"
   title: "Ensure prelink is not installed"
@@ -2090,6 +2132,7 @@
   expected_state: "not_installed"
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.b.iv"
+  post_reboot_required: false
 
 - id: "B.2.b.v"
   title: "Ensure Automatic Error Reporting is not enabled"
@@ -2101,6 +2144,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.b.v"
+  post_reboot_required: false
 
 - id: "B.2.c.i"
   title: "Ensure local login warning banner is configured properly"
@@ -2112,6 +2156,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.c.i"
+  post_reboot_required: false
 
 - id: "B.2.c.ii"
   title: "Ensure remote login warning banner is configured properly"
@@ -2123,6 +2168,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.c.ii"
+  post_reboot_required: false
 
 - id: "B.2.c.iii"
   title: "Ensure access to /etc/motd is configured"
@@ -2134,6 +2180,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.c.iii"
+  post_reboot_required: false
 
 - id: "B.2.c.iv"
   title: "Ensure access to /etc/issue is configured"
@@ -2145,6 +2192,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.c.iv"
+  post_reboot_required: false
 
 - id: "B.2.c.v"
   title: "Ensure access to /etc/issue.net is configured"
@@ -2156,7 +2204,8 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.c.v"
-# Section 3.a: Configure Server Services
+  post_reboot_required: false
+
 - id: "B.3.a.i"
   title: "Ensure autofs services are not in use"
   description: "Disable the autofs service to prevent automatic mounting of filesystems"
@@ -2167,6 +2216,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.i"
+  post_reboot_required: false
 
 - id: "B.3.a.ii"
   title: "Ensure avahi daemon services are not in use"
@@ -2178,6 +2228,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.ii"
+  post_reboot_required: false
 
 - id: "B.3.a.iii"
   title: "Ensure dhcp server services are not in use"
@@ -2189,6 +2240,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.iii"
+  post_reboot_required: false
 
 - id: "B.3.a.iv"
   title: "Ensure dns server services are not in use"
@@ -2200,6 +2252,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.iv"
+  post_reboot_required: false
 
 - id: "B.3.a.v"
   title: "Ensure dnsmasq services are not in use"
@@ -2211,6 +2264,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.v"
+  post_reboot_required: false
 
 - id: "B.3.a.vi"
   title: "Ensure ftp server services are not in use"
@@ -2222,6 +2276,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.vi"
+  post_reboot_required: false
 
 - id: "B.3.a.vii"
   title: "Ensure ldap server services are not in use"
@@ -2233,6 +2288,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.vii"
+  post_reboot_required: false
 
 - id: "B.3.a.viii"
   title: "Ensure message access server services are not in use"
@@ -2244,6 +2300,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.viii"
+  post_reboot_required: false
 
 - id: "B.3.a.ix"
   title: "Ensure network file system services are not in use"
@@ -2255,6 +2312,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.ix"
+  post_reboot_required: false
 
 - id: "B.3.a.x"
   title: "Ensure nis server services are not in use"
@@ -2266,6 +2324,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.x"
+  post_reboot_required: false
 
 - id: "B.3.a.xi"
   title: "Ensure print server services are not in use"
@@ -2277,6 +2336,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xi"
+  post_reboot_required: false
 
 - id: "B.3.a.xii"
   title: "Ensure rpcbind services are not in use"
@@ -2288,6 +2348,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xii"
+  post_reboot_required: false
 
 - id: "B.3.a.xiii"
   title: "Ensure rsync services are not in use"
@@ -2299,6 +2360,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xiii"
+  post_reboot_required: false
 
 - id: "B.3.a.xiv"
   title: "Ensure samba file server services are not in use"
@@ -2310,6 +2372,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xiv"
+  post_reboot_required: false
 
 - id: "B.3.a.xv"
   title: "Ensure snmp services are not in use"
@@ -2321,6 +2384,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xv"
+  post_reboot_required: false
 
 - id: "B.3.a.xvi"
   title: "Ensure tftp server services are not in use"
@@ -2332,6 +2396,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xvi"
+  post_reboot_required: false
 
 - id: "B.3.a.xvii"
   title: "Ensure web proxy server services are not in use"
@@ -2343,6 +2408,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xvii"
+  post_reboot_required: false
 
 - id: "B.3.a.xviii"
   title: "Ensure web server services are not in use"
@@ -2354,6 +2420,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xviii"
+  post_reboot_required: false
 
 - id: "B.3.a.xix"
   title: "Ensure xinetd services are not in use"
@@ -2365,6 +2432,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xix"
+  post_reboot_required: false
 
 - id: "B.3.a.xx"
   title: "Ensure X window server services are not in use"
@@ -2376,6 +2444,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xx"
+  post_reboot_required: false
 
 - id: "B.3.a.xxi"
   title: "Ensure mail transfer agent is configured for local-only mode"
@@ -2387,6 +2456,7 @@
   expected_state: "local-only"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xxi"
+  post_reboot_required: false
 
 - id: "B.3.a.xxii"
   title: "Ensure only approved services are listening on a network interface"
@@ -2398,8 +2468,8 @@
   expected_state: "approved_only"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xxii"
+  post_reboot_required: false
 
-# Section 3.b: Configure Client Services
 - id: "B.3.b.i"
   title: "Ensure NIS Client is not installed"
   description: "Remove NIS client packages to prevent use of insecure NIS protocol"
@@ -2410,6 +2480,7 @@
   expected_state: "not_installed"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.b.i"
+  post_reboot_required: false
 
 - id: "B.3.b.ii"
   title: "Ensure rsh client is not installed"
@@ -2421,6 +2492,7 @@
   expected_state: "not_installed"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.b.ii"
+  post_reboot_required: false
 
 - id: "B.3.b.iii"
   title: "Ensure talk client is not installed"
@@ -2432,6 +2504,7 @@
   expected_state: "not_installed"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.b.iii"
+  post_reboot_required: false
 
 - id: "B.3.b.iv"
   title: "Ensure telnet client is not installed"
@@ -2443,6 +2516,7 @@
   expected_state: "not_installed"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.b.iv"
+  post_reboot_required: false
 
 - id: "B.3.b.v"
   title: "Ensure ldap client is not installed"
@@ -2454,6 +2528,7 @@
   expected_state: "not_installed"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.b.v"
+  post_reboot_required: false
 
 - id: "B.3.b.vi"
   title: "Ensure ftp client is not installed"
@@ -2465,8 +2540,8 @@
   expected_state: "not_installed"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.b.vi"
+  post_reboot_required: false
 
-# Section 3.c: Time Synchronization
 - id: "B.3.c.i"
   title: "Ensure a single time synchronization daemon is in use"
   description: "Ensure only one time synchronization daemon (ntp, chrony, or systemd-timesyncd) is running"
@@ -2477,8 +2552,8 @@
   expected_state: "single_daemon"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.c.i"
+  post_reboot_required: false
 
-# Section 3.d: systemd-timesyncd
 - id: "B.3.d.i"
   title: "Ensure systemd-timesyncd configured with authorized timeserver"
   description: "Configure systemd-timesyncd to use authorized NTP servers"
@@ -2489,6 +2564,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.d.i"
+  post_reboot_required: false
 
 - id: "B.3.d.ii"
   title: "Ensure systemd-timesyncd is enabled and running"
@@ -2500,8 +2576,8 @@
   expected_state: "enabled_running"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.d.ii"
+  post_reboot_required: false
 
-# Section 3.e: Chrony
 - id: "B.3.e.i"
   title: "Ensure chrony is configured with authorized timeserver"
   description: "Configure chrony to use authorized NTP servers"
@@ -2512,6 +2588,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.e.i"
+  post_reboot_required: false
 
 - id: "B.3.e.ii"
   title: "Ensure chrony is running as user _chrony"
@@ -2523,6 +2600,7 @@
   expected_state: "user_chrony"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.e.ii"
+  post_reboot_required: false
 
 - id: "B.3.e.iii"
   title: "Ensure chrony is enabled and running"
@@ -2534,8 +2612,8 @@
   expected_state: "enabled_running"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.e.iii"
+  post_reboot_required: false
 
-# Section 3.f: Job Schedulers
 - id: "B.3.f.i"
   title: "Ensure cron daemon is enabled and active"
   description: "Ensure the cron service is enabled and running"
@@ -2546,6 +2624,7 @@
   expected_state: "enabled_running"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.f.i"
+  post_reboot_required: false
 
 - id: "B.3.f.ii"
   title: "Ensure permissions on /etc/crontab are configured"
@@ -2557,6 +2636,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.f.ii"
+  post_reboot_required: false
 
 - id: "B.3.f.iii"
   title: "Ensure permissions on /etc/cron.hourly are configured"
@@ -2568,6 +2648,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.f.iii"
+  post_reboot_required: false
 
 - id: "B.3.f.iv"
   title: "Ensure permissions on /etc/cron.daily are configured"
@@ -2579,6 +2660,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.f.iv"
+  post_reboot_required: false
 
 - id: "B.3.f.v"
   title: "Ensure permissions on /etc/cron.weekly are configured"
@@ -2590,6 +2672,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.f.v"
+  post_reboot_required: false
 
 - id: "B.3.f.vi"
   title: "Ensure permissions on /etc/cron.monthly are configured"
@@ -2601,6 +2684,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 3.f.vi"
+  post_reboot_required: false
 
 - id: "B.3.f.vii"
   title: "Ensure permissions on /etc/cron.d are configured"
@@ -2612,6 +2696,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 3.f.vii"
+  post_reboot_required: false
 
 - id: "B.3.f.viii"
   title: "Ensure crontab is restricted to authorized users"
@@ -2623,7 +2708,8 @@
   expected_state: "restricted"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 3.f.viii"
-# Section 4.a: Configure Network Devices
+  post_reboot_required: false
+
 - id: "B.4.a.i"
   title: "Ensure IPv6 status is identified"
   description: "Identify if IPv6 is enabled or disabled on the system to align with network policy"
@@ -2634,6 +2720,7 @@
   expected_state: "identified"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.a.i"
+  post_reboot_required: false
 
 - id: "B.4.a.ii"
   title: "Ensure wireless interfaces are disabled"
@@ -2645,6 +2732,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.a.ii"
+  post_reboot_required: false
 
 - id: "B.4.a.iii"
   title: "Ensure bluetooth services are not in use"
@@ -2656,8 +2744,9 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.a.iii"
+  post_reboot_required: false
 
-# Section 4.b: Configure Network Kernel Modules
+
 - id: "B.4.b.i"
   title: "Ensure dccp kernel module is not available"
   description: "Disable the DCCP (Datagram Congestion Control Protocol) kernel module"
@@ -2668,6 +2757,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.b.i"
+  post_reboot_required: false
 
 - id: "B.4.b.ii"
   title: "Ensure tipc kernel module is not available"
@@ -2679,6 +2769,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.b.ii"
+  post_reboot_required: false
 
 - id: "B.4.b.iii"
   title: "Ensure rds kernel module is not available"
@@ -2690,6 +2781,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.b.iii"
+  post_reboot_required: false
 
 - id: "B.4.b.iv"
   title: "Ensure sctp kernel module is not available"
@@ -2701,8 +2793,8 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.b.iv"
+  post_reboot_required: false
 
-# Section 4.c: Configure Network Kernel Parameters
 - id: "B.4.c.i"
   title: "Ensure ip forwarding is disabled"
   description: "Disable IP forwarding to prevent the system from acting as a router"
@@ -2713,6 +2805,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.i"
+  post_reboot_required: false
 
 - id: "B.4.c.ii"
   title: "Ensure packet redirect sending is disabled"
@@ -2724,6 +2817,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.ii"
+  post_reboot_required: false
 
 - id: "B.4.c.iii"
   title: "Ensure bogus icmp responses are ignored"
@@ -2735,6 +2829,7 @@
   expected_state: "ignored"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.iii"
+  post_reboot_required: false
 
 - id: "B.4.c.iv"
   title: "Ensure broadcast icmp requests are ignored"
@@ -2746,6 +2841,7 @@
   expected_state: "ignored"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.iv"
+  post_reboot_required: false
 
 - id: "B.4.c.v"
   title: "Ensure icmp redirects are not accepted"
@@ -2757,6 +2853,7 @@
   expected_state: "not_accepted"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.v"
+  post_reboot_required: false
 
 - id: "B.4.c.xi"
   title: "Ensure secure icmp redirects are not accepted"
@@ -2768,6 +2865,7 @@
   expected_state: "not_accepted"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.xi"
+  post_reboot_required: false
 
 - id: "B.4.c.xii"
   title: "Ensure reverse path filtering is enabled"
@@ -2779,6 +2877,7 @@
   expected_state: "enabled"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.xii"
+  post_reboot_required: false
 
 - id: "B.4.c.xiii"
   title: "Ensure source routed packets are not accepted"
@@ -2790,6 +2889,7 @@
   expected_state: "not_accepted"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.xiii"
+  post_reboot_required: false
 
 - id: "B.4.c.xiv"
   title: "Ensure suspicious packets are logged"
@@ -2801,6 +2901,7 @@
   expected_state: "logged"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.xiv"
+  post_reboot_required: false
 
 - id: "B.4.c.xv"
   title: "Ensure tcp syn cookies is enabled"
@@ -2812,6 +2913,7 @@
   expected_state: "enabled"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.xv"
+  post_reboot_required: false
 
 - id: "B.4.c.xvi"
   title: "Ensure ipv6 router advertisements are not accepted"
@@ -2823,7 +2925,8 @@
   expected_state: "not_accepted"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.xvi"
-# Section 5.a: Configure a single firewall utility
+  post_reboot_required: false
+
 - id: "B.5.a.i"
   title: "Ensure ufw is installed"
   description: "Install the Uncomplicated Firewall (UFW) package"
@@ -2834,6 +2937,7 @@
   expected_state: "installed"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 5.a.i"
+  post_reboot_required: false
 
 - id: "B.5.a.ii"
   title: "Ensure iptables-persistent is not installed with ufw"
@@ -2845,6 +2949,7 @@
   expected_state: "not_installed"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 5.a.ii"
+  post_reboot_required: false
 
 - id: "B.5.a.iii"
   title: "Ensure ufw service is enabled"
@@ -2856,6 +2961,7 @@
   expected_state: "enabled"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 5.a.iii"
+  post_reboot_required: false
 
 - id: "B.5.a.iv"
   title: "Ensure ufw loopback traffic is configured"
@@ -2867,6 +2973,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 5.a.iv"
+  post_reboot_required: false
 
 - id: "B.5.a.v"
   title: "Ensure ufw outbound connections are configured"
@@ -2878,6 +2985,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 5.a.v"
+  post_reboot_required: false
 
 - id: "B.5.a.vi"
   title: "Ensure ufw firewall rules exist for all open ports"
@@ -2889,6 +2997,7 @@
   expected_state: "rules_exist"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 5.a.vi"
+  post_reboot_required: false
 
 - id: "B.5.a.vii"
   title: "Ensure ufw default deny firewall policy"
@@ -2900,6 +3009,7 @@
   expected_state: "deny"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 5.a.vii"
+  post_reboot_required: false
 
 - id: "B.5.a.viii"
   title: "Ensure ufw is not in use with iptables"
@@ -2911,7 +3021,8 @@
   expected_state: "not_mixed"
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 5.a.viii"
-# Section 6.a: Configure SSH Server
+  post_reboot_required: false
+
 - id: "B.6.a.i"
   title: "Ensure permissions on /etc/ssh/sshd_config are configured"
   description: "Secure the sshd_config file by setting appropriate ownership and permissions"
@@ -2922,6 +3033,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.i"
+  post_reboot_required: false
 
 - id: "B.6.a.ii"
   title: "Ensure permissions on SSH private host key files are configured"
@@ -2933,6 +3045,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.ii"
+  post_reboot_required: false
 
 - id: "B.6.a.iii"
   title: "Ensure permissions on SSH public host key files are configured"
@@ -2944,6 +3057,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.iii"
+  post_reboot_required: false
 
 - id: "B.6.a.iv"
   title: "Ensure sshd access is configured"
@@ -2955,6 +3069,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.iv"
+  post_reboot_required: false
 
 - id: "B.6.a.v"
   title: "Ensure sshd Banner is configured"
@@ -2966,6 +3081,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.v"
+  post_reboot_required: false
 
 - id: "B.6.a.vi"
   title: "Ensure sshd Ciphers are configured"
@@ -2977,6 +3093,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.vi"
+  post_reboot_required: false
 
 - id: "B.6.a.vii"
   title: "Ensure sshd ClientAliveInterval and ClientAliveCountMax are configured"
@@ -2988,6 +3105,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.vii"
+  post_reboot_required: false
 
 - id: "B.6.a.viii"
   title: "Ensure sshd DisableForwarding is enabled"
@@ -2999,6 +3117,7 @@
   expected_state: "enabled"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.viii"
+  post_reboot_required: false
 
 - id: "B.6.a.ix"
   title: "Ensure sshd GSSAPIAuthentication is disabled"
@@ -3010,6 +3129,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.ix"
+  post_reboot_required: false
 
 - id: "B.6.a.x"
   title: "Ensure sshd HostbasedAuthentication is disabled"
@@ -3021,6 +3141,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.x"
+  post_reboot_required: false
 
 - id: "B.6.a.xi"
   title: "Ensure sshd IgnoreRhosts is enabled"
@@ -3032,6 +3153,7 @@
   expected_state: "enabled"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xi"
+  post_reboot_required: false
 
 - id: "B.6.a.xii"
   title: "Ensure sshd KexAlgorithms is configured"
@@ -3043,6 +3165,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xii"
+  post_reboot_required: false
 
 - id: "B.6.a.xiii"
   title: "Ensure sshd LoginGraceTime is configured"
@@ -3054,6 +3177,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xiii"
+  post_reboot_required: false
 
 - id: "B.6.a.xiv"
   title: "Ensure sshd LogLevel is configured"
@@ -3065,6 +3189,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xiv"
+  post_reboot_required: false
 
 - id: "B.6.a.xv"
   title: "Ensure sshd MACs are configured"
@@ -3076,6 +3201,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xv"
+  post_reboot_required: false
 
 - id: "B.6.a.xvi"
   title: "Ensure sshd MaxAuthTries is configured"
@@ -3087,6 +3213,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xvi"
+  post_reboot_required: false
 
 - id: "B.6.a.xvii"
   title: "Ensure sshd MaxSessions is configured"
@@ -3098,6 +3225,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xvii"
+  post_reboot_required: false
 
 - id: "B.6.a.xviii"
   title: "Ensure sshd MaxStartups is configured"
@@ -3109,6 +3237,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xviii"
+  post_reboot_required: false
 
 - id: "B.6.a.xix"
   title: "Ensure sshd PermitEmptyPasswords is disabled"
@@ -3120,6 +3249,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xix"
+  post_reboot_required: false
 
 - id: "B.6.a.xx"
   title: "Ensure sshd PermitRootLogin is disabled"
@@ -3131,6 +3261,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xx"
+  post_reboot_required: false
 
 - id: "B.6.a.xxi"
   title: "Ensure sshd PermitUserEnvironment is disabled"
@@ -3142,6 +3273,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xxi"
+  post_reboot_required: false
 
 - id: "B.6.a.xxii"
   title: "Ensure sshd UsePAM is enabled"
@@ -3153,8 +3285,8 @@
   expected_state: "enabled"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xxii"
+  post_reboot_required: false
 
-# Section 6.b: Configure privilege escalation
 - id: "B.6.b.i"
   title: "Ensure sudo is installed"
   description: "Ensure the sudo package is installed for privilege delegation"
@@ -3165,6 +3297,7 @@
   expected_state: "installed"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.b.i"
+  post_reboot_required: false
 
 - id: "B.6.b.ii"
   title: "Ensure sudo commands use pty"
@@ -3176,6 +3309,7 @@
   expected_state: "use_pty"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.b.ii"
+  post_reboot_required: false
 
 - id: "B.6.b.iii"
   title: "Ensure sudo log file exists"
@@ -3187,6 +3321,7 @@
   expected_state: "exists"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.b.iii"
+  post_reboot_required: false
 
 - id: "B.6.b.iv"
   title: "Ensure users must provide password for privilege escalation"
@@ -3198,6 +3333,7 @@
   expected_state: "password_required"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.b.iv"
+  post_reboot_required: false
 
 - id: "B.6.b.v"
   title: "Ensure re-authentication for privilege escalation is not disabled globally"
@@ -3209,6 +3345,7 @@
   expected_state: "enabled"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.b.v"
+  post_reboot_required: false
 
 - id: "B.6.b.vi"
   title: "Ensure sudo authentication timeout is configured correctly"
@@ -3220,6 +3357,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.b.vi"
+  post_reboot_required: false
 
 - id: "B.6.b.vii"
   title: "Ensure access to the su command is restricted"
@@ -3231,8 +3369,8 @@
   expected_state: "restricted"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.b.vii"
+  post_reboot_required: false
 
-# Section 6.c.i: Configure PAM software packages
 - id: "B.6.c.i.1"
   title: "Ensure latest version of pam is installed"
   description: "Install the latest updates for the PAM library"
@@ -3243,6 +3381,7 @@
   expected_state: "latest_version"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.c.i.1"
+  post_reboot_required: false
 
 - id: "B.6.c.i.2"
   title: "Ensure libpam-modules is installed"
@@ -3254,6 +3393,7 @@
   expected_state: "installed"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.c.i.2"
+  post_reboot_required: false
 
 - id: "B.6.c.i.3"
   title: "Ensure libpam-pwquality is installed"
@@ -3265,8 +3405,8 @@
   expected_state: "installed"
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.c.i.3"
+  post_reboot_required: false
 
-# Section 6.c.ii: Configure pam-auth-update profiles
 - id: "B.6.c.ii.1"
   title: "Ensure pam_unix module is enabled"
   description: "Enable the pam_unix module for standard authentication"
@@ -3277,6 +3417,7 @@
   expected_state: "enabled"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.ii.1"
+  post_reboot_required: false
 
 - id: "B.6.c.ii.2"
   title: "Ensure pam_faillock module is enabled"
@@ -3288,6 +3429,7 @@
   expected_state: "enabled"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.ii.2"
+  post_reboot_required: false
 
 - id: "B.6.c.ii.3"
   title: "Ensure pam_pwquality module is enabled"
@@ -3299,6 +3441,7 @@
   expected_state: "enabled"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.ii.3"
+  post_reboot_required: false
 
 - id: "B.6.c.ii.4"
   title: "Ensure pam_pwhistory module is enabled"
@@ -3310,8 +3453,8 @@
   expected_state: "enabled"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.ii.4"
+  post_reboot_required: false
 
-# Section 6.c.iii: Configure pam_faillock module
 - id: "B.6.c.iii.1"
   title: "Ensure password failed attempts lockout is configured"
   description: "Set the number of failed attempts before lockout (deny)"
@@ -3322,6 +3465,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.iii.1"
+  post_reboot_required: false
 
 - id: "B.6.c.iii.2"
   title: "Ensure password unlock time is configured"
@@ -3333,6 +3477,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.iii.2"
+  post_reboot_required: false
 
 - id: "B.6.c.iii.3"
   title: "Ensure password failed attempts lockout includes root account"
@@ -3344,8 +3489,8 @@
   expected_state: "includes_root"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.iii.3"
+  post_reboot_required: false
 
-# Section 6.c.iv: Configure pam_pwquality module
 - id: "B.6.c.iv.1"
   title: "Ensure password number of changed characters is configured"
   description: "Enforce a minimum number of character changes (difok)"
@@ -3356,6 +3501,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.iv.1"
+  post_reboot_required: false
 
 - id: "B.6.c.iv.2"
   title: "Ensure minimum password length is configured"
@@ -3367,6 +3513,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.iv.2"
+  post_reboot_required: false
 
 - id: "B.6.c.iv.3"
   title: "Ensure password same consecutive characters is configured"
@@ -3378,6 +3525,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.iv.3"
+  post_reboot_required: false
 
 - id: "B.6.c.iv.4"
   title: "Ensure password maximum sequential characters is configured"
@@ -3389,6 +3537,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.iv.4"
+  post_reboot_required: false
 
 - id: "B.6.c.iv.5"
   title: "Ensure password dictionary check is enabled"
@@ -3400,6 +3549,7 @@
   expected_state: "enabled"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.iv.5"
+  post_reboot_required: false
 
 - id: "B.6.c.iv.6"
   title: "Ensure password quality checking is enforced"
@@ -3411,6 +3561,7 @@
   expected_state: "enforced"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.iv.6"
+  post_reboot_required: false
 
 - id: "B.6.c.iv.7"
   title: "Ensure password quality is enforced for the root user"
@@ -3422,8 +3573,8 @@
   expected_state: "enforced_root"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.iv.7"
+  post_reboot_required: false
 
-# Section 6.c.v: Configure pam_pwhistory module
 - id: "B.6.c.v.1"
   title: "Ensure password history remember is configured"
   description: "Set the number of previous passwords to remember (remember)"
@@ -3434,6 +3585,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.v.1"
+  post_reboot_required: false
 
 - id: "B.6.c.v.2"
   title: "Ensure password history is enforced for the root user"
@@ -3445,6 +3597,7 @@
   expected_state: "enforced_root"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.v.2"
+  post_reboot_required: false
 
 - id: "B.6.c.v.3"
   title: "Ensure pam_pwhistory includes use_authtok"
@@ -3456,7 +3609,8 @@
   expected_state: "includes_use_authtok"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.v.3"
-# Section 7.a: Configure shadow password suite parameters
+  post_reboot_required: false
+
 - id: "B.7.a.i"
   title: "Ensure password expiration is configured"
   description: "Configure password expiration limits to force periodic password changes"
@@ -3467,6 +3621,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 7.a.i"
+  post_reboot_required: false
 
 - id: "B.7.a.ii"
   title: "Ensure minimum password days is configured"
@@ -3478,6 +3633,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 7.a.ii"
+  post_reboot_required: false
 
 - id: "B.7.a.iii"
   title: "Ensure password expiration warning days is configured"
@@ -3489,6 +3645,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 7.a.iii"
+  post_reboot_required: false
 
 - id: "B.7.a.iv"
   title: "Ensure strong password hashing algorithm is configured"
@@ -3500,6 +3657,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 7.a.iv"
+  post_reboot_required: false
 
 - id: "B.7.a.v"
   title: "Ensure inactive password lock is configured"
@@ -3511,6 +3669,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 7.a.v"
+  post_reboot_required: false
 
 - id: "B.7.a.vi"
   title: "Ensure all users last password change date is in the past"
@@ -3522,6 +3681,7 @@
   expected_state: "in_past"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 7.a.vi"
+  post_reboot_required: false
 
 - id: "B.7.a.vii"
   title: "Ensure root is the only UID 0 account"
@@ -3533,6 +3693,7 @@
   expected_state: "root_only"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 7.a.vii"
+  post_reboot_required: false
 
 - id: "B.7.a.viii"
   title: "Ensure root is the only GID 0 account"
@@ -3544,6 +3705,7 @@
   expected_state: "root_only"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 7.a.viii"
+  post_reboot_required: false
 
 - id: "B.7.a.ix"
   title: "Ensure group root is the only GID 0 group"
@@ -3555,6 +3717,7 @@
   expected_state: "root_only"
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 7.a.ix"
+  post_reboot_required: false
 
 - id: "B.7.a.x"
   title: "Ensure root account access is controlled"
@@ -3566,6 +3729,7 @@
   expected_state: "controlled"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 7.a.x"
+  post_reboot_required: false
 
 - id: "B.7.a.xi"
   title: "Ensure root path integrity"
@@ -3577,6 +3741,7 @@
   expected_state: "integrity_verified"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 7.a.xi"
+  post_reboot_required: false
 
 - id: "B.7.a.xii"
   title: "Ensure root user umask is configured"
@@ -3588,6 +3753,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 7.a.xii"
+  post_reboot_required: false
 
 - id: "B.7.a.xiii"
   title: "Ensure system accounts do not have a valid login shell"
@@ -3599,6 +3765,7 @@
   expected_state: "no_login_shell"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 7.a.xiii"
+  post_reboot_required: false
 
 - id: "B.7.a.xiv"
   title: "Ensure accounts without a valid login shell are locked"
@@ -3610,8 +3777,8 @@
   expected_state: "locked"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 7.a.xiv"
+  post_reboot_required: false
 
-# Section 7.b: Configure user default environment
 - id: "B.7.b.i"
   title: "Ensure nologin is not listed in /etc/shells"
   description: "Ensure the nologin shell is not included in the valid shells list"
@@ -3622,6 +3789,7 @@
   expected_state: "not_listed"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 7.b.i"
+  post_reboot_required: false
 
 - id: "B.7.b.ii"
   title: "Ensure default user shell timeout is configured"
@@ -3633,6 +3801,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 7.b.ii"
+  post_reboot_required: false
 
 - id: "B.7.b.iii"
   title: "Ensure default user umask is configured"
@@ -3644,8 +3813,8 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 7.b.iii"
+  post_reboot_required: false
 
-  # Section 8.a.i: Configure systemd-journald service
 - id: "B.8.a.i.1"
   title: "Ensure journald service is enabled and active"
   description: "Ensure the systemd-journald service is running to capture system logs"
@@ -3656,6 +3825,7 @@
   expected_state: "enabled_active"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.i.1"
+  post_reboot_required: false
 
 - id: "B.8.a.i.2"
   title: "Ensure journald log file access is configured"
@@ -3667,6 +3837,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.i.2"
+  post_reboot_required: false
 
 - id: "B.8.a.i.3"
   title: "Ensure journald log file rotation is configured"
@@ -3678,6 +3849,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.i.3"
+  post_reboot_required: false
 
 - id: "B.8.a.i.4"
   title: "Ensure only one logging system is in use"
@@ -3689,8 +3861,8 @@
   expected_state: "single_system"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.i.4"
+  post_reboot_required: false
 
-# Section 8.a.ii: Configure rsyslog
 - id: "B.8.a.ii.1"
   title: "Ensure rsyslog is installed"
   description: "Install the rsyslog package for system logging"
@@ -3701,6 +3873,7 @@
   expected_state: "installed"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.ii.1"
+  post_reboot_required: false
 
 - id: "B.8.a.ii.2"
   title: "Ensure rsyslog service is enabled and active"
@@ -3712,6 +3885,7 @@
   expected_state: "enabled_active"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.ii.2"
+  post_reboot_required: false
 
 - id: "B.8.a.ii.3"
   title: "Ensure journald is configured to send logs to rsyslog"
@@ -3723,6 +3897,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.ii.3"
+  post_reboot_required: false
 
 - id: "B.8.a.ii.4"
   title: "Ensure rsyslog log file creation mode is configured"
@@ -3734,6 +3909,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.ii.4"
+  post_reboot_required: false
 
 - id: "B.8.a.ii.5"
   title: "Ensure rsyslog logging is configured"
@@ -3745,6 +3921,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.ii.5"
+  post_reboot_required: false
 
 - id: "B.8.a.ii.6"
   title: "Ensure rsyslog is configured to send logs to a remote log host"
@@ -3756,6 +3933,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.ii.6"
+  post_reboot_required: false
 
 - id: "B.8.a.ii.7"
   title: "Ensure rsyslog is not configured to receive logs from a remote client"
@@ -3767,6 +3945,7 @@
   expected_state: "disabled"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.ii.7"
+  post_reboot_required: false
 
 - id: "B.8.a.ii.8"
   title: "Ensure logrotate is configured"
@@ -3778,8 +3957,8 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.ii.8"
+  post_reboot_required: false
 
-# Section 8.a.iii: Configure Logfiles
 - id: "B.8.a.iii.1"
   title: "Ensure access to all logfiles has been configured"
   description: "Restrict permissions on all log files to authorized users only"
@@ -3790,8 +3969,8 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.iii.1"
+  post_reboot_required: false
 
-# Section 8.b: System Auditing (auditd)
 - id: "B.8.b.i.1"
   title: "Ensure auditd packages are installed"
   description: "Install auditd to enable system auditing"
@@ -3802,6 +3981,7 @@
   expected_state: "installed"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.b.i.1"
+  post_reboot_required: false
 
 - id: "B.8.b.i.2"
   title: "Ensure auditd service is enabled and active"
@@ -3813,6 +3993,7 @@
   expected_state: "enabled_active"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.b.i.2"
+  post_reboot_required: false
 
 - id: "B.8.b.i.3"
   title: "Ensure auditing for processes that start prior to auditd is enabled"
@@ -3824,6 +4005,7 @@
   expected_state: "enabled"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.b.i.3"
+  post_reboot_required: false
 
 - id: "B.8.b.i.4"
   title: "Ensure audit_backlog_limit is sufficient"
@@ -3835,8 +4017,8 @@
   expected_state: "sufficient"
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.b.i.4"
+  post_reboot_required: false
 
-# Section 8.c: Configure Data Retention
 - id: "B.8.c.i"
   title: "Ensure audit log storage size is configured"
   description: "Configure max_log_file to manage storage usage"
@@ -3847,6 +4029,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.c.i"
+  post_reboot_required: false
 
 - id: "B.8.c.ii"
   title: "Ensure audit logs are not automatically deleted"
@@ -3858,6 +4041,7 @@
   expected_state: "keep_logs"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.c.ii"
+  post_reboot_required: false
 
 - id: "B.8.c.iii"
   title: "Ensure system is disabled when audit logs are full"
@@ -3869,6 +4053,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.c.iii"
+  post_reboot_required: false
 
 - id: "B.8.c.iv"
   title: "Ensure system warns when audit logs are low on space"
@@ -3880,8 +4065,8 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.c.iv"
+  post_reboot_required: false
 
-# Section 8.d: Configure auditd Rules
 - id: "B.8.d.i"
   title: "Ensure changes to system administration scope (sudoers) is collected"
   description: "Audit changes to /etc/sudoers and /etc/sudoers.d"
@@ -3892,6 +4077,7 @@
   expected_state: "collected"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.i"
+  post_reboot_required: false
 
 - id: "B.8.d.ii"
   title: "Ensure actions as another user are always logged"
@@ -3903,6 +4089,7 @@
   expected_state: "logged"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.ii"
+  post_reboot_required: false
 
 - id: "B.8.d.iii"
   title: "Ensure events that modify the sudo log file are collected"
@@ -3914,6 +4101,7 @@
   expected_state: "collected"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.iii"
+  post_reboot_required: false
 
 - id: "B.8.d.iv"
   title: "Ensure events that modify date and time information are collected"
@@ -3925,6 +4113,7 @@
   expected_state: "collected"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.iv"
+  post_reboot_required: false
 
 - id: "B.8.d.v"
   title: "Ensure events that modify the system's network environment are collected"
@@ -3936,6 +4125,7 @@
   expected_state: "collected"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.v"
+  post_reboot_required: false
 
 - id: "B.8.d.vi"
   title: "Ensure use of privileged commands are collected"
@@ -3947,6 +4137,7 @@
   expected_state: "collected"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.vi"
+  post_reboot_required: false
 
 - id: "B.8.d.vii"
   title: "Ensure unsuccessful file access attempts are collected"
@@ -3958,6 +4149,7 @@
   expected_state: "collected"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.vii"
+  post_reboot_required: false
 
 - id: "B.8.d.viii"
   title: "Ensure events that modify user/group information are collected"
@@ -3969,6 +4161,7 @@
   expected_state: "collected"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.viii"
+  post_reboot_required: false
 
 - id: "B.8.d.ix"
   title: "Ensure discretionary access control permission modification events are collected"
@@ -3980,6 +4173,7 @@
   expected_state: "collected"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.ix"
+  post_reboot_required: false
 
 - id: "B.8.d.x"
   title: "Ensure successful file system mounts are collected"
@@ -3991,6 +4185,7 @@
   expected_state: "collected"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.x"
+  post_reboot_required: false
 
 - id: "B.8.d.xi"
   title: "Ensure session initiation information is collected"
@@ -4002,6 +4197,7 @@
   expected_state: "collected"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xi"
+  post_reboot_required: false
 
 - id: "B.8.d.xii"
   title: "Ensure login and logout events are collected"
@@ -4013,6 +4209,7 @@
   expected_state: "collected"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xii"
+  post_reboot_required: false
 
 - id: "B.8.d.xiii"
   title: "Ensure file deletion events by users are collected"
@@ -4024,6 +4221,7 @@
   expected_state: "collected"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xiii"
+  post_reboot_required: false
 
 - id: "B.8.d.xiv"
   title: "Ensure events that modify the system's Mandatory Access Controls are collected"
@@ -4035,6 +4233,7 @@
   expected_state: "collected"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xiv"
+  post_reboot_required: false
 
 - id: "B.8.d.xv"
   title: "Ensure successful and unsuccessful attempts to use the chcon command are collected"
@@ -4046,6 +4245,7 @@
   expected_state: "collected"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xv"
+  post_reboot_required: false
 
 - id: "B.8.d.xvi"
   title: "Ensure successful and unsuccessful attempts to use the setfacl command are collected"
@@ -4057,6 +4257,7 @@
   expected_state: "collected"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xvi"
+  post_reboot_required: false
 
 - id: "B.8.d.xvii"
   title: "Ensure successful and unsuccessful attempts to use the chacl command are collected"
@@ -4068,6 +4269,7 @@
   expected_state: "collected"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xvii"
+  post_reboot_required: false
 
 - id: "B.8.d.xviii"
   title: "Ensure successful and unsuccessful attempts to use the usermod command are collected"
@@ -4079,6 +4281,7 @@
   expected_state: "collected"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xviii"
+  post_reboot_required: false
 
 - id: "B.8.d.xix"
   title: "Ensure kernel module loading unloading and modification is collected"
@@ -4090,6 +4293,7 @@
   expected_state: "collected"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xix"
+  post_reboot_required: false
 
 - id: "B.8.d.xx"
   title: "Ensure the audit configuration is immutable"
@@ -4101,6 +4305,7 @@
   expected_state: "immutable"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xx"
+  post_reboot_required: false
 
 - id: "B.8.d.xxi"
   title: "Ensure the running and on disk configuration is the same"
@@ -4112,8 +4317,8 @@
   expected_state: "consistent"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xxi"
+  post_reboot_required: false
 
-# Section 8.e: Configure auditd File Access
 - id: "B.8.e.i"
   title: "Ensure audit log files mode is configured"
   description: "Configure permissions (e.g., 0600) for audit logs"
@@ -4124,6 +4329,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.e.i"
+  post_reboot_required: false
 
 - id: "B.8.e.ii"
   title: "Ensure audit log files owner is configured"
@@ -4135,6 +4341,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.e.ii"
+  post_reboot_required: false
 
 - id: "B.8.e.iii"
   title: "Ensure audit log files group owner is configured"
@@ -4146,6 +4353,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.e.iii"
+  post_reboot_required: false
 
 - id: "B.8.e.iv"
   title: "Ensure the audit log file directory mode is configured"
@@ -4157,6 +4365,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.e.iv"
+  post_reboot_required: false
 
 - id: "B.8.e.v"
   title: "Ensure audit configuration files mode is configured"
@@ -4168,6 +4377,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.e.v"
+  post_reboot_required: false
 
 - id: "B.8.e.vi"
   title: "Ensure audit configuration files owner is configured"
@@ -4179,6 +4389,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.e.vi"
+  post_reboot_required: false
 
 - id: "B.8.e.vii"
   title: "Ensure audit configuration files group owner is configured"
@@ -4190,6 +4401,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 8.e.vii"
+  post_reboot_required: false
 
 - id: "B.8.e.viii"
   title: "Ensure audit tools mode is configured"
@@ -4201,6 +4413,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 8.e.viii"
+  post_reboot_required: false
 
 - id: "B.8.e.ix"
   title: "Ensure audit tools owner is configured"
@@ -4212,6 +4425,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 8.e.ix"
+  post_reboot_required: false
 
 - id: "B.8.e.x"
   title: "Ensure audit tools group owner is configured"
@@ -4223,8 +4437,8 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 8.e.x"
+  post_reboot_required: false
 
-# Section 8.f: Configure Integrity Checking
 - id: "B.8.f.i"
   title: "Ensure AIDE is installed"
   description: "Install AIDE (Advanced Intrusion Detection Environment) for file integrity checking"
@@ -4235,6 +4449,7 @@
   expected_state: "installed"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 8.f.i"
+  post_reboot_required: false
 
 - id: "B.8.f.ii"
   title: "Ensure filesystem integrity is regularly checked"
@@ -4246,6 +4461,7 @@
   expected_state: "checked_regularly"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 8.f.ii"
+  post_reboot_required: false
 
 - id: "B.8.f.iii"
   title: "Ensure cryptographic mechanisms are used to protect the integrity of audit tools"
@@ -4257,8 +4473,8 @@
   expected_state: "protected"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 8.f.iii"
+  post_reboot_required: false
 
-  # Section 9.a: System File Permissions
 - id: "B.9.a.i"
   title: "Ensure permissions on /etc/passwd are configured"
   description: "Secure permissions (e.g., 644, owned by root) for /etc/passwd"
@@ -4269,6 +4485,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.i"
+  post_reboot_required: false
 
 - id: "B.9.a.ii"
   title: "Ensure permissions on /etc/passwd- are configured"
@@ -4280,6 +4497,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.ii"
+  post_reboot_required: false
 
 - id: "B.9.a.iii"
   title: "Ensure permissions on /etc/group are configured"
@@ -4291,6 +4509,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.iii"
+  post_reboot_required: false
 
 - id: "B.9.a.iv"
   title: "Ensure permissions on /etc/group- are configured"
@@ -4302,6 +4521,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.iv"
+  post_reboot_required: false
 
 - id: "B.9.a.v"
   title: "Ensure permissions on /etc/shadow are configured"
@@ -4313,6 +4533,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.v"
+  post_reboot_required: false
 
 - id: "B.9.a.vi"
   title: "Ensure permissions on /etc/shadow- are configured"
@@ -4324,6 +4545,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.vi"
+  post_reboot_required: false
 
 - id: "B.9.a.vii"
   title: "Ensure permissions on /etc/gshadow are configured"
@@ -4335,6 +4557,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.vii"
+  post_reboot_required: false
 
 - id: "B.9.a.viii"
   title: "Ensure permissions on /etc/gshadow- are configured"
@@ -4346,6 +4569,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.viii"
+  post_reboot_required: false
 
 - id: "B.9.a.ix"
   title: "Ensure permissions on /etc/shells are configured"
@@ -4357,6 +4581,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.ix"
+  post_reboot_required: false
 
 - id: "B.9.a.x"
   title: "Ensure permissions on /etc/security/opasswd are configured"
@@ -4368,6 +4593,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.x"
+  post_reboot_required: false
 
 - id: "B.9.a.xi"
   title: "Ensure world writable files and directories are secured"
@@ -4379,6 +4605,7 @@
   expected_state: "secured"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xi"
+  post_reboot_required: false
 
 - id: "B.9.a.xii"
   title: "Ensure no files or directories without an owner and a group exist"
@@ -4390,6 +4617,7 @@
   expected_state: "none_exist"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xii"
+  post_reboot_required: false
 
 - id: "B.9.a.xiii"
   title: "Ensure SUID and SGID files are reviewed"
@@ -4401,8 +4629,8 @@
   expected_state: "reviewed"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xiii"
+  post_reboot_required: false
 
-# Section 9.a (Continued): Local User and Group Settings
 - id: "B.9.a.xiv"
   title: "Ensure accounts in /etc/passwd use shadowed passwords"
   description: "Verify that ‘x’ is used in the password field of /etc/passwd"
@@ -4413,6 +4641,7 @@
   expected_state: "shadowed"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xiv"
+  post_reboot_required: false
 
 - id: "B.9.a.xv"
   title: "Ensure /etc/shadow password fields are not empty"
@@ -4424,6 +4653,7 @@
   expected_state: "not_empty"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xv"
+  post_reboot_required: false
 
 - id: "B.9.a.xvi"
   title: "Ensure all groups in /etc/passwd exist in /etc/group"
@@ -4435,6 +4665,7 @@
   expected_state: "consistent"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xvi"
+  post_reboot_required: false
 
 - id: "B.9.a.xvii"
   title: "Ensure shadow group is empty"
@@ -4446,6 +4677,7 @@
   expected_state: "empty"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xvii"
+  post_reboot_required: false
 
 - id: "B.9.a.xviii"
   title: "Ensure no duplicate UIDs exist"
@@ -4457,6 +4689,7 @@
   expected_state: "unique"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xviii"
+  post_reboot_required: false
 
 - id: "B.9.a.xix"
   title: "Ensure no duplicate GIDs exist"
@@ -4468,6 +4701,7 @@
   expected_state: "unique"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xix"
+  post_reboot_required: false
 
 - id: "B.9.a.xx"
   title: "Ensure no duplicate user names exist"
@@ -4479,6 +4713,7 @@
   expected_state: "unique"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xx"
+  post_reboot_required: false
 
 - id: "B.9.a.xxi"
   title: "Ensure no duplicate group names exist"
@@ -4490,6 +4725,7 @@
   expected_state: "unique"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xxi"
+  post_reboot_required: false
 
 - id: "B.9.a.xxii"
   title: "Ensure local interactive user home directories are configured"
@@ -4501,6 +4737,7 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xxii"
+  post_reboot_required: false
 
 - id: "B.9.a.xxiii"
   title: "Ensure local interactive user dot files access is configured"
@@ -4512,3 +4749,4 @@
   expected_state: "configured"
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xxiii"
+  post_reboot_required: false

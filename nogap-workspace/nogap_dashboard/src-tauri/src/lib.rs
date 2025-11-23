@@ -2,6 +2,7 @@
 // IPC commands for native policy auditing and remediation
 
 mod atomic;
+mod elev_checks;
 mod helpers;
 mod privilege;
 mod reporting;
@@ -78,6 +79,22 @@ pub struct RollbackResult {
     pub policy_id: String,
     pub success: bool,
     pub message: String,
+}
+
+// ========== PRIVILEGE ENFORCEMENT ==========
+
+/// Check if the current process has elevated/admin privileges
+#[tauri::command]
+fn cmd_check_elevation() -> Result<bool, String> {
+    elev_checks::is_elevated()
+        .map_err(|e| format!("Failed to check elevation status: {}", e))
+}
+
+/// Require that the current process has elevated/admin privileges
+#[tauri::command]
+fn cmd_require_elevation() -> Result<(), String> {
+    elev_checks::ensure_admin()
+        .map_err(|e| format!("Admin privilege required: {}", e))
 }
 
 // Load policies from YAML/JSON
@@ -195,6 +212,10 @@ fn remediate_policy(
     app_handle: tauri::AppHandle,
     policy_id: String,
 ) -> Result<RemediateResult, String> {
+    // Enforce admin privileges before remediation
+    elev_checks::ensure_admin()
+        .map_err(|e| format!("Admin privilege required for remediation: {}", e))?;
+
     // Check privileges before attempting remediation
     #[cfg(target_os = "windows")]
     if let Err(e) = privilege::ensure_admin() {
@@ -257,6 +278,10 @@ fn remediate_policy(
 // Remediate all policies
 #[tauri::command]
 fn remediate_all_policies(app_handle: tauri::AppHandle) -> Result<Vec<RemediateResult>, String> {
+    // Enforce admin privileges before bulk remediation
+    elev_checks::ensure_admin()
+        .map_err(|e| format!("Admin privilege required for bulk remediation: {}", e))?;
+
     let policies = load_full_policies(&app_handle)?;
     let current_os = std::env::consts::OS;
 
@@ -291,6 +316,10 @@ fn get_system_info() -> Result<String, String> {
 // Rollback a single policy to its previous state
 #[tauri::command]
 fn rollback_policy(policy_id: String) -> Result<RollbackResult, String> {
+    // Enforce admin privileges before rollback
+    elev_checks::ensure_admin()
+        .map_err(|e| format!("Admin privilege required for rollback: {}", e))?;
+
     log::info!("[ROLLBACK] Attempting rollback for policy: {}", policy_id);
     
     // Load all policies to find the one being rolled back
@@ -332,6 +361,10 @@ fn rollback_policy(policy_id: String) -> Result<RollbackResult, String> {
 // Rollback all policies that have rollback snapshots
 #[tauri::command]
 fn rollback_all() -> Result<Vec<RollbackResult>, String> {
+    // Enforce admin privileges before bulk rollback
+    elev_checks::ensure_admin()
+        .map_err(|e| format!("Admin privilege required for bulk rollback: {}", e))?;
+
     log::info!("[ROLLBACK] Attempting rollback for all policies");
     
     // Load all policies
@@ -1708,6 +1741,8 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
+            cmd_check_elevation,
+            cmd_require_elevation,
             load_policies,
             audit_policy,
             audit_all_policies,

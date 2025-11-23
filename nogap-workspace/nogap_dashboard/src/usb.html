@@ -257,10 +257,7 @@
         </div>
     </div>
 
-    <script type="module">
-        // Import Tauri 2.x API
-        import { invoke } from "@tauri-apps/api/core";
-
+    <script>
         // DOM elements
         const driveList = document.getElementById('driveList');
         const preview = document.getElementById('preview');
@@ -307,7 +304,7 @@
 
             try {
                 // Get preview
-                const previewData = await invoke('cmd_preview_repo', { repoPath: drivePath });
+                const previewData = await window.__TAURI__.core.invoke('cmd_preview_repo', { repoPath: drivePath });
 
                 // Build preview display
                 let previewHtml = `
@@ -346,10 +343,10 @@
         async function loadDrives() {
             try {
                 // Get all drives
-                const allDrives = await invoke('cmd_list_all_drives');
+                const allDrives = await window.__TAURI__.core.invoke('cmd_list_all_drives');
                 
                 // Get repos
-                const repos = await invoke('cmd_scan_usb_repos');
+                const repos = await window.__TAURI__.core.invoke('cmd_scan_usb_repos');
 
                 if (allDrives.length === 0) {
                     driveList.innerHTML = `
