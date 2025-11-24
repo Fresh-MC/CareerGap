@@ -1,0 +1,6 @@
+[package]
+name = "nogap_system_installer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]

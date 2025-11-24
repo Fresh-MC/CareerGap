@@ -4,6 +4,16 @@ use anyhow::Result;
 /// Provides TUI, audit, and remediate commands for the NoGap security platform.
 use clap::{Parser, Subcommand};
 use nogap_cli::ui;
+use serde::Serialize;
+use chrono::Utc;
+use nogap_core::{policy_parser, engine};
+
+#[derive(Serialize)]
+struct CliReport {
+    timestamp: String,
+    compliance_score: f32,
+    results: Vec<nogap_core::engine::AuditResult>,
+}
 
 #[derive(Parser)]
 #[command(name = "nogap-cli")]
@@ -29,6 +39,9 @@ enum Commands {
         /// Filter by policy ID
         #[arg(short, long)]
         filter: Option<String>,
+        /// Output as JSON (headless mode)
+        #[arg(long)]
+        json: bool,
     },
     /// Run remediation on policies (non-interactive)
     Remediate {
@@ -51,7 +64,11 @@ fn main() -> Result<()> {
         Commands::Tui { policies } => {
             ui::run_tui(&policies)?;
         }
-        Commands::Audit { policies, filter } => {
+        Commands::Audit { policies, filter, json } => {
+            if json {
+                run_headless_audit(&policies);
+                return Ok(());
+            }
             run_audit_cli(&policies, filter.as_deref())?;
         }
         Commands::Remediate { policies, id, yes } => {
@@ -60,6 +77,46 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn run_headless_audit(policies_path: &str) {
+    let policies = match policy_parser::load_policy(policies_path) {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("{{\"error\": \"Failed to load policies: {}\"}}", e);
+            std::process::exit(1);
+        }
+    };
+
+    let results = match engine::audit(&policies) {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("{{\"error\": \"Audit failed: {}\"}}", e);
+            std::process::exit(1);
+        }
+    };
+
+    let total = results.len();
+    let passed = results.iter().filter(|r| r.passed).count();
+    let score = if total > 0 {
+        (passed as f32 / total as f32) * 100.0
+    } else {
+        0.0
+    };
+
+    let report = CliReport {
+        timestamp: Utc::now().to_rfc3339(),
+        compliance_score: score,
+        results,
+    };
+
+    match serde_json::to_string_pretty(&report) {
+        Ok(json) => println!("{}", json),
+        Err(e) => {
+            eprintln!("{{\"error\": \"JSON serialization failed: {}\"}}", e);
+            std::process::exit(1);
+        }
+    }
 }
 
 fn run_audit_cli(policies_path: &str, filter: Option<&str>) -> Result<()> {

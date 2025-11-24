@@ -2,10 +2,11 @@ use crate::platforms::linux;
 use crate::platforms::windows;
 use crate::snapshot;
 use crate::types::Policy;
+use serde::{Serialize, Deserialize};
 use serde_json::Value;
 use std::error::Error;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AuditResult {
     pub policy_id: String,
     pub passed: bool,
