@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "build": {
+    "distDir": "../src",
+    "devPath": "../src"
+  },
+  "package": {
+    "productName": "Aegis Installer",
+    "version": "1.0.0"
+  },
+  "tauri": {
+    "bundle": {
+      "active": true,
+      "identifier": "com.nogap.installer",
+      "targets": "all"
+    },
+    "windows": [
+      {
+        "title": "Aegis USB Authority Installer",
+        "width": 900,
+        "height": 700,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  }
+}

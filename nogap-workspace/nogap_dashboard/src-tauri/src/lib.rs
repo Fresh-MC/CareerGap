@@ -1733,6 +1733,119 @@ fn remediate_ssh_config(policy: &FullPolicy) -> Result<RemediateResult, String> 
     })
 }
 
+// ========== CSV IMPORT COMMANDS ==========
+
+/// Detect USB-B devices and find CSV reports
+#[tauri::command]
+fn detect_usb_csv_reports() -> Result<Vec<String>, String> {
+    use std::fs;
+    use std::path::PathBuf;
+
+    let mut report_paths = Vec::new();
+
+    #[cfg(target_os = "windows")]
+    {
+        // Check drive letters D-Z for USB-B marker
+        for letter in b'D'..=b'Z' {
+            let drive = format!("{}:\\", letter as char);
+            let marker_path = format!("{}nogap_usb_repo", drive);
+            
+            if std::path::Path::new(&marker_path).exists() {
+                // Found USB-B, look for reports
+                let reports_dir = format!("{}reports", drive);
+                if let Ok(entries) = fs::read_dir(&reports_dir) {
+                    for entry in entries.flatten() {
+                        let path = entry.path();
+                        if path.is_dir() {
+                            // Check for report.csv in hostname directory
+                            let csv_path = path.join("report.csv");
+                            if csv_path.exists() {
+                                if let Some(path_str) = csv_path.to_str() {
+                                    report_paths.push(path_str.to_string());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        // Check common Linux mount points
+        let mount_points = ["/media", "/mnt", "/run/media"];
+        
+        for mount_point in &mount_points {
+            if let Ok(entries) = fs::read_dir(mount_point) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    let marker_path = path.join("nogap_usb_repo");
+                    
+                    if marker_path.exists() {
+                        // Found USB-B, look for reports
+                        let reports_dir = path.join("reports");
+                        if let Ok(host_entries) = fs::read_dir(&reports_dir) {
+                            for host_entry in host_entries.flatten() {
+                                let host_path = host_entry.path();
+                                if host_path.is_dir() {
+                                    // Check for report.csv in hostname directory
+                                    let csv_path = host_path.join("report.csv");
+                                    if csv_path.exists() {
+                                        if let Some(path_str) = csv_path.to_str() {
+                                            report_paths.push(path_str.to_string());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if report_paths.is_empty() {
+        Err("No USB-B device with reports found".to_string())
+    } else {
+        log::info!("Found {} CSV reports on USB-B", report_paths.len());
+        Ok(report_paths)
+    }
+}
+
+/// Read CSV file contents
+#[tauri::command]
+fn read_csv_file(path: String) -> Result<String, String> {
+    use std::fs;
+    
+    log::info!("Reading CSV file: {}", path);
+    
+    fs::read_to_string(&path)
+        .map_err(|e| format!("Failed to read CSV file {}: {}", path, e))
+}
+
+/// Read binary file contents
+#[tauri::command]
+fn read_binary_file(path: String) -> Result<Vec<u8>, String> {
+    use std::fs;
+    
+    log::info!("Reading binary file: {}", path);
+    
+    fs::read(&path)
+        .map_err(|e| format!("Failed to read binary file {}: {}", path, e))
+}
+
+/// Write binary file contents
+#[tauri::command]
+fn write_binary_file(path: String, data: Vec<u8>) -> Result<(), String> {
+    use std::fs;
+    
+    log::info!("Writing binary file: {}", path);
+    
+    fs::write(&path, data)
+        .map_err(|e| format!("Failed to write binary file {}: {}", path, e))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // Initialize logger (only once)
@@ -1740,6 +1853,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             cmd_check_elevation,
             cmd_require_elevation,
@@ -1758,7 +1872,11 @@ pub fn run() {
             commands_ostree::cmd_preview_repo,
             commands_ostree::cmd_import_repo,
             commands_ostree::cmd_export_commit,
-            commands_ostree::cmd_list_all_drives
+            commands_ostree::cmd_list_all_drives,
+            detect_usb_csv_reports,
+            read_csv_file,
+            read_binary_file,
+            write_binary_file
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

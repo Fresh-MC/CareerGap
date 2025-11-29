@@ -24,6 +24,7 @@ let modal;
 let modalClose;
 let generateReportBtn;
 let exportCsvBtn;
+let importCsvBtn;
 let reportModal;
 let reportModalClose;
 let reportPreviewFrame;
@@ -56,6 +57,7 @@ function initializeElements() {
   modalClose = document.querySelector(".close");
   generateReportBtn = document.getElementById("generate-report-btn");
   exportCsvBtn = document.getElementById("export-csv-btn");
+  importCsvBtn = document.getElementById("import-csv-btn");
   reportModal = document.getElementById("report-modal");
   reportModalClose = document.querySelector(".report-close");
   reportPreviewFrame = document.getElementById("report-preview-frame");
@@ -80,6 +82,11 @@ function attachEventListeners() {
   }
   if (exportCsvBtn) {
     exportCsvBtn.addEventListener("click", exportCsvReport);
+  }
+  if (importCsvBtn) {
+    importCsvBtn.addEventListener("click", () => {
+      window.location.href = "csv_import.html";
+    });
   }
   if (exportPdfBtn) {
     exportPdfBtn.addEventListener("click", exportReportToPdf);
@@ -469,19 +476,6 @@ function extractPlatformScores(audited) {
   return { windowsScore, linuxScore };
 }
 
-function openReportPreviewModal(htmlPath) {
-  currentReportPath = htmlPath;
-  if (reportModal && reportPreviewFrame) {
-    // Convert file path to file:// URL for iframe
-    const fileUrl = htmlPath.startsWith('file://') ? htmlPath : `file://${htmlPath}`;
-    reportPreviewFrame.src = fileUrl;
-    reportModal.style.display = "block";
-    if (exportPdfBtn) {
-      exportPdfBtn.disabled = false;
-    }
-  }
-}
-
 function closeReportModal() {
   if (reportModal) {
     reportModal.style.display = "none";
@@ -530,10 +524,28 @@ async function generateReport() {
       timestamp
     });
 
-    showNotification("Report generated successfully", "success");
-    
-    // Open preview modal
-    openReportPreviewModal(htmlPath);
+    // Open save dialog to let user choose where to save the report
+    const defaultFilename = `nogap_report_${timestamp.replace(/[:.\-]/g, '_')}.html`;
+    const savePath = await window.__TAURI__.dialog.save({
+      defaultPath: defaultFilename,
+      filters: [{
+        name: 'HTML Files',
+        extensions: ['html']
+      }]
+    });
+
+    // Check if user cancelled
+    if (!savePath) {
+      showNotification("Report generation cancelled", "info");
+      showLoading(false);
+      return;
+    }
+
+    // Read temp file and write to chosen location
+    const fileData = await invoke("read_binary_file", { path: htmlPath });
+    await invoke("write_binary_file", { path: savePath, data: Array.from(fileData) });
+
+    showNotification(`Report saved successfully to ${savePath}`, "success");
   } catch (error) {
     showNotification(`Failed to generate report: ${error}`, "error");
     console.error("Error generating report:", error);
@@ -554,22 +566,13 @@ async function exportReportToPdf() {
       htmlPath: currentReportPath
     });
 
-    // Open the HTML in a new window for user to print to PDF
-    // This uses the browser's native print-to-PDF functionality
-    const fileUrl = htmlPath.startsWith('file://') ? htmlPath : `file://${htmlPath}`;
+    // Use Tauri's opener plugin to open the HTML file in default browser
+    // This avoids file:// URL issues in WebView
+    await window.__TAURI__.core.invoke('plugin:opener|open', {
+      path: htmlPath
+    });
     
-    // Create a hidden window and trigger print dialog
-    const printWindow = window.open(fileUrl, '_blank');
-    if (printWindow) {
-      printWindow.addEventListener('load', () => {
-        setTimeout(() => {
-          printWindow.print();
-        }, 500);
-      });
-      showNotification("Opening print dialog for PDF export...", "success");
-    } else {
-      showNotification("Please allow popups to export PDF", "warning");
-    }
+    showNotification("Opening report in browser for PDF export...", "success");
   } catch (error) {
     showNotification(`Failed to export PDF: ${error}`, "error");
     console.error("Error exporting PDF:", error);
@@ -603,8 +606,8 @@ async function exportCsvReport() {
     // Get current timestamp
     const timestamp = new Date().toISOString();
 
-    // Call backend to generate CSV report
-    const csvPath = await invoke("generate_csv_report", {
+    // Generate CSV in temp directory
+    const tempPath = await invoke("generate_csv_report", {
       policies: policyReports,
       total,
       pass,
@@ -612,28 +615,28 @@ async function exportCsvReport() {
       timestamp
     });
 
-    // Download the CSV file using browser API
-    const fileUrl = csvPath.startsWith('file://') ? csvPath : `file://${csvPath}`;
-    
-    // Fetch the file as a blob
-    const response = await fetch(fileUrl);
-    const blob = await response.blob();
-    
-    // Create object URL for download
-    const objectUrl = URL.createObjectURL(blob);
-    
-    // Create temporary anchor element and trigger download
-    const a = document.createElement('a');
-    a.href = objectUrl;
-    a.download = `nogap_report_${timestamp.replace(/[:.\-]/g, '_')}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    
-    // Clean up object URL
-    URL.revokeObjectURL(objectUrl);
-    
-    showNotification("CSV report downloaded successfully", "success");
+    // Open save dialog
+    const defaultFilename = `nogap_report_${timestamp.replace(/[:.\-]/g, '_')}.csv`;
+    const savePath = await window.__TAURI__.dialog.save({
+      defaultPath: defaultFilename,
+      filters: [{
+        name: 'CSV Files',
+        extensions: ['csv']
+      }]
+    });
+
+    // Check if user cancelled
+    if (!savePath) {
+      showNotification("CSV export cancelled", "info");
+      showLoading(false);
+      return;
+    }
+
+    // Read temp file and write to chosen location
+    const fileData = await invoke("read_binary_file", { path: tempPath });
+    await invoke("write_binary_file", { path: savePath, data: Array.from(fileData) });
+
+    showNotification("CSV report saved successfully", "success");
   } catch (error) {
     showNotification(`Failed to export CSV: ${error}`, "error");
     console.error("Error exporting CSV:", error);

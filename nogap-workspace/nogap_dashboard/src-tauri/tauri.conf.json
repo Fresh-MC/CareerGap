@@ -21,7 +21,22 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": null,
+      "capabilities": [
+        {
+          "identifier": "main-capability",
+          "windows": ["*"],
+          "permissions": [
+            "dialog:allow-save",
+            "dialog:default",
+            "core:default",
+            "core:path:default",
+            "core:path:allow-resolve",
+            "core:path:allow-normalize",
+            "opener:default"
+          ]
+        }
+      ]
     }
   },
   "bundle": {

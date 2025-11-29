@@ -2,7 +2,7 @@
 
 # NoGap Workspace
 
-This repository contains the NoGap workspace, which includes a Rust library (`nogap_core`), a Rust CLI application (`nogap_cli`), and a GUI application (`nogap_dashboard`) built with Tauri.
+This repository contains the NoGap workspace, which includes a Rust library (`nogap_core`), a Rust CLI application (`nogap_cli`), a GUI application (`nogap_dashboard`) built with Tauri, and a Python kiosk backend for remote CSV collection.
 
 ## Projects
 
@@ -11,12 +11,62 @@ This repository contains the NoGap workspace, which includes a Rust library (`no
 
 ### nogap_cli
 - A command-line interface for NoGap that wraps the functionality of `nogap_core`. It provides commands such as:
-  - `--audit`: Audit the current state.
-  - `--harden`: Harden the configuration.
-  - `--rollback`: Rollback to a previous state.
+  - `audit`: Audit the current state with optional CSV export
+  - `remediate`: Apply policy remediations with optional CSV export
+  - `--export-csv <path>`: Export audit/remediation results to CSV format
 
 ### nogap_dashboard
-- A GUI application built with Tauri that provides a user-friendly interface for interacting with NoGap functionalities. It includes Playwright tests for UI automation.
+- A GUI application built with Tauri that provides a user-friendly interface for interacting with NoGap functionalities. Features include:
+  - Policy audit and remediation
+  - HTML/PDF report generation
+  - **CSV export and import** with filtering and visualization
+  - USB-B device management for offline operations
+  - Playwright tests for UI automation
+
+### nogap_kiosk
+- A Python backend for collecting CSV reports from remote hosts via:
+  - **WinRM** (Windows hosts)
+  - **SSH/SCP** (Linux hosts)
+  - Summary CSV generation
+  - USB-B export for air-gapped environments
+
+## CSV Reporting Features
+
+The NoGap platform provides comprehensive CSV reporting capabilities across all components. For complete documentation, see [CSV_IMPORT_GUIDE.md](./CSV_IMPORT_GUIDE.md).
+
+### Quick Start
+
+**CLI CSV Export**:
+```bash
+# Export audit results to default location
+nogap-cli audit --export-csv
+
+# Export to custom path
+nogap-cli audit --export-csv /path/to/report.csv
+
+# Export with USB-B auto-detection
+nogap-cli audit --export-csv  # Automatically detects USB-B
+```
+
+**Kiosk Remote Collection**:
+```python
+from kiosk_backend import KioskBackend, RemoteHost
+
+hosts = [
+    RemoteHost("host1", "windows", "192.168.1.10", "admin", password="pass"),
+    RemoteHost("host2", "linux", "192.168.1.11", "root", key_path="/root/.ssh/id_rsa")
+]
+
+kiosk = KioskBackend()
+kiosk.process_hosts(hosts)
+kiosk.generate_summary_csv()
+```
+
+**Dashboard CSV Import**:
+1. Open NoGap Dashboard
+2. Click **"📥 Import CSV"** button
+3. Select CSV file or import from USB-B
+4. View results with filtering and pagination
 
 ## Getting Started
 

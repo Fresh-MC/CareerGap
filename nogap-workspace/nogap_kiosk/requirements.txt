@@ -1,0 +1,2 @@
+pywinrm>=0.4.3
+paramiko>=3.4.0
