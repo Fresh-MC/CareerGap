@@ -2,6 +2,7 @@ use rusqlite::{params, Connection, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::time::{SystemTime, UNIX_EPOCH};
+use std::path::PathBuf;
 
 /// Structured diff between two snapshots
 #[derive(Debug, Clone, PartialEq)]
@@ -71,9 +72,52 @@ pub struct RollbackState {
     pub value: Value,
 }
 
+/// Returns the absolute path to the snapshot database
+fn get_snapshot_db_path() -> PathBuf {
+    // Try to use app data directory first (recommended for user data)
+    #[cfg(target_os = "windows")]
+    {
+        if let Some(data_dir) = dirs::data_local_dir() {
+            let app_dir = data_dir.join("nogap");
+            if std::fs::create_dir_all(&app_dir).is_ok() {
+                let db_path = app_dir.join("snapshots.db");
+                log::info!("[SNAPSHOT] Using DB path: {:?}", db_path);
+                return db_path;
+            }
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        if let Some(data_dir) = dirs::data_local_dir() {
+            let app_dir = data_dir.join("nogap");
+            if std::fs::create_dir_all(&app_dir).is_ok() {
+                let db_path = app_dir.join("snapshots.db");
+                log::info!("[SNAPSHOT] Using DB path: {:?}", db_path);
+                return db_path;
+            }
+        }
+    }
+
+    // Fallback to executable directory
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            let db_path = exe_dir.join("snapshots.db");
+            log::info!("[SNAPSHOT] Using DB path (fallback): {:?}", db_path);
+            return db_path;
+        }
+    }
+
+    // Last resort: current directory (should rarely happen)
+    let db_path = PathBuf::from("snapshots.db");
+    log::warn!("[SNAPSHOT] Using DB path (last resort): {:?}", db_path);
+    db_path
+}
+
 /// Initializes the snapshot database with required schema
 pub fn init_db() -> Result<Connection> {
-    let conn = Connection::open("snapshots.db")?;
+    let db_path = get_snapshot_db_path();
+    let conn = Connection::open(db_path)?;
     conn.execute(
         "CREATE TABLE IF NOT EXISTS snapshots (
             id INTEGER PRIMARY KEY,

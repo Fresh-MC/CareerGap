@@ -37,7 +37,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use ed25519_dalek::{Signature, Verifier, VerifyingKey};
+use ed25519_dalek::{Signature, VerifyingKey};
 use std::collections::HashMap;
 
 /// Default trusted public key (placeholder - replace with actual production key)
@@ -207,7 +207,7 @@ fn discover_windows_repos() -> Result<Vec<PathBuf>, OstreeError> {
     // Iterate through drive letters D: through Z:
     for letter in b'D'..=b'Z' {
         let drive_path = format!("{}:\\", letter as char);
-        let mut wide: Vec<u16> = OsString::from(&drive_path)
+        let wide: Vec<u16> = OsString::from(&drive_path)
             .encode_wide()
             .chain(std::iter::once(0))
             .collect();

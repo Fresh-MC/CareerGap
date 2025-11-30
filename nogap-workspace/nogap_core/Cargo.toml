@@ -22,6 +22,8 @@ crossbeam-channel = "0.5"
 thiserror = "1"
 regex = "1"
 encoding_rs = "0.8"
+log = "0.4"
+dirs = "5.0"
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.52"

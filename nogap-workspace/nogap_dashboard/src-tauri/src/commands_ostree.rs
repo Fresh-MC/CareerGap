@@ -6,7 +6,7 @@ use nogap_core::ostree_lite::{
     install_manifest, export_commit_to_target, OstreeError
 };
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// Preview information for a USB repository before import
 #[derive(Debug, Serialize, Deserialize)]
@@ -273,7 +273,7 @@ pub async fn cmd_list_all_drives() -> Result<Vec<String>, String> {
     #[cfg(target_os = "windows")]
     {
         use std::ffi::OsString;
-        use std::os::windows::ffi::OsStringExt;
+        use std::os::windows::ffi::OsStrExt;
         
         // Enumerate drive letters from D: to Z:
         for letter in b'D'..=b'Z' {
@@ -293,8 +293,8 @@ pub async fn cmd_list_all_drives() -> Result<Vec<String>, String> {
                 if drive_type == 2 || drive_type == 3 {
                     let path = PathBuf::from(&drive_path);
                     if path.exists() && path.is_dir() {
-                        drives.push(drive_path);
                         log::debug!("Found drive: {}", drive_path);
+                        drives.push(drive_path);
                     }
                 }
             }

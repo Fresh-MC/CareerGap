@@ -2622,9 +2622,11 @@ name = "nogap_core"
 version = "0.1.0"
 dependencies = [
  "crossbeam-channel",
+ "dirs 5.0.1",
  "ed25519-dalek",
  "encoding_rs",
  "hex",
+ "log",
  "rand 0.8.5",
  "regex",
  "rsa",

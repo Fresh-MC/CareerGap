@@ -258,6 +258,32 @@ fn remediate_policy(
         });
     }
 
+    // Save snapshot before remediation for rollback support
+    log::info!("[SNAPSHOT] Capturing pre-remediation state for policy: {}", policy_id);
+    let core_policy = convert_to_core_policy(&policy);
+    let state_provider = nogap_core::engine::DefaultPolicyStateProvider;
+
+    match nogap_core::engine::PolicyStateProvider::export_state(&state_provider, &core_policy) {
+        Ok(before_state) => {
+            match nogap_core::snapshot::init_db() {
+                Ok(conn) => {
+                    match serde_json::to_string(&before_state) {
+                        Ok(state_json) => {
+                            if let Err(e) = nogap_core::snapshot::save_rollback(&conn, &policy_id, &state_json) {
+                                log::warn!("[SNAPSHOT] Failed to save rollback point for {}: {}", policy_id, e);
+                            } else {
+                                log::info!("[SNAPSHOT] ✅ Saved rollback point for {}", policy_id);
+                            }
+                        }
+                        Err(e) => log::warn!("[SNAPSHOT] Failed to serialize state for {}: {}", policy_id, e),
+                    }
+                }
+                Err(e) => log::warn!("[SNAPSHOT] DB initialization failed for {}: {}", policy_id, e),
+            }
+        }
+        Err(e) => log::warn!("[SNAPSHOT] Failed to export state for {}: {}", policy_id, e),
+    }
+
     // Perform remediation based on remediate_type
     match policy.remediate_type.as_str() {
         "local_policy_set" => remediate_local_policy(&policy),
@@ -1739,7 +1765,6 @@ fn remediate_ssh_config(policy: &FullPolicy) -> Result<RemediateResult, String> 
 #[tauri::command]
 fn detect_usb_csv_reports() -> Result<Vec<String>, String> {
     use std::fs;
-    use std::path::PathBuf;
 
     let mut report_paths = Vec::new();
 
