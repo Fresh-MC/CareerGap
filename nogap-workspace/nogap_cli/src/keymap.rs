@@ -16,6 +16,7 @@ impl KeyMap {
             ("a", "Run audit"),
             ("r", "Remediate"),
             ("d", "View diff"),
+            ("e/E", "Export current audit results to CSV"),
             ("t", "Toggle high-contrast"),
             ("?", "Show help"),
             ("q/Esc", "Quit/Close"),
@@ -91,5 +92,10 @@ impl KeyMap {
     /// Check if key is space (for toggling checkboxes)
     pub fn is_space(code: KeyCode) -> bool {
         matches!(code, KeyCode::Char(' '))
+    }
+
+    /// Export current results to CSV
+    pub fn is_export_csv(code: KeyCode) -> bool {
+        matches!(code, KeyCode::Char('e') | KeyCode::Char('E'))
     }
 }

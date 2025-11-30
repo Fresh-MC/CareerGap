@@ -1,0 +1,27 @@
+﻿{
+  "timestamp": "2025-11-30T12:00:00Z",
+  "compliance_score": 75.0,
+  "results": [
+    {
+      "policy_id": "TEST-001",
+      "passed": true,
+      "message": "Policy compliant"
+    },
+    {
+      "policy_id": "TEST-002",
+      "passed": false,
+      "message": "Policy not compliant"
+    },
+    {
+      "policy_id": "HIGH-001",
+      "passed": true,
+      "message": "High severity policy passed"
+    },
+    {
+      "policy_id": "TEST-003",
+      "passed": false,
+      "message": "Another failing policy"
+    }
+  ]
+}
+

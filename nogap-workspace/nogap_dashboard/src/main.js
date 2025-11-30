@@ -4,6 +4,8 @@ const { invoke } = window.__TAURI__.core;
 let policies = [];
 let auditResults = {};
 let filteredPolicies = [];
+let detectedOS = null;
+let groupedPolicies = {};
 
 // UI Elements
 let loadPoliciesBtn;
@@ -119,7 +121,21 @@ async function loadPolicies() {
   try {
     policies = await invoke("load_policies");
     auditResults = {};
+    
+    // Detect OS and auto-filter policies
+    if (!detectedOS) {
+      const sysInfo = await invoke("get_system_info");
+      detectedOS = sysInfo.toLowerCase().includes("windows") ? "windows" : 
+                   sysInfo.toLowerCase().includes("linux") ? "linux" : null;
+    }
+    
+    // Filter policies by detected OS
+    if (detectedOS) {
+      policies = policies.filter(p => p.platform.toLowerCase() === detectedOS);
+    }
+    
     filteredPolicies = [...policies];
+    groupPoliciesByHierarchy();
     renderPolicies();
     updatePolicyCount();
     auditAllBtn.disabled = false;
@@ -219,6 +235,29 @@ async function remediatePolicy(policyId) {
   showLoading(false);
 }
 
+function groupPoliciesByHierarchy() {
+  groupedPolicies = {};
+  
+  filteredPolicies.forEach(policy => {
+    const parts = policy.id.split('.');
+    const section = parts[0]; // e.g., "A"
+    const subsection = parts.length > 1 ? parts[0] + '.' + parts[1] : null; // e.g., "A.1"
+    
+    if (!groupedPolicies[section]) {
+      groupedPolicies[section] = { subsections: {}, policies: [] };
+    }
+    
+    if (subsection && parts.length > 2) {
+      if (!groupedPolicies[section].subsections[subsection]) {
+        groupedPolicies[section].subsections[subsection] = [];
+      }
+      groupedPolicies[section].subsections[subsection].push(policy);
+    } else {
+      groupedPolicies[section].policies.push(policy);
+    }
+  });
+}
+
 function applyFilters() {
   const searchTerm = searchInput.value.toLowerCase();
   const platform = platformFilter.value;
@@ -245,7 +284,38 @@ function applyFilters() {
     return matchesSearch && matchesPlatform && matchesSeverity && matchesStatus;
   });
 
+  groupPoliciesByHierarchy();
   renderPolicies();
+}
+
+function renderPolicyCard(policy) {
+  const audit = auditResults[policy.id];
+  const statusClass = audit ? (audit.compliant ? 'compliant' : 'non-compliant') : 'pending';
+  const statusText = audit ? (audit.compliant ? '✓ Compliant' : '✗ Non-Compliant') : '⦿ Pending';
+  const severityClass = `severity-${policy.severity.toLowerCase()}`;
+
+  return `
+    <div class="policy-card ${statusClass}">
+      <div class="policy-header">
+        <div class="policy-title-section">
+          <h3>${policy.title}</h3>
+          <span class="policy-id">${policy.id}</span>
+        </div>
+        <div class="policy-badges">
+          <span class="badge badge-platform">${policy.platform}</span>
+          <span class="badge ${severityClass}">${policy.severity}</span>
+          <span class="badge badge-status ${statusClass}">${statusText}</span>
+        </div>
+      </div>
+      <p class="policy-description">${policy.description}</p>
+      ${audit ? `<p class="audit-message">${audit.message}</p>` : ''}
+      <div class="policy-actions">
+        <button class="btn btn-small btn-secondary" onclick="auditPolicy('${policy.id}')">Audit</button>
+        <button class="btn btn-small btn-primary" onclick="remediatePolicy('${policy.id}')">Remediate</button>
+        <button class="btn btn-small btn-info" onclick="showPolicyDetails('${policy.id}')">Details</button>
+      </div>
+    </div>
+  `;
 }
 
 function renderPolicies() {
@@ -254,35 +324,131 @@ function renderPolicies() {
     return;
   }
 
-  policiesContainer.innerHTML = filteredPolicies.map(policy => {
-    const audit = auditResults[policy.id];
-    const statusClass = audit ? (audit.compliant ? 'compliant' : 'non-compliant') : 'pending';
-    const statusText = audit ? (audit.compliant ? '✓ Compliant' : '✗ Non-Compliant') : '⦿ Pending';
-    const severityClass = `severity-${policy.severity.toLowerCase()}`;
+  let html = renderBulkRemediationPanel();
 
-    return `
-      <div class="policy-card ${statusClass}">
-        <div class="policy-header">
-          <div class="policy-title-section">
-            <h3>${policy.title}</h3>
-            <span class="policy-id">${policy.id}</span>
-          </div>
-          <div class="policy-badges">
-            <span class="badge badge-platform">${policy.platform}</span>
-            <span class="badge ${severityClass}">${policy.severity}</span>
-            <span class="badge badge-status ${statusClass}">${statusText}</span>
-          </div>
+  // Render grouped policies
+  Object.keys(groupedPolicies).sort().forEach(section => {
+    const sectionData = groupedPolicies[section];
+    const subsectionKeys = Object.keys(sectionData.subsections).sort();
+    
+    html += `
+      <div class="policy-section">
+        <div class="section-header" onclick="toggleSection('${section}')">
+          <span class="section-toggle" id="toggle-${section}">▼</span>
+          <h2>Section ${section}</h2>
         </div>
-        <p class="policy-description">${policy.description}</p>
-        ${audit ? `<p class="audit-message">${audit.message}</p>` : ''}
-        <div class="policy-actions">
-          <button class="btn btn-small btn-secondary" onclick="auditPolicy('${policy.id}')">Audit</button>
-          <button class="btn btn-small btn-primary" onclick="remediatePolicy('${policy.id}')">Remediate</button>
-          <button class="btn btn-small btn-info" onclick="showPolicyDetails('${policy.id}')">Details</button>
-        </div>
-      </div>
+        <div class="section-content" id="section-${section}">
     `;
-  }).join('');
+    
+    // Render subsections
+    subsectionKeys.forEach(subsection => {
+      const policies = sectionData.subsections[subsection];
+      html += `
+        <div class="policy-subsection">
+          <div class="subsection-header" onclick="toggleSubsection('${subsection}')">
+            <span class="subsection-toggle" id="toggle-${subsection}">▼</span>
+            <h3>Subsection ${subsection}</h3>
+          </div>
+          <div class="subsection-content" id="subsection-${subsection}">
+            ${policies.map(p => renderPolicyCard(p)).join('')}
+          </div>
+        </div>
+      `;
+    });
+    
+    // Render policies without subsection
+    if (sectionData.policies.length > 0) {
+      html += sectionData.policies.map(p => renderPolicyCard(p)).join('');
+    }
+    
+    html += `</div></div>`;
+  });
+
+  policiesContainer.innerHTML = html;
+}
+
+function renderBulkRemediationPanel() {
+  const severities = [...new Set(filteredPolicies.map(p => p.severity))];
+  
+  if (severities.length === 0) return '';
+  
+  return `
+    <div class="bulk-remediation-panel">
+      <h2>🔧 Bulk Remediation</h2>
+      <div class="bulk-actions">
+        ${severities.map(severity => {
+          const count = filteredPolicies.filter(p => p.severity === severity).length;
+          const severityClass = `severity-${severity.toLowerCase()}`;
+          return `
+            <button class="btn btn-small ${severityClass}" onclick="remediateBySeverity('${severity}')">
+              Remediate all ${severity} policies (${count})
+            </button>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+async function remediateBySeverity(severity) {
+  const policiesToRemediate = filteredPolicies.filter(p => p.severity === severity);
+  
+  if (!confirm(`Are you sure you want to remediate all ${policiesToRemediate.length} ${severity} policies? This will modify system settings.`)) {
+    return;
+  }
+  
+  showLoading(true);
+  let successCount = 0;
+  let failCount = 0;
+  let rebootRequired = false;
+  
+  for (const policy of policiesToRemediate) {
+    try {
+      const result = await invoke("remediate_policy", { policyId: policy.id });
+      if (result.success) {
+        successCount++;
+        if (result.reboot_required) rebootRequired = true;
+      } else {
+        failCount++;
+      }
+    } catch (error) {
+      failCount++;
+      console.error(`Failed to remediate ${policy.id}:`, error);
+    }
+  }
+  
+  let message = `Bulk remediation complete: ${successCount} succeeded, ${failCount} failed`;
+  if (rebootRequired) message += " (Reboot required)";
+  
+  showNotification(message, successCount > 0 ? "success" : "error");
+  await auditAllPolicies();
+  showLoading(false);
+}
+
+function toggleSection(sectionId) {
+  const content = document.getElementById(`section-${sectionId}`);
+  const toggle = document.getElementById(`toggle-${sectionId}`);
+  
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    toggle.textContent = '▼';
+  } else {
+    content.style.display = 'none';
+    toggle.textContent = '▶';
+  }
+}
+
+function toggleSubsection(subsectionId) {
+  const content = document.getElementById(`subsection-${subsectionId}`);
+  const toggle = document.getElementById(`toggle-${subsectionId}`);
+  
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    toggle.textContent = '▼';
+  } else {
+    content.style.display = 'none';
+    toggle.textContent = '▶';
+  }
 }
 
 function showPolicyDetails(policyId) {
@@ -653,3 +819,6 @@ window.rollbackAll = rollbackAll;
 window.generateReport = generateReport;
 window.exportCsvReport = exportCsvReport;
 window.exportReportToPdf = exportReportToPdf;
+window.remediateBySeverity = remediateBySeverity;
+window.toggleSection = toggleSection;
+window.toggleSubsection = toggleSubsection;

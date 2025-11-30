@@ -11,7 +11,6 @@
   set_value: "1"
   post_reboot_required: false
   reference: "Annexure A Page 1, Item 1.a.i"
-
 - id: "A.1.a.ii"
   title: "Set minimum password length"
   description: "Ensure minimum password length is at least 14 characters"
@@ -27,7 +26,6 @@
   set_value: 14
   post_reboot_required: false
   reference: "Annexure A Page 1, Item 1.a.ii"
-
 - id: "A.1.a.iii"
   title: "Set maximum password age"
   description: "Ensure maximum password age is 60 days or less"
@@ -43,7 +41,6 @@
   set_value: 60
   post_reboot_required: false
   reference: "Annexure A Page 1, Item 1.a.iii"
-
 - id: "A.1.a.iv"
   title: "Set minimum password age"
   description: "Ensure minimum password age is at least 1 day"
@@ -59,7 +56,6 @@
   set_value: 1
   post_reboot_required: false
   reference: "Annexure A Page 1, Item 1.a.iv"
-
 - id: "A.1.a.v"
   title: "Store passwords using reversible encryption"
   description: "Ensure passwords are not stored using reversible encryption"
@@ -73,7 +69,36 @@
   set_value: "0"
   post_reboot_required: false
   reference: "Annexure A Page 1, Item 1.a.v"
-
+- id: "A.1.a.vii"
+  title: "Minimum password length audit"
+  description: "Ensure minimum password length is set to 14 characters or more"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "local_policy"
+  policy_name: "MinimumPasswordLength"
+  expected_state:
+    operator: "gte"
+    value: 14
+  remediate_type: "local_policy_set"
+  set_value: 14
+  post_reboot_required: false
+  reference: "Annexure A Page 1, Item 1.a.vii"
+- id: "A.1.a.viii"
+  title: "Relax minimum password length limits"
+  description: "Enable the relaxation of minimum password length limits to support passwords longer than 14 characters"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "local_policy"
+  policy_name: "RelaxMinimumPasswordLengthLimits"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "local_policy_set"
+  set_value: 1
+  post_reboot_required: true
+  reference: "Annexure A Page 1, Item 1.a.viii"
 - id: "A.1.b.i"
   title: "Enforce password history"
   description: "Ensure password history remembers at least 24 passwords"
@@ -89,7 +114,6 @@
   set_value: 24
   post_reboot_required: false
   reference: "Annexure A Page 2, Item 1.b.i"
-
 - id: "A.1.b.ii"
   title: "Enforce password history on all domain users"
   description: "Ensure password history is enforced across the domain"
@@ -105,7 +129,21 @@
   set_value: 24
   post_reboot_required: false
   reference: "Annexure A Page 2, Item 1.b.ii"
-
+- id: "A.1.b.iii"
+  title: "Reset account lockout counter after"
+  description: "Ensure 'Reset account lockout counter after' is set to 15 minutes or more"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "local_policy"
+  policy_name: "ResetLockoutCount"
+  expected_state:
+    operator: "gte"
+    value: 15
+  remediate_type: "local_policy_set"
+  set_value: 15
+  post_reboot_required: false
+  reference: "Annexure A Page 1, Item 1.b.iii"
 - id: "A.2.a.i"
   title: "Disable Guest account"
   description: "Ensure Guest account is disabled"
@@ -119,7 +157,6 @@
   set_value: "0"
   post_reboot_required: false
   reference: "Annexure A Page 3, Item 2.a.i"
-
 - id: "A.2.a.ii"
   title: "Rename Administrator account"
   description: "Ensure default Administrator account is renamed"
@@ -137,7 +174,6 @@
   set_type: "STRING"
   post_reboot_required: false
   reference: "Annexure A Page 3, Item 2.a.ii"
-
 - id: "A.2.a.iii"
   title: "Rename Guest account"
   description: "Ensure default Guest account is renamed"
@@ -171,7 +207,6 @@
   set_value: 5
   post_reboot_required: false
   reference: "Annexure A Page 3, Item 2.b.i"
-
 - id: "A.2.b.ii"
   title: "Set account lockout duration"
   description: "Ensure account lockout duration is at least 15 minutes"
@@ -187,7 +222,6 @@
   set_value: 15
   post_reboot_required: false
   reference: "Annexure A Page 3, Item 2.b.ii"
-
 - id: "A.2.b.iii"
   title: "Reset account lockout counter"
   description: "Ensure account lockout counter reset time is at least 15 minutes"
@@ -203,7 +237,74 @@
   set_value: 15
   post_reboot_required: false
   reference: "Annexure A Page 3, Item 2.b.iii"
-
+- id: "A.2.b.iv"
+  title: "Interactive logon: Do not display last user name"
+  description: "Ensure the previous username is not displayed on the secure desktop"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "registry"
+  policy_name: "DontDisplayLastUserName"
+  registry_key: "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System"
+  registry_value: "dontdisplaylastusername"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  post_reboot_required: false
+  reference: "Annexure A Page 3, Item 2.b.iv"
+- id: "A.2.b.v"
+  title: "Interactive logon: Message text for users attempting to log on"
+  description: "Ensure a legal warning banner is displayed to users before logging on"
+  platform: "windows"
+  severity: "low"
+  reversible: true
+  check_type: "registry"
+  policy_name: "LegalNoticeText"
+  registry_key: "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System"
+  registry_value: "legalnoticetext"
+  expected_state:
+    operator: "not_empty"
+    value: null
+  remediate_type: "registry_set"
+  set_value: "Authorized Use Only. All activity is monitored."
+  post_reboot_required: false
+  reference: "Annexure A Page 3, Item 2.b.v"
+- id: "A.2.b.vi"
+  title: "Network access: Do not allow storage of passwords and credentials"
+  description: "Ensure passwords and credentials are not stored for network authentication"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry"
+  policy_name: "DisablePasswordSaving"
+  registry_key: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa"
+  registry_value: "disabledomaincreds"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  post_reboot_required: true
+  reference: "Annexure A Page 3, Item 2.b.vi"
+- id: "A.2.b.vii"
+  title: "Shutdown: Clear virtual memory pagefile"
+  description: "Ensure the system clears the pagefile upon shutdown to prevent data remnant recovery"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "registry"
+  policy_name: "ClearPageFileAtShutdown"
+  registry_key: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management"
+  registry_value: "ClearPageFileAtShutdown"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  post_reboot_required: true
+  reference: "Annexure A Page 3, Item 2.b.vii"
 - id: "A.2.c.i"
   title: "Limit local account use of blank passwords"
   description: "Ensure local accounts with blank passwords cannot be used remotely"
@@ -217,7 +318,202 @@
   set_value: "1"
   post_reboot_required: false
   reference: "Annexure A Page 3, Item 2.c.i"
-
+- id: "A.2.d.i"
+  title: "User Account Control: Run all administrators in Admin Approval Mode"
+  description: "Ensure UAC is enabled for all users, including administrators"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry"
+  policy_name: "EnableLUA"
+  registry_key: "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System"
+  registry_value: "EnableLUA"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  post_reboot_required: true
+  reference: "Annexure A Page 4, Item 2.d.i"
+- id: "A.2.d.ii"
+  title: "User Account Control: Behavior of the elevation prompt for administrators"
+  description: "Ensure the UAC prompt requests consent on the secure desktop"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry"
+  policy_name: "ConsentPromptBehaviorAdmin"
+  registry_key: "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System"
+  registry_value: "ConsentPromptBehaviorAdmin"
+  expected_state:
+    operator: "eq"
+    value: 2
+  remediate_type: "registry_set"
+  set_value: 2
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 2.d.ii"
+- id: "A.2.d.iii"
+  title: "User Account Control: Switch to the secure desktop when prompting for elevation"
+  description: "Ensure the desktop is dimmed and locked (Secure Desktop) during UAC prompts"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "registry"
+  policy_name: "PromptOnSecureDesktop"
+  registry_key: "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System"
+  registry_value: "PromptOnSecureDesktop"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 2.d.iii"
+- id: "A.2.d.iv"
+  title: "User Account Control: Detect application installations and prompt for elevation"
+  description: "Ensure Windows detects installers and prompts for permissions"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "registry"
+  policy_name: "EnableInstallerDetection"
+  registry_key: "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System"
+  registry_value: "EnableInstallerDetection"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 2.d.iv"
+- id: "A.2.d.v"
+  title: "Network security: LAN Manager authentication level"
+  description: "Ensure only NTLMv2 is used (refuse LM and NTLM) to prevent credential theft"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry"
+  policy_name: "LmCompatibilityLevel"
+  registry_key: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa"
+  registry_value: "LmCompatibilityLevel"
+  expected_state:
+    operator: "gte"
+    value: 5
+  remediate_type: "registry_set"
+  set_value: 5
+  post_reboot_required: true
+  reference: "Annexure A Page 4, Item 2.d.v"
+- id: "A.2.d.vi"
+  title: "Network access: Do not allow anonymous enumeration of SAM accounts"
+  description: "Prevent anonymous users from listing user accounts on the system"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "registry"
+  policy_name: "RestrictAnonymousSAM"
+  registry_key: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa"
+  registry_value: "RestrictAnonymousSAM"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 2.d.vi"
+- id: "A.2.d.vii"
+  title: "Network access: Do not allow anonymous enumeration of SAM accounts and shares"
+  description: "Prevent anonymous users from listing shares and accounts"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "registry"
+  policy_name: "RestrictAnonymous"
+  registry_key: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa"
+  registry_value: "RestrictAnonymous"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 2.d.vii"
+- id: "A.2.d.viii"
+  title: "Remote Desktop: Require Network Level Authentication (NLA)"
+  description: "Ensure RDP connections require authentication before establishing a session"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry"
+  policy_name: "UserAuthentication"
+  registry_key: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp"
+  registry_value: "UserAuthentication"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 2.d.viii"
+- id: "A.2.c.ix"
+  title: "Restore files and directories"
+  description: "Ensure 'Restore files and directories' is restricted to Administrators and Backup Operators"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "user_right"
+  policy_name: "SeRestorePrivilege"
+  expected_state:
+  operator: "equals"
+  value: ["Administrators", "Backup Operators"]
+  remediate_type: "user_right_set"
+  set_value: ["Administrators", "Backup Operators"]
+  post_reboot_required: false
+  reference: "Annexure A Page 3, Item 2.c.ix"
+- id: "A.2.c.x"
+  title: "Shut down the system"
+  description: "Ensure 'Shut down the system' is restricted to Administrators, Backup Operators, and Users"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "user_right"
+  policy_name: "SeShutdownPrivilege"
+  expected_state:
+    operator: "equals"
+    value: ["Administrators", "Backup Operators", "Users"]
+  remediate_type: "user_right_set"
+  set_value: ["Administrators", "Backup Operators", "Users"]
+  post_reboot_required: false
+  reference: "Annexure A Page 3, Item 2.c.x"
+- id: "A.2.c.xi"
+  title: "Synchronize directory service data"
+  description: "Ensure 'Synchronize directory service data' is set to 'No One'"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "user_right"
+  policy_name: "SeSyncAgentPrivilege"
+  expected_state:
+    operator: "equals"
+    value: []
+  remediate_type: "user_right_set"
+  set_value: []
+  post_reboot_required: false
+  reference: "Annexure A Page 3, Item 2.c.xi"
+- id: "A.2.c.xii"
+  title: "Take ownership of files or other objects"
+  description: "Ensure 'Take ownership of files or other objects' is restricted to Administrators"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "user_right"
+  policy_name: "SeTakeOwnershipPrivilege"
+  expected_state:
+    operator: "equals"
+    value: ["Administrators"]
+  remediate_type: "user_right_set"
+  set_value: ["Administrators"]
+  post_reboot_required: false
+  reference: "Annexure A Page 3, Item 2.c.xii"
 - id: "A.3.a.i"
   title: "Disable SMBv1 protocol"
   description: "Ensure SMBv1 protocol is disabled"
@@ -235,7 +531,6 @@
   set_type: "DWORD"
   post_reboot_required: true
   reference: "Annexure A Page 4, Item 3.a.i"
-
 - id: "A.3.a.ii"
   title: "Enable Windows Firewall for Domain profile"
   description: "Ensure Windows Firewall is enabled for Domain profile"
@@ -253,7 +548,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 4, Item 3.a.ii"
-
 - id: "A.3.a.iii"
   title: "Enable Windows Firewall for Private profile"
   description: "Ensure Windows Firewall is enabled for Private profile"
@@ -271,7 +565,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 4, Item 3.a.iii"
-
 - id: "A.3.a.iv"
   title: "Enable Windows Firewall for Public profile"
   description: "Ensure Windows Firewall is enabled for Public profile"
@@ -289,7 +582,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 4, Item 3.a.iv"
-
 - id: "A.3.b.i"
   title: "Configure network access to shares and pipes"
   description: "Ensure network access to named pipes and shares is restricted"
@@ -307,7 +599,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 4, Item 3.b.i"
-
 - id: "A.3.b.ii"
   title: "Disable LLMNR protocol"
   description: "Ensure Link-Local Multicast Name Resolution (LLMNR) is disabled"
@@ -325,7 +616,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 4, Item 3.b.ii"
-
 - id: "A.3.c.i"
   title: "Disable NetBIOS over TCP/IP"
   description: "Ensure NetBIOS over TCP/IP is disabled"
@@ -343,7 +633,6 @@
   set_type: "DWORD"
   post_reboot_required: true
   reference: "Annexure A Page 4, Item 3.c.i"
-
 - id: "A.3.c.ii"
   title: "Enable DEP for all programs"
   description: "Ensure Data Execution Prevention (DEP) is enabled for all programs"
@@ -361,7 +650,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 4, Item 3.c.ii"
-
 - id: "A.3.d.i"
   title: "Enable structured exception handling overwrite protection"
   description: "Ensure SEHOP is enabled"
@@ -379,7 +667,6 @@
   set_type: "DWORD"
   post_reboot_required: true
   reference: "Annexure A Page 4, Item 3.d.i"
-
 - id: "A.3.d.ii"
   title: "Configure Windows Firewall logging"
   description: "Ensure Windows Firewall logs dropped packets for all profiles"
@@ -397,7 +684,907 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 4, Item 3.d.ii"
-
+- id: "A.3.e.i"
+  title: "Force audit policy subcategory settings"
+  description: "Ensure advanced audit policy settings override category-based audit policies"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa"
+  value_name: "SCENoApplyLegacyAuditPolicy"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.e.i"
+- id: "A.3.e.ii"
+  title: "Shutdown system if unable to log security audits"
+  description: "Ensure the system halts when audit logs cannot be written"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa"
+  value_name: "CrashOnAuditFail"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  set_type: "DWORD"
+  post_reboot_required: true
+  reference: "Annexure A Page 4, Item 3.e.ii"
+- id: "A.3.e.iii"
+  title: "DCOM Machine Access Restrictions"
+  description: "Restrict DCOM access using secure SDDL configuration"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SOFTWARE\\Microsoft\\Ole"
+  value_name: "MachineAccessRestriction"
+  expected_state:
+    operator: "eq"
+    value: "<Secure_SDDL_Value>"
+  remediate_type: "registry_set"
+  set_value: "<Secure_SDDL_Value>"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.e.iii"
+- id: "A.3.e.iv"
+  title: "DCOM Machine Launch Restrictions"
+  description: "Restrict DCOM launch permissions using secure SDDL"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SOFTWARE\\Microsoft\\Ole"
+  value_name: "MachineLaunchRestriction"
+  expected_state:
+    operator: "eq"
+    value: "<Secure_SDDL_Value>"
+  remediate_type: "registry_set"
+  set_value: "<Secure_SDDL_Value>"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.e.iv"
+- id: "A.3.e.v"
+  title: "Restrict formatting and ejecting removable media"
+  description: "Ensure only administrators can format or eject removable storage devices"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"
+  value_name: "AllocateDASD"
+  expected_state:
+    operator: "eq"
+    value: "0"
+  remediate_type: "registry_set"
+  set_value: "0"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.e.v"
+- id: "A.3.e.vi"
+  title: "Prevent users from installing printer drivers"
+  description: "Ensure standard users are blocked from installing printer drivers"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Print\\Providers\\LanMan Print Services\\Servers"
+  value_name: "AddPrinterDrivers"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.e.vi"
+- id: "A.3.e.vii"
+  title: "Restrict CD-ROM access to locally logged-on user"
+  description: "Ensure CD drives cannot be accessed remotely"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"
+  value_name: "AllocateCDRoms"
+  expected_state:
+    operator: "eq"
+    value: "1"
+  remediate_type: "registry_set"
+  set_value: "1"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.e.vii"
+- id: "A.3.e.viii"
+  title: "Allow computer account reuse during domain join"
+  description: "Prevent unauthorized reuse of existing computer accounts"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "MACHINE_ACCOUNT_REUSE"
+  expected_state:
+    operator: "eq"
+    value: "Disabled"
+  remediate_type: "gpo_set"
+  set_value: "Disabled"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.e.viii"
+- id: "A.3.e.ix"
+  title: "Block vulnerable Netlogon secure channel connections"
+  description: "Ensure insecure Netlogon connections are blocked"
+  platform: "windows"
+  severity: "critical"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters"
+  value_name: "RequireSignOrSeal"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  set_type: "DWORD"
+  post_reboot_required: true
+  reference: "Annexure A Page 4, Item 3.e.ix"
+- id: "A.3.f.i"
+  title: "LDAP server channel binding token requirements"
+  description: "Enforce LDAP channel binding to mitigate man-in-the-middle and downgrade attacks."
+  platform: "windows"
+  severity: "critical"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\NTDS\\Parameters"
+  value_name: "LdapEnforceChannelBinding"
+  expected_state:
+    operator: "eq"
+    value: 2
+  remediate_type: "registry_set"
+  set_value: 2
+  set_type: "DWORD"
+  post_reboot_required: true
+  reference: "Annexure A Page 4, Item 3.f.i"
+- id: "A.3.f.ii"
+  title: "LDAP server signing requirements"
+  description: "Require LDAP signing on domain controllers to protect integrity of LDAP traffic."
+  platform: "windows"
+  severity: "critical"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\NTDS\\Parameters"
+  value_name: "LDAPServerIntegrity"
+  expected_state:
+    operator: "eq"
+    value: 2
+  remediate_type: "registry_set"
+  set_value: 2
+  set_type: "DWORD"
+  post_reboot_required: true
+  reference: "Annexure A Page 4, Item 3.f.ii"
+- id: "A.3.f.iii"
+  title: "Digitally encrypt or sign secure channel data (always)"
+  description: "Ensure secure channel data is always encrypted or signed to protect confidentiality and integrity."
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "SecureChannel_EncryptOrSignAlways"
+  expected_state:
+    operator: "eq"
+    value: "Enabled"
+  remediate_type: "gpo_set"
+  set_value: "Enabled"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.f.iii"
+- id: "A.3.f.iv"
+  title: "Refuse machine account password changes"
+  description: "Prevent unauthorized attempts to change domain machine account passwords (protects trust relationships)."
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters"
+  value_name: "RefusePasswordChange"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.f.iv"
+- id: "A.3.f.v"
+  title: "Maximum machine account password age"
+  description: "Limit lifetime of machine account passwords to force regular rotation and limit exposure."
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\Netlogon\\Parameters"
+  value_name: "MaximumPasswordAge"
+  expected_state:
+    operator: "lte"
+    value: 30
+  remediate_type: "registry_set"
+  set_value: 30
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.f.v"
+- id: "A.3.f.vi"
+  title: "Require strong Windows session key"
+  description: "Enforce strong (Windows 2000 or later) session keys for domain secure channels."
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "StrongSessionKeyRequired"
+  expected_state:
+    operator: "eq"
+    value: "Enabled"
+  remediate_type: "gpo_set"
+  set_value: "Enabled"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.f.vi"
+- id: "A.3.g.i"
+  title: "Interactive logon: Do not require CTRL+ALT+DEL"
+  description: "Require users to press CTRL+ALT+DEL at interactive logon to mitigate credential-capture attacks."
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "DisableCAD"
+  expected_state:
+    operator: "eq"
+    value: 0
+  remediate_type: "gpo_set"
+  set_value: 0
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.g.i"
+- id: "A.3.g.ii"
+  title: "Interactive logon: Don't display last signed-in"
+  description: "Prevent display of the last interactive logon account to reduce targeted-account disclosure."
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "InteractiveLogon_DontDisplayLastSignedIn"
+  expected_state:
+    operator: "eq"
+    value: "Enabled"
+  remediate_type: "gpo_set"
+  set_value: "Enabled"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.g.ii"
+- id: "A.3.g.iii"
+  title: "Interactive logon: Don't display username at sign-in"
+  description: "Do not pre-fill or display the username on the sign-in screen to reduce account enumeration and exposure."
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "InteractiveLogon_DontDisplayUsername"
+  expected_state:
+    operator: "eq"
+    value: "Enabled"
+  remediate_type: "gpo_set"
+  set_value: "Enabled"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.g.iii"
+- id: "A.3.g.iv"
+  title: "Interactive logon: Display user information when the session is locked"
+  description: "Do not display user details on the lock screen to avoid information disclosure and social engineering vectors."
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "InteractiveLogon_DisplayUserInfoWhenLocked"
+  expected_state:
+    operator: "eq"
+    value: "Do not display user information"
+  remediate_type: "gpo_set"
+  set_value: "Do not display user information"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.g.iv"
+- id: "A.3.g.v"
+  title: "Interactive logon: Machine inactivity limit"
+  description: "Automatically lock sessions after a short idle period to reduce risk of an unattended workstation being used."
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "InteractiveLogon_MachineInactivityLimit"
+  expected_state:
+    operator: "lte"
+    value: 300
+  remediate_type: "gpo_set"
+  set_value: 300
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.g.v"
+- id: "A.3.g.vi"
+  title: "Interactive logon: Number of previous logons to cache (in case domain controller is not available)"
+  description: "Reduce cached credentials to limit credential exposure when offline; setting to 0 disables cached logons."
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "InteractiveLogon_NumPreviousLogonsToCache"
+  expected_state:
+    operator: "eq"
+    value: 0
+  remediate_type: "gpo_set"
+  set_value: 0
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.g.vi"
+- id: "A.3.g.vii"
+  title: "Interactive logon: Prompt user to change password before expiration"
+  description: "Warn users ahead of password expiry to avoid emergency password resets and possible insecure workarounds."
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "gpo"
+  target_path: "User Configuration\\Administrative Templates\\Windows Components\\Windows Logon Options"
+  value_name: "ChangePasswordPromptDays"
+  expected_state:
+    operator: "gte"
+    value: 14
+  remediate_type: "gpo_set"
+  set_value: 14
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.g.vii"
+- id: "A.3.g.viii"
+  title: "Interactive logon: Require Domain Controller authentication to unlock workstation"
+  description: "Require DC authentication for unlock to ensure centralized policy and credential checks are enforced."
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "InteractiveLogon_RequireDCAuthToUnlock"
+  expected_state:
+    operator: "eq"
+    value: "Enabled"
+  remediate_type: "gpo_set"
+  set_value: "Enabled"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.g.viii"
+- id: "A.3.g.ix"
+  title: "Interactive logon: Require Windows Hello for Business or smart card"
+  description: "Enforce a strong multi-factor credential (Windows Hello for Business or smart card) for interactive logon where feasible."
+  platform: "windows"
+  severity: "critical"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Administrative Templates\\Windows Components\\Windows Hello for Business"
+  value_name: "UseWinHelloForBusiness"
+  expected_state:
+    operator: "eq"
+    value: "Enabled"
+  remediate_type: "gpo_set"
+  set_value: "Enabled"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.g.ix"
+- id: "A.3.g.x"
+  title: "Interactive logon: Smart card removal behavior"
+  description: "Automatically lock the workstation when the smart card is removed to protect active sessions."
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "SmartCardRemovalBehavior"
+  expected_state:
+    operator: "eq"
+    value: "Lock Workstation"
+  remediate_type: "gpo_set"
+  set_value: "Lock Workstation"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.g.x"
+- id: "A.3.h.i"
+  title: "Microsoft network client: Digitally sign communications (always)"
+  description: "Ensure all SMB client communications are digitally signed to protect against relay and tampering attacks."
+  platform: "windows"
+  severity: "critical"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "MicrosoftNetworkClient_SignAlways"
+  expected_state:
+    operator: "eq"
+    value: "Enabled"
+  remediate_type: "gpo_set"
+  set_value: "Enabled"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.h.i"
+- id: "A.3.h.ii"
+  title: "Microsoft network client: Send unencrypted password to third-party SMB servers"
+  description: "Prevent clients from sending clear-text passwords to SMB servers to avoid credential exposure."
+  platform: "windows"
+  severity: "critical"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "MicrosoftNetworkClient_SendUnencryptedPassword"
+  expected_state:
+    operator: "eq"
+    value: "Disabled"
+  remediate_type: "gpo_set"
+  set_value: "Disabled"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.h.ii"
+- id: "A.3.h.iii"
+  title: "Microsoft network server: Digitally sign communications (always)"
+  description: "Require SMB servers to sign all communications to mitigate man-in-the-middle and SMB spoofing attacks."
+  platform: "windows"
+  severity: "critical"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "MicrosoftNetworkServer_SignAlways"
+  expected_state:
+    operator: "eq"
+    value: "Enabled"
+  remediate_type: "gpo_set"
+  set_value: "Enabled"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.h.iii"
+- id: "A.3.h.iv"
+  title: "Microsoft network server: Disconnect clients when logon hours expire"
+  description: "Enforce logon-hours restrictions by disconnecting SMB clients when allowed login window ends."
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "MicrosoftNetworkServer_DisconnectWhenLogonHoursExpire"
+  expected_state:
+    operator: "eq"
+    value: "Enabled"
+  remediate_type: "gpo_set"
+  set_value: "Enabled"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.h.iv"
+- id: "A.3.h.v"
+  title: "Microsoft network server: Server SPN target name validation level"
+  description: "Enable SPN validation to prevent SMB replay, pass-the-hash, and credential relay attacks."
+  platform: "windows"
+  severity: "critical"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\LanmanServer\\Parameters"
+  value_name: "SmbServerNameHardeningLevel"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  set_type: "DWORD"
+  post_reboot_required: true
+  reference: "Annexure A Page 4, Item 3.h.v"
+- id: "A.3.h.vi"
+  title: "Network access: Allow anonymous SID/Name translation"
+  description: "Disable anonymous SID/Name translation to prevent attackers from mapping accounts without authentication."
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "NetworkAccess_AllowAnonymousSIDNameTranslation"
+  expected_state:
+    operator: "eq"
+    value: "Disabled"
+  remediate_type: "gpo_set"
+  set_value: "Disabled"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.h.vi"
+- id: "A.3.h.vii"
+  title: "Network access: Do not allow anonymous enumeration of SAM accounts"
+  description: "Prevent anonymous enumeration of SAM accounts to block reconnaissance and account-discovery attacks."
+  platform: "windows"
+  severity: "critical"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "NetworkAccess_DoNotAllowAnonymousEnumerationSAM"
+  expected_state:
+    operator: "eq"
+    value: "Enabled"
+  remediate_type: "gpo_set"
+  set_value: "Enabled"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.h.vii"
+- id: "A.3.i.i"
+  title: "Network access: Do not allow anonymous enumeration of SAM accounts and shares"
+  description: "Prevents anonymous users from enumerating SAM accounts or shared resources, blocking reconnaissance attacks."
+  platform: "windows"
+  severity: "critical"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "NetworkAccess_DenyAnonymousSAMAndShares"
+  expected_state:
+    operator: "eq"
+    value: "Enabled"
+  remediate_type: "gpo_set"
+  set_value: "Enabled"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.i.i"
+- id: "A.3.i.ii"
+  title: "Network access: Do not allow storage of passwords and credentials for network authentication"
+  description: "Ensures Windows does not store plaintext or reversible credentials, preventing credential harvesting attacks."
+  platform: "windows"
+  severity: "critical"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "NetworkAccess_NoCredentialStorage"
+  expected_state:
+    operator: "eq"
+    value: "Enabled"
+  remediate_type: "gpo_set"
+  set_value: "Enabled"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.i.ii"
+- id: "A.3.i.iii"
+  title: "Network security: LAN Manager authentication level"
+  description: "Require NTLMv2 responses only; prevents legacy LM/NTLM protocols from being used in authentication attacks."
+  platform: "windows"
+  severity: "critical"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "NetworkSecurity_LMAuthLevel"
+  expected_state:
+    operator: "eq"
+    value: "Send NTLMv2 response only"
+  remediate_type: "gpo_set"
+  set_value: "Send NTLMv2 response only"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.i.iii"
+- id: "A.3.i.iv"
+  title: "Network security: Restrict NTLM â€” NTLM authentication in this domain"
+  description: "Restricts or disables NTLM authentication to prevent pass-the-hash, relay, and downgrade attacks."
+  platform: "windows"
+  severity: "critical"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "NetworkSecurity_RestrictNTLM_Domain"
+  expected_state:
+    operator: "eq"
+    value: "Deny all"
+  remediate_type: "gpo_set"
+  set_value: "Deny all"
+  set_type: "STRING"
+  post_reboot_required: true
+  reference: "Annexure A Page 4, Item 3.i.iv"
+- id: "A.3.i.v"
+  title: "Network security: Minimum session security for NTLM SSP based clients"
+  description: "Enforces strong NTLM session security for client-side communications, preventing downgrade and replay attacks."
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\MSV1_0"
+  value_name: "NTLMMinClientSec"
+  expected_state:
+    operator: "eq"
+    value: 0x20080000
+  remediate_type: "registry_set"
+  set_value: 0x20080000
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.i.v"
+- id: "A.3.i.vi"
+  title: "Network security: Minimum session security for NTLM SSP based servers"
+  description: "Ensures servers require strong NTLM protections, enabling packet signing and encryption."
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\MSV1_0"
+  value_name: "NTLMMinServerSec"
+  expected_state:
+    operator: "eq"
+    value: 0x20080000
+  remediate_type: "registry_set"
+  set_value: 0x20080000
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.i.vi"
+- id: "A.3.i.vii"
+  title: "Network security: Configure encryption types allowed for Kerberos"
+  description: "Restrict Kerberos to strong encryption types only (AES128/AES256) to prevent downgrade or RC4-based attacks."
+  platform: "windows"
+  severity: "critical"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\Kerberos\\Parameters"
+  value_name: "SupportedEncryptionTypes"
+  expected_state:
+    operator: "eq"
+    value: 0x18
+  remediate_type: "registry_set"
+  set_value: 0x18
+  set_type: "DWORD"
+  post_reboot_required: true
+  reference: "Annexure A Page 4, Item 3.i.vii"
+- id: "A.3.j.i"
+  title: "Network security: Restrict NTLM: Outgoing NTLM traffic to remote servers"
+  description: "Prevent Windows from using NTLM when authenticating to remote servers, mitigating pass-the-hash and NTLM relay attacks."
+  platform: "windows"
+  severity: "critical"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "NetworkSecurity_RestrictNTLM_Outbound"
+  expected_state:
+    operator: "eq"
+    value: "Deny all"
+  remediate_type: "gpo_set"
+  set_value: "Deny all"
+  set_type: "STRING"
+  post_reboot_required: true
+  reference: "Annexure A Page 4, Item 3.j.i"
+- id: "A.3.j.ii"
+  title: "Recovery console: Allow automatic administrative logon"
+  description: "Disable automatic admin logon in Recovery Console to prevent unauthorized full-system access."
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "RecoveryConsole_AllowAutoAdminLogon"
+  expected_state:
+    operator: "eq"
+    value: "Disabled"
+  remediate_type: "gpo_set"
+  set_value: "Disabled"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.j.ii"
+- id: "A.3.j.iii"
+  title: "Recovery console: Allow floppy copy and access to all drives and folders"
+  description: "Prevent full unrestricted disk access from the recovery console, which could lead to data exfiltration or manipulation."
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "RecoveryConsole_AllowAllAccess"
+  expected_state:
+    operator: "eq"
+    value: "Disabled"
+  remediate_type: "gpo_set"
+  set_value: "Disabled"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.j.iii"
+- id: "A.3.j.iv"
+  title: "Shutdown: Clear virtual memory pagefile"
+  description: "Clear the pagefile on shutdown to prevent recovery of sensitive data from disk."
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management"
+  value_name: "ClearPageFileAtShutdown"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  set_type: "DWORD"
+  post_reboot_required: true
+  reference: "Annexure A Page 4, Item 3.j.iv"
+- id: "A.3.j.v"
+  title: "System cryptography: Force strong key protection"
+  description: "Require strong cryptographic key protection for private keys stored on the system."
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\Cryptography"
+  value_name: "ForceKeyProtection"
+  expected_state:
+    operator: "eq"
+    value: 2
+  remediate_type: "registry_set"
+  set_value: 2
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.j.v"
+- id: "A.3.j.vi"
+  title: "System cryptography: Use FIPS-compliant algorithms"
+  description: "Enable the use of FIPS 140-2 compliant algorithms for encryption, hashing, and signing operations."
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "SystemCryptography_UseFIPS"
+  expected_state:
+    operator: "eq"
+    value: "Enabled"
+  remediate_type: "gpo_set"
+  set_value: "Enabled"
+  set_type: "STRING"
+  post_reboot_required: true
+  reference: "Annexure A Page 4, Item 3.j.vi"
+- id: "A.3.j.vii"
+  title: "System objects: Strengthen default permissions of internal system objects"
+  description: "Ensures strong default ACLs on internal objects such as symbolic links to prevent privilege escalation."
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "gpo"
+  target_path: "Computer Configuration\\Windows Settings\\Security Settings\\Local Policies\\Security Options"
+  value_name: "SystemObjects_StrengthenDefaultPermissions"
+  expected_state:
+    operator: "eq"
+    value: "Enabled"
+  remediate_type: "gpo_set"
+  set_value: "Enabled"
+  set_type: "STRING"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.j.vii"
+- id: "A.3.k.i"
+  title: "User Account Control: Admin Approval Mode for the Built-in Administrator account"
+  description: "Enable Admin Approval Mode for the built-in Administrator account to prevent automatic elevation."
+  platform: "windows"
+  severity: "critical"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System"
+  value_name: "FilterAdministratorToken"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  set_type: "DWORD"
+  post_reboot_required: true
+  reference: "Annexure A Page 4, Item 3.k.i"
+- id: "A.3.k.ii"
+  title: "User Account Control: Behavior of the elevation prompt for administrators in Admin Approval Mode"
+  description: "Require consent on the secure desktop for admin elevation to mitigate spoofing and elevation attacks."
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System"
+  value_name: "ConsentPromptBehaviorAdmin"
+  expected_state:
+    operator: "eq"
+    value: 2
+  remediate_type: "registry_set"
+  set_value: 2
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.k.ii"
+- id: "A.3.k.iii"
+  title: "User Account Control: Behavior of the elevation prompt for standard users"
+  description: "Require credentials for elevation when a standard user attempts an administrative task."
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System"
+  value_name: "ConsentPromptBehaviorUser"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.k.iii"
+- id: "A.3.k.iv"
+  title: "User Account Control: Only elevate executables that are signed and validated"
+  description: "Require digital signatures for elevated applications to prevent malicious unsigned code from gaining admin access."
+  platform: "windows"
+  severity: "critical"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System"
+  value_name: "ValidateAdminCodeSignatures"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.k.iv"
+- id: "A.3.k.v"
+  title: "User Account Control: Only elevate UIAccess applications installed in secure locations"
+  description: "Restricts elevation of UIAccess apps unless installed in secure paths to prevent GUI-based privilege escalation."
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System"
+  value_name: "EnableSecureUIAPaths"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.k.v"
+- id: "A.3.k.vi"
+  title: "User Account Control: Switch to the secure desktop when prompting for elevation"
+  description: "Use a separate secure desktop for elevation prompts to mitigate spoofing and shatter attacks."
+  platform: "windows"
+  severity: "critical"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System"
+  value_name: "PromptOnSecureDesktop"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.k.vi"
+- id: "A.3.k.vii"
+  title: "User Account Control: Detect application installations and prompt for elevation"
+  description: "Detect installers requiring admin access and request elevation, preventing silent privilege escalation."
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "registry_key"
+  target_path: "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System"
+  value_name: "EnableInstallerDetection"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "registry_set"
+  set_value: 1
+  set_type: "DWORD"
+  post_reboot_required: false
+  reference: "Annexure A Page 4, Item 3.k.vii"
 - id: "A.4.a.i"
   title: "Enable UAC Admin Approval Mode for Built-in Administrator"
   description: "Ensure User Account Control: Admin Approval Mode for the Built-in Administrator account is enabled"
@@ -411,7 +1598,6 @@
   set_value: "1"
   post_reboot_required: false
   reference: "Annexure A Page 4, Item 4.a.i"
-
 - id: "A.4.a.ii"
   title: "Configure UAC elevation prompt for administrators"
   description: "Ensure User Account Control: Behaviour of the elevation prompt for administrators in Admin Approval Mode is set to Prompt for consent on the secure desktop or higher"
@@ -427,7 +1613,6 @@
   set_value: 2
   post_reboot_required: false
   reference: "Annexure A Page 4, Item 4.a.ii"
-
 - id: "A.4.a.iii"
   title: "Configure UAC elevation prompt for standard users"
   description: "Ensure User Account Control: Behaviour of the elevation prompt for standard users is set to Automatically deny elevation requests"
@@ -441,7 +1626,6 @@
   set_value: "0"
   post_reboot_required: false
   reference: "Annexure A Page 4, Item 4.a.iii"
-
 - id: "A.4.a.iv"
   title: "Enable UAC application installation detection"
   description: "Ensure User Account Control: Detect application installations and prompt for elevation is enabled"
@@ -455,7 +1639,6 @@
   set_value: "1"
   post_reboot_required: false
   reference: "Annexure A Page 4, Item 4.a.iv"
-
 - id: "A.4.a.v"
   title: "Enable UAC Admin Approval Mode"
   description: "Ensure User Account Control: Run all administrators in Admin Approval Mode is enabled"
@@ -469,7 +1652,6 @@
   set_value: "1"
   post_reboot_required: false
   reference: "Annexure A Page 4, Item 4.a.v"
-
 - id: "A.4.a.vi"
   title: "Enable UAC secure desktop prompt"
   description: "Ensure User Account Control: Switch to the secure desktop when prompting for elevation is enabled"
@@ -483,7 +1665,6 @@
   set_value: "1"
   post_reboot_required: false
   reference: "Annexure A Page 4, Item 4.a.vi"
-
 - id: "A.4.b.i"
   title: "Disable Bluetooth Audio Gateway Service"
   description: "Ensure Bluetooth Audio Gateway Service (BTAGService) is disabled"
@@ -499,7 +1680,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.i"
-
 - id: "A.4.b.ii"
   title: "Disable Bluetooth Support Service"
   description: "Ensure Bluetooth Support Service (bthserv) is disabled"
@@ -515,7 +1695,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.ii"
-
 - id: "A.4.b.iii"
   title: "Disable Computer Browser service"
   description: "Ensure Computer Browser (Browser) is disabled or not installed"
@@ -531,7 +1710,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.iii"
-
 - id: "A.4.b.iv"
   title: "Disable Geolocation Service"
   description: "Ensure Geolocation Service (lfsvc) is disabled"
@@ -547,7 +1725,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.iv"
-
 - id: "A.4.b.v"
   title: "Disable Internet Connection Sharing"
   description: "Ensure Internet Connection Sharing (ICS) (SharedAccess) is disabled"
@@ -563,7 +1740,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.v"
-
 - id: "A.4.b.vi"
   title: "Disable Remote Desktop Configuration service"
   description: "Ensure Remote Desktop Configuration (SessionEnv) is disabled"
@@ -579,7 +1755,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.vi"
-
 - id: "A.4.b.vii"
   title: "Disable Remote Desktop Services"
   description: "Ensure Remote Desktop Services (TermService) is disabled"
@@ -595,7 +1770,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.vii"
-
 - id: "A.4.b.viii"
   title: "Disable Remote Desktop Services UserMode Port Redirector"
   description: "Ensure Remote Desktop Services UserMode Port Redirector (UmRdpService) is disabled"
@@ -611,7 +1785,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.viii"
-
 - id: "A.4.b.ix"
   title: "Disable RPC Locator service"
   description: "Ensure Remote Procedure Call (RPC) Locator (RpcLocator) is disabled"
@@ -627,7 +1800,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.ix"
-
 - id: "A.4.b.x"
   title: "Disable Remote Registry service"
   description: "Ensure Remote Registry (RemoteRegistry) is disabled"
@@ -643,7 +1815,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.x"
-
 - id: "A.4.b.xi"
   title: "Disable Routing and Remote Access service"
   description: "Ensure Routing and Remote Access (RemoteAccess) is disabled"
@@ -659,7 +1830,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.xi"
-
 - id: "A.4.b.xii"
   title: "Disable Simple TCP/IP Services"
   description: "Ensure Simple TCP/IP Services (simptcp) is disabled or not installed"
@@ -675,7 +1845,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.xii"
-
 - id: "A.4.b.xiii"
   title: "Disable SNMP Service"
   description: "Ensure SNMP Service (SNMP) is disabled or not installed"
@@ -691,7 +1860,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.xiii"
-
 - id: "A.4.b.xiv"
   title: "Disable UPnP Device Host service"
   description: "Ensure UPnP Device Host (upnphost) is disabled"
@@ -707,7 +1875,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.xiv"
-
 - id: "A.4.b.xv"
   title: "Disable Web Management Service"
   description: "Ensure Web Management Service (WMSvc) is disabled or not installed"
@@ -723,7 +1890,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.xv"
-
 - id: "A.4.b.xvi"
   title: "Disable Windows Error Reporting Service"
   description: "Ensure Windows Error Reporting Service (WerSvc) is disabled"
@@ -739,7 +1905,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.xvi"
-
 - id: "A.4.b.xvii"
   title: "Disable Windows Event Collector service"
   description: "Ensure Windows Event Collector (Wecsvc) is disabled"
@@ -755,7 +1920,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.xvii"
-
 - id: "A.4.b.xviii"
   title: "Disable Windows Media Player Network Sharing Service"
   description: "Ensure Windows Media Player Network Sharing Service (WMPNetworkSvc) is disabled or not installed"
@@ -771,7 +1935,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.xviii"
-
 - id: "A.4.b.xix"
   title: "Disable Windows Mobile Hotspot Service"
   description: "Ensure Windows Mobile Hotspot Service (icssvc) is disabled"
@@ -787,7 +1950,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.xix"
-
 - id: "A.4.b.xx"
   title: "Disable Windows PushToInstall Service"
   description: "Ensure Windows PushToInstall Service (PushToInstall) is disabled"
@@ -803,7 +1965,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.xx"
-
 - id: "A.4.b.xxi"
   title: "Disable Windows Remote Management service"
   description: "Ensure Windows Remote Management (WS-Management) (WinRM) is disabled"
@@ -819,7 +1980,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.xxi"
-
 - id: "A.4.b.xxii"
   title: "Disable World Wide Web Publishing Service"
   description: "Ensure World Wide Web Publishing Service (W3SVC) is disabled or not installed"
@@ -835,7 +1995,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.xxii"
-
 - id: "A.4.b.xxiii"
   title: "Disable Xbox Accessory Management Service"
   description: "Ensure Xbox Accessory Management Service (XboxGipSvc) is disabled"
@@ -851,7 +2010,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.xxiii"
-
 - id: "A.4.b.xxiv"
   title: "Disable Xbox Live Auth Manager service"
   description: "Ensure Xbox Live Auth Manager (XblAuthManager) is disabled"
@@ -867,7 +2025,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.xxiv"
-
 - id: "A.4.b.xxv"
   title: "Disable Xbox Live Game Save service"
   description: "Ensure Xbox Live Game Save (XblGameSave) is disabled"
@@ -883,7 +2040,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.xxv"
-
 - id: "A.4.b.xxvi"
   title: "Disable Xbox Live Networking Service"
   description: "Ensure Xbox Live Networking Service (XboxNetApiSvc) is disabled"
@@ -899,7 +2055,6 @@
     disable: true
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 4.b.xxvi"
-
 - id: "A.5.a.i"
   title: "Enable Windows Firewall for Private profile"
   description: "Ensure Windows Firewall: Private: Firewall state is set to On (recommended)"
@@ -917,7 +2072,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 5.a.i"
-
 - id: "A.5.a.ii"
   title: "Block inbound connections for Private profile"
   description: "Ensure Windows Firewall: Private: Inbound connections is set to Block (default)"
@@ -935,7 +2089,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 5.a.ii"
-
 - id: "A.5.a.iii"
   title: "Allow outbound connections for Private profile"
   description: "Ensure Windows Firewall: Private: Outbound connections is set to Allow (default)"
@@ -953,7 +2106,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 5.a.iii"
-
 - id: "A.5.a.iv"
   title: "Disable notification for Private profile"
   description: "Ensure Windows Firewall: Private: Settings: Display a notification is set to No"
@@ -971,7 +2123,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 5.a.iv"
-
 - id: "A.5.a.v"
   title: "Configure Private profile log file name"
   description: "Ensure Windows Firewall: Private: Logging: Name is set to %SystemRoot%\\System32\\logfiles\\firewall\\privatefw.log"
@@ -989,7 +2140,6 @@
   set_type: "STRING"
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 5.a.v"
-
 - id: "A.5.a.vi"
   title: "Configure Private profile log size limit"
   description: "Ensure Windows Firewall: Private: Logging: Size limit (KB) is set to 16,384 KB or greater"
@@ -1007,7 +2157,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 5.a.vi"
-
 - id: "A.5.a.vii"
   title: "Enable logging of dropped packets for Private profile"
   description: "Ensure Windows Firewall: Private: Logging: Log dropped packets is set to Yes"
@@ -1025,7 +2174,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 5.a.vii"
-
 - id: "A.5.a.viii"
   title: "Enable logging of successful connections for Private profile"
   description: "Ensure Windows Firewall: Private: Logging: Log successful connections is set to Yes"
@@ -1043,7 +2191,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 5.a.viii"
-
 - id: "A.5.b.i"
   title: "Enable Windows Firewall for Public profile"
   description: "Ensure Windows Firewall: Public: Firewall state is set to On (recommended)"
@@ -1061,7 +2208,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 5.b.i"
-
 - id: "A.5.b.ii"
   title: "Block inbound connections for Public profile"
   description: "Ensure Windows Firewall: Public: Inbound connections is set to Block (default)"
@@ -1079,7 +2225,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 5.b.ii"
-
 - id: "A.5.b.iii"
   title: "Allow outbound connections for Public profile"
   description: "Ensure Windows Firewall: Public: Outbound connections is set to Allow (default)"
@@ -1097,7 +2242,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 5.b.iii"
-
 - id: "A.5.b.iv"
   title: "Disable notification for Public profile"
   description: "Ensure Windows Firewall: Public: Settings: Display a notification is set to No"
@@ -1115,7 +2259,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 5.b.iv"
-
 - id: "A.5.b.v"
   title: "Disable local firewall rules for Public profile"
   description: "Ensure Windows Firewall: Public: Settings: Apply local firewall rules is set to No"
@@ -1133,7 +2276,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 5.b.v"
-
 - id: "A.5.b.vi"
   title: "Disable local connection security rules for Public profile"
   description: "Ensure Windows Firewall: Public: Settings: Apply local connection security rules is set to No"
@@ -1151,7 +2293,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 5.b.vi"
-
 - id: "A.5.b.vii"
   title: "Configure Public profile log file name"
   description: "Ensure Windows Firewall: Public: Logging: Name is set to %SystemRoot%\\System32\\logfiles\\firewall\\publicfw.log"
@@ -1169,7 +2310,6 @@
   set_type: "STRING"
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 5.b.vii"
-
 - id: "A.5.b.viii"
   title: "Configure Public profile log size limit"
   description: "Ensure Windows Firewall: Public: Logging: Size limit (KB) is set to 16,384 KB or greater"
@@ -1187,7 +2327,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 5.b.viii"
-
 - id: "A.5.b.ix"
   title: "Enable logging of dropped packets for Public profile"
   description: "Ensure Windows Firewall: Public: Logging: Log dropped packets is set to Yes"
@@ -1205,7 +2344,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 5.b.ix"
-
 - id: "A.5.b.x"
   title: "Enable logging of successful connections for Public profile"
   description: "Ensure Windows Firewall: Public: Logging: Log successful connections is set to Yes"
@@ -1223,7 +2361,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 5, Item 5.b.x"
-
 - id: "A.6.a.i"
   title: "Audit Credential Validation"
   description: "Ensure Audit Credential Validation is set to Success and Failure"
@@ -1237,7 +2374,6 @@
   set_value: "3"
   post_reboot_required: false
   reference: "Annexure A Page 6, Item 6.a.i"
-
 - id: "A.6.a.ii"
   title: "Audit Application Group Management"
   description: "Ensure Audit Application Group Management is set to Success and Failure"
@@ -1251,7 +2387,6 @@
   set_value: "3"
   post_reboot_required: false
   reference: "Annexure A Page 6, Item 6.a.ii"
-
 - id: "A.6.a.iii"
   title: "Audit Security Group Management"
   description: "Ensure Audit Security Group Management is set to include Success"
@@ -1267,7 +2402,6 @@
   set_value: "3"
   post_reboot_required: false
   reference: "Annexure A Page 6, Item 6.a.iii"
-
 - id: "A.6.a.iv"
   title: "Audit User Account Management"
   description: "Ensure Audit User Account Management is set to Success and Failure"
@@ -1281,7 +2415,6 @@
   set_value: "3"
   post_reboot_required: false
   reference: "Annexure A Page 6, Item 6.a.iv"
-
 - id: "A.6.a.v"
   title: "Audit PNP Activity"
   description: "Ensure Audit PNP Activity is set to include Success"
@@ -1297,7 +2430,6 @@
   set_value: "1"
   post_reboot_required: false
   reference: "Annexure A Page 6, Item 6.a.v"
-
 - id: "A.6.a.vi"
   title: "Audit Process Creation"
   description: "Ensure Audit Process Creation is set to include Success"
@@ -1313,7 +2445,6 @@
   set_value: "1"
   post_reboot_required: false
   reference: "Annexure A Page 6, Item 6.a.vi"
-
 - id: "A.6.a.vii"
   title: "Audit Account Lockout"
   description: "Ensure Audit Account Lockout is set to include Failure"
@@ -1329,7 +2460,6 @@
   set_value: "2"
   post_reboot_required: false
   reference: "Annexure A Page 6, Item 6.a.vii"
-
 - id: "A.6.a.viii"
   title: "Audit Other Logon/Logoff Events"
   description: "Ensure Audit Other Logon/Logoff Events is set to Success and Failure"
@@ -1343,7 +2473,6 @@
   set_value: "3"
   post_reboot_required: false
   reference: "Annexure A Page 6, Item 6.a.viii"
-
 - id: "A.6.a.ix"
   title: "Audit File Share"
   description: "Ensure Audit File Share is set to Success and Failure"
@@ -1357,7 +2486,6 @@
   set_value: "3"
   post_reboot_required: false
   reference: "Annexure A Page 6, Item 6.a.ix"
-
 - id: "A.6.a.x"
   title: "Audit Removable Storage"
   description: "Ensure Audit Removable Storage is set to Success and Failure"
@@ -1371,7 +2499,6 @@
   set_value: "3"
   post_reboot_required: false
   reference: "Annexure A Page 6, Item 6.a.x"
-
 - id: "A.6.a.xi"
   title: "Audit Audit Policy Change"
   description: "Ensure Audit Audit Policy Change is set to include Success"
@@ -1387,7 +2514,6 @@
   set_value: "3"
   post_reboot_required: false
   reference: "Annexure A Page 6, Item 6.a.xi"
-
 - id: "A.6.a.xii"
   title: "Audit Other Policy Change Events"
   description: "Ensure Audit Other Policy Change Events is set to include Failure"
@@ -1403,7 +2529,6 @@
   set_value: "2"
   post_reboot_required: false
   reference: "Annexure A Page 6, Item 6.a.xii"
-
 - id: "A.6.a.xiii"
   title: "Audit Sensitive Privilege Use"
   description: "Ensure Audit Sensitive Privilege Use is set to Success and Failure"
@@ -1417,7 +2542,6 @@
   set_value: "3"
   post_reboot_required: false
   reference: "Annexure A Page 6, Item 6.a.xiii"
-
 - id: "A.6.a.xiv"
   title: "Audit System Integrity"
   description: "Ensure Audit System Integrity is set to Success and Failure"
@@ -1431,7 +2555,6 @@
   set_value: "3"
   post_reboot_required: false
   reference: "Annexure A Page 6, Item 6.a.xiv"
-
 - id: "A.6.a.xv"
   title: "Prevent enabling lock screen camera"
   description: "Ensure Prevent enabling lock screen camera is set to Enabled"
@@ -1449,7 +2572,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 6, Item 6.a.xv"
-
 - id: "A.6.a.xvi"
   title: "Configure SMB v1 client driver"
   description: "Ensure Configure SMB v1 client driver is set to Enabled: Disable driver (recommended)"
@@ -1467,7 +2589,6 @@
   set_type: "DWORD"
   post_reboot_required: true
   reference: "Annexure A Page 6, Item 6.a.xvi"
-
 - id: "A.6.a.xvii"
   title: "Configure SMB v1 server"
   description: "Ensure Configure SMB v1 server is set to Disabled"
@@ -1485,7 +2606,6 @@
   set_type: "DWORD"
   post_reboot_required: true
   reference: "Annexure A Page 6, Item 6.a.xvii"
-
 - id: "A.6.b.i"
   title: "Disallow Autoplay for non-volume devices"
   description: "Ensure Disallow Autoplay for non-volume devices is set to Enabled"
@@ -1503,7 +2623,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 6, Item 6.b.i"
-
 - id: "A.6.b.ii"
   title: "Set the default behaviour for AutoRun"
   description: "Ensure Set the default behaviour for AutoRun is set to Enabled: Do not execute any autorun commands"
@@ -1521,7 +2640,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 6, Item 6.b.ii"
-
 - id: "A.6.b.iii"
   title: "Turn off Autoplay"
   description: "Ensure Turn off Autoplay is set to Enabled: All drives"
@@ -1539,7 +2657,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 6, Item 6.b.iii"
-
 - id: "A.7.a"
   title: "Allow auditing events in Microsoft Defender Application Guard"
   description: "Ensure Allow auditing events in Microsoft Defender Application Guard is set to Enabled"
@@ -1557,7 +2674,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 7, Item 7.a"
-
 - id: "A.7.b"
   title: "Disable camera and microphone in Microsoft Defender Application Guard"
   description: "Ensure Allow camera and microphone access in Microsoft Defender Application Guard is set to Disabled"
@@ -1575,7 +2691,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 7, Item 7.b"
-
 - id: "A.7.c"
   title: "Disable data persistence in Microsoft Defender Application Guard"
   description: "Ensure Allow data persistence for Microsoft Defender Application Guard is set to Disabled"
@@ -1593,7 +2708,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 7, Item 7.c"
-
 - id: "A.7.d"
   title: "Disable file download to host in Microsoft Defender Application Guard"
   description: "Ensure Allow files to download and save to the host operating system from Microsoft Defender Application Guard is set to Disabled"
@@ -1611,7 +2725,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 7, Item 7.d"
-
 - id: "A.7.e"
   title: "Configure clipboard settings for Microsoft Defender Application Guard"
   description: "Ensure Configure Microsoft Defender Application Guard clipboard settings is set to Enabled: Enable clipboard operation from an isolated session to the host"
@@ -1629,7 +2742,6 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 7, Item 7.e"
-
 - id: "B.1.a.i"
   title: "Ensure cramfs kernel module is not available"
   description: "Disable the cramfs filesystem type to prevent use"
@@ -1639,9 +2751,8 @@
   check_type: "manual"
   expected_state: "disabled"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.a.i"  
+  reference: "Annexure B Page 24, Item 1.a.i"
   post_reboot_required: false
-
 - id: "B.1.a.ii"
   title: "Ensure freevxfs kernel module is not available"
   description: "Disable the freevxfs filesystem type to prevent use"
@@ -1653,8 +2764,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.a.ii"
   post_reboot_required: false
-  
-
 - id: "B.1.a.iii"
   title: "Ensure hfs kernel module is not available"
   description: "Disable the hfs filesystem type to prevent use"
@@ -1666,7 +2775,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.a.iii"
   post_reboot_required: false
-
 - id: "B.1.a.iv"
   title: "Ensure hfsplus kernel module is not available"
   description: "Disable the hfsplus filesystem type to prevent use"
@@ -1678,7 +2786,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.a.iv"
   post_reboot_required: false
-
 - id: "B.1.a.v"
   title: "Ensure jffs2 kernel module is not available"
   description: "Disable the jffs2 filesystem type to prevent use"
@@ -1688,9 +2795,8 @@
   check_type: "manual"
   expected_state: "disabled"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.a.v" 
+  reference: "Annexure B Page 24, Item 1.a.v"
   post_reboot_required: false
-
 - id: "B.1.a.vi"
   title: "Ensure overlayfs kernel module is not available"
   description: "Disable the overlayfs filesystem type to prevent use"
@@ -1700,9 +2806,8 @@
   check_type: "manual"
   expected_state: "disabled"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.a.vi"  
+  reference: "Annexure B Page 24, Item 1.a.vi"
   post_reboot_required: false
-
 - id: "B.1.a.vii"
   title: "Ensure squashfs kernel module is not available"
   description: "Disable the squashfs filesystem type to prevent use"
@@ -1712,9 +2817,8 @@
   check_type: "manual"
   expected_state: "disabled"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.a.vii"  
+  reference: "Annexure B Page 24, Item 1.a.vii"
   post_reboot_required: false
-
 - id: "B.1.a.viii"
   title: "Ensure udf kernel module is not available"
   description: "Disable the udf filesystem type to prevent use"
@@ -1724,9 +2828,8 @@
   check_type: "manual"
   expected_state: "disabled"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.a.viii" 
+  reference: "Annexure B Page 24, Item 1.a.viii"
   post_reboot_required: false
-
 - id: "B.1.a.ix"
   title: "Ensure usb-storage kernel module is not available"
   description: "Disable the usb-storage filesystem type to prevent use"
@@ -1736,9 +2839,8 @@
   check_type: "manual"
   expected_state: "disabled"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.a.ix"  
+  reference: "Annexure B Page 24, Item 1.a.ix"
   post_reboot_required: false
-
 - id: "B.1.a.x"
   title: "Ensure unused filesystems kernel modules are not available"
   description: "Ensure other unused filesystems are disabled"
@@ -1748,9 +2850,8 @@
   check_type: "manual"
   expected_state: "disabled"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.a.x"  
+  reference: "Annexure B Page 24, Item 1.a.x"
   post_reboot_required: false
-
 - id: "B.1.b.i"
   title: "Ensure /tmp is a separate partition"
   description: "Ensure that a separate partition exists for /tmp"
@@ -1760,9 +2861,8 @@
   check_type: "manual"
   expected_state: "mounted"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.b.i"  
+  reference: "Annexure B Page 24, Item 1.b.i"
   post_reboot_required: false
-
 - id: "B.1.b.ii"
   title: "Ensure nodev option set on /tmp partition"
   description: "Ensure the nodev mount option is set on /tmp"
@@ -1772,9 +2872,8 @@
   check_type: "manual"
   expected_state: "present"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.b.ii"  
+  reference: "Annexure B Page 24, Item 1.b.ii"
   post_reboot_required: false
-
 - id: "B.1.b.iii"
   title: "Ensure nosuid option set on /tmp partition"
   description: "Ensure the nosuid mount option is set on /tmp"
@@ -1786,7 +2885,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.b.iii"
   post_reboot_required: false
-
 - id: "B.1.b.iv"
   title: "Ensure noexec option set on /tmp partition"
   description: "Ensure the noexec mount option is set on /tmp"
@@ -1796,9 +2894,8 @@
   check_type: "manual"
   expected_state: "present"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.b.iv"  
+  reference: "Annexure B Page 24, Item 1.b.iv"
   post_reboot_required: false
-
 - id: "B.1.c.i"
   title: "Ensure /dev/shm is a separate partition"
   description: "Ensure that a separate partition exists for /dev/shm"
@@ -1810,7 +2907,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.c.i"
   post_reboot_required: false
-
 - id: "B.1.c.ii"
   title: "Ensure nodev option set on /dev/shm partition"
   description: "Ensure the nodev mount option is set on /dev/shm"
@@ -1822,7 +2918,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.c.ii"
   post_reboot_required: false
-
 - id: "B.1.c.iii"
   title: "Ensure nosuid option set on /dev/shm partition"
   description: "Ensure the nosuid mount option is set on /dev/shm"
@@ -1832,9 +2927,8 @@
   check_type: "manual"
   expected_state: "present"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.c.iii"  
+  reference: "Annexure B Page 24, Item 1.c.iii"
   post_reboot_required: false
-
 - id: "B.1.c.iv"
   title: "Ensure noexec option set on /dev/shm partition"
   description: "Ensure the noexec mount option is set on /dev/shm"
@@ -1846,7 +2940,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.c.iv"
   post_reboot_required: false
-
 - id: "B.1.d.i"
   title: "Ensure separate partition exists for /home"
   description: "Ensure that a separate partition exists for /home"
@@ -1856,9 +2949,8 @@
   check_type: "manual"
   expected_state: "mounted"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.d.i"  
+  reference: "Annexure B Page 24, Item 1.d.i"
   post_reboot_required: false
-
 - id: "B.1.d.ii"
   title: "Ensure nodev option set on /home partition"
   description: "Ensure the nodev mount option is set on /home"
@@ -1870,7 +2962,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.d.ii"
   post_reboot_required: false
-
 - id: "B.1.d.iii"
   title: "Ensure nosuid option set on /home partition"
   description: "Ensure the nosuid mount option is set on /home"
@@ -1880,9 +2971,8 @@
   check_type: "manual"
   expected_state: "present"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.d.iii" 
+  reference: "Annexure B Page 24, Item 1.d.iii"
   post_reboot_required: false
-
 - id: "B.1.e.i"
   title: "Ensure separate partition exists for /var"
   description: "Ensure that a separate partition exists for /var"
@@ -1894,7 +2984,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.e.i"
   post_reboot_required: false
-
 - id: "B.1.e.ii"
   title: "Ensure nodev option set on /var partition"
   description: "Ensure the nodev mount option is set on /var"
@@ -1906,7 +2995,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.e.ii"
   post_reboot_required: false
-
 - id: "B.1.e.iii"
   title: "Ensure nosuid option set on /var partition"
   description: "Ensure the nosuid mount option is set on /var"
@@ -1918,7 +3006,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.e.iii"
   post_reboot_required: false
-
 - id: "B.1.f.i"
   title: "Ensure separate partition exists for /var/tmp"
   description: "Ensure that a separate partition exists for /var/tmp"
@@ -1930,7 +3017,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.f.i"
   post_reboot_required: false
-
 - id: "B.1.f.ii"
   title: "Ensure nodev option set on /var/tmp partition"
   description: "Ensure the nodev mount option is set on /var/tmp"
@@ -1940,9 +3026,8 @@
   check_type: "manual"
   expected_state: "present"
   remediate_type: "manual"
-  reference: "Annexure B Page 24, Item 1.f.ii" 
+  reference: "Annexure B Page 24, Item 1.f.ii"
   post_reboot_required: false
-
 - id: "B.1.f.iii"
   title: "Ensure nosuid option set on /var/tmp partition"
   description: "Ensure the nosuid mount option is set on /var/tmp"
@@ -1954,7 +3039,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 24, Item 1.f.iii"
   post_reboot_required: false
-
 - id: "B.1.f.iv"
   title: "Ensure noexec option set on /var/tmp partition"
   description: "Ensure the noexec mount option is set on /var/tmp"
@@ -1966,7 +3050,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 1.f.iv"
   post_reboot_required: false
-
 - id: "B.1.g.i"
   title: "Ensure separate partition exists for /var/log"
   description: "Ensure that a separate partition exists for /var/log"
@@ -1978,7 +3061,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 1.g.i"
   post_reboot_required: false
-
 - id: "B.1.g.ii"
   title: "Ensure nodev option set on /var/log partition"
   description: "Ensure the nodev mount option is set on /var/log"
@@ -1990,7 +3072,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 1.g.ii"
   post_reboot_required: false
-
 - id: "B.1.g.iii"
   title: "Ensure nosuid option set on /var/log partition"
   description: "Ensure the nosuid mount option is set on /var/log"
@@ -2000,9 +3081,8 @@
   check_type: "manual"
   expected_state: "present"
   remediate_type: "manual"
-  reference: "Annexure B Page 25, Item 1.g.iii" 
+  reference: "Annexure B Page 25, Item 1.g.iii"
   post_reboot_required: false
-
 - id: "B.1.g.iv"
   title: "Ensure noexec option set on /var/log partition"
   description: "Ensure the noexec mount option is set on /var/log"
@@ -2014,7 +3094,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 1.g.iv"
   post_reboot_required: false
-
 - id: "B.1.h.i"
   title: "Ensure separate partition exists for /var/log/audit"
   description: "Ensure that a separate partition exists for /var/log/audit"
@@ -2026,7 +3105,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 1.h.i"
   post_reboot_required: false
-
 - id: "B.1.h.ii"
   title: "Ensure nodev option set on /var/log/audit partition"
   description: "Ensure the nodev mount option is set on /var/log/audit"
@@ -2038,7 +3116,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 1.h.ii"
   post_reboot_required: false
-
 - id: "B.1.h.iii"
   title: "Ensure nosuid option set on /var/log/audit partition"
   description: "Ensure the nosuid mount option is set on /var/log/audit"
@@ -2050,7 +3127,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 1.h.iii"
   post_reboot_required: false
-
 - id: "B.1.h.iv"
   title: "Ensure noexec option set on /var/log/audit partition"
   description: "Ensure the noexec mount option is set on /var/log/audit"
@@ -2073,7 +3149,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.a.i"
   post_reboot_required: false
-
 - id: "B.2.a.ii"
   title: "Ensure access to bootloader config is configured"
   description: "Configure permissions for the bootloader configuration file"
@@ -2085,7 +3160,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.a.ii"
   post_reboot_required: false
-
 - id: "B.2.b.i"
   title: "Ensure address space layout randomization is enabled"
   description: "Enable ASLR (Address Space Layout Randomization)"
@@ -2097,7 +3171,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.b.i"
   post_reboot_required: false
-
 - id: "B.2.b.ii"
   title: "Ensure ptrace_scope is restricted"
   description: "Restrict the use of ptrace to authorized processes"
@@ -2109,7 +3182,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.b.ii"
   post_reboot_required: false
-
 - id: "B.2.b.iii"
   title: "Ensure core dumps are restricted"
   description: "Restrict or disable core dumps to prevent sensitive data leakage"
@@ -2121,7 +3193,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.b.iii"
   post_reboot_required: false
-
 - id: "B.2.b.iv"
   title: "Ensure prelink is not installed"
   description: "Ensure the prelink package is not installed"
@@ -2133,7 +3204,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.b.iv"
   post_reboot_required: false
-
 - id: "B.2.b.v"
   title: "Ensure Automatic Error Reporting is not enabled"
   description: "Disable automatic error reporting services (e.g., Apport, ABRT)"
@@ -2145,7 +3215,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.b.v"
   post_reboot_required: false
-
 - id: "B.2.c.i"
   title: "Ensure local login warning banner is configured properly"
   description: "Configure the local login banner (/etc/issue) with appropriate warning text"
@@ -2157,7 +3226,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.c.i"
   post_reboot_required: false
-
 - id: "B.2.c.ii"
   title: "Ensure remote login warning banner is configured properly"
   description: "Configure the remote login banner (/etc/issue.net) with appropriate warning text"
@@ -2169,7 +3237,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.c.ii"
   post_reboot_required: false
-
 - id: "B.2.c.iii"
   title: "Ensure access to /etc/motd is configured"
   description: "Configure permissions for /etc/motd"
@@ -2181,7 +3248,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.c.iii"
   post_reboot_required: false
-
 - id: "B.2.c.iv"
   title: "Ensure access to /etc/issue is configured"
   description: "Configure permissions for /etc/issue"
@@ -2193,7 +3259,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.c.iv"
   post_reboot_required: false
-
 - id: "B.2.c.v"
   title: "Ensure access to /etc/issue.net is configured"
   description: "Configure permissions for /etc/issue.net"
@@ -2205,7 +3270,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 25, Item 2.c.v"
   post_reboot_required: false
-
+# Section 3.a: Configure Server Services
 - id: "B.3.a.i"
   title: "Ensure autofs services are not in use"
   description: "Disable the autofs service to prevent automatic mounting of filesystems"
@@ -2217,7 +3282,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.i"
   post_reboot_required: false
-
 - id: "B.3.a.ii"
   title: "Ensure avahi daemon services are not in use"
   description: "Disable the avahi-daemon to prevent network service discovery"
@@ -2229,7 +3293,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.ii"
   post_reboot_required: false
-
 - id: "B.3.a.iii"
   title: "Ensure dhcp server services are not in use"
   description: "Disable the DHCP server service if the system is not acting as a DHCP server"
@@ -2241,7 +3304,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.iii"
   post_reboot_required: false
-
 - id: "B.3.a.iv"
   title: "Ensure dns server services are not in use"
   description: "Disable the DNS server service (e.g., bind) if not needed"
@@ -2253,7 +3315,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.iv"
   post_reboot_required: false
-
 - id: "B.3.a.v"
   title: "Ensure dnsmasq services are not in use"
   description: "Disable dnsmasq if not explicitly required for DNS/DHCP caching"
@@ -2265,7 +3326,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.v"
   post_reboot_required: false
-
 - id: "B.3.a.vi"
   title: "Ensure ftp server services are not in use"
   description: "Disable FTP server services (e.g., vsftpd) due to lack of encryption"
@@ -2277,7 +3337,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.vi"
   post_reboot_required: false
-
 - id: "B.3.a.vii"
   title: "Ensure ldap server services are not in use"
   description: "Disable LDAP server services if the system is not an LDAP directory server"
@@ -2289,7 +3348,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.vii"
   post_reboot_required: false
-
 - id: "B.3.a.viii"
   title: "Ensure message access server services are not in use"
   description: "Disable email retrieval services (e.g., Dovecot, Cyrus) if not a mail server"
@@ -2301,7 +3359,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.viii"
   post_reboot_required: false
-
 - id: "B.3.a.ix"
   title: "Ensure network file system services are not in use"
   description: "Disable NFS services to prevent unauthorized file access over the network"
@@ -2313,7 +3370,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.ix"
   post_reboot_required: false
-
 - id: "B.3.a.x"
   title: "Ensure nis server services are not in use"
   description: "Disable NIS server services due to insecure authentication protocols"
@@ -2325,7 +3381,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.x"
   post_reboot_required: false
-
 - id: "B.3.a.xi"
   title: "Ensure print server services are not in use"
   description: "Disable CUPS/print server services if the system is not a print server"
@@ -2337,7 +3392,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xi"
   post_reboot_required: false
-
 - id: "B.3.a.xii"
   title: "Ensure rpcbind services are not in use"
   description: "Disable rpcbind if RPC services are not required"
@@ -2349,7 +3403,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xii"
   post_reboot_required: false
-
 - id: "B.3.a.xiii"
   title: "Ensure rsync services are not in use"
   description: "Disable the rsync daemon if not needed for file synchronization"
@@ -2361,7 +3414,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xiii"
   post_reboot_required: false
-
 - id: "B.3.a.xiv"
   title: "Ensure samba file server services are not in use"
   description: "Disable Samba services if file sharing with Windows systems is not required"
@@ -2373,7 +3425,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xiv"
   post_reboot_required: false
-
 - id: "B.3.a.xv"
   title: "Ensure snmp services are not in use"
   description: "Disable SNMP services if network monitoring is not required"
@@ -2385,7 +3436,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xv"
   post_reboot_required: false
-
 - id: "B.3.a.xvi"
   title: "Ensure tftp server services are not in use"
   description: "Disable TFTP server services due to lack of authentication"
@@ -2397,7 +3447,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xvi"
   post_reboot_required: false
-
 - id: "B.3.a.xvii"
   title: "Ensure web proxy server services are not in use"
   description: "Disable web proxy services (e.g., Squid) if not required"
@@ -2409,7 +3458,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xvii"
   post_reboot_required: false
-
 - id: "B.3.a.xviii"
   title: "Ensure web server services are not in use"
   description: "Disable web server services (Apache, Nginx) if not hosting a website"
@@ -2421,7 +3469,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xviii"
   post_reboot_required: false
-
 - id: "B.3.a.xix"
   title: "Ensure xinetd services are not in use"
   description: "Disable xinetd (extended internet services daemon) if not needed"
@@ -2433,7 +3480,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xix"
   post_reboot_required: false
-
 - id: "B.3.a.xx"
   title: "Ensure X window server services are not in use"
   description: "Disable X Window System services on servers to reduce attack surface"
@@ -2445,7 +3491,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xx"
   post_reboot_required: false
-
 - id: "B.3.a.xxi"
   title: "Ensure mail transfer agent is configured for local-only mode"
   description: "Configure MTA (like Postfix) to listen only on the loopback interface"
@@ -2457,7 +3502,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xxi"
   post_reboot_required: false
-
 - id: "B.3.a.xxii"
   title: "Ensure only approved services are listening on a network interface"
   description: "Verify that no unapproved services are listening on network interfaces"
@@ -2469,7 +3513,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.a.xxii"
   post_reboot_required: false
-
+# Section 3.b: Configure Client Services
 - id: "B.3.b.i"
   title: "Ensure NIS Client is not installed"
   description: "Remove NIS client packages to prevent use of insecure NIS protocol"
@@ -2481,7 +3525,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.b.i"
   post_reboot_required: false
-
 - id: "B.3.b.ii"
   title: "Ensure rsh client is not installed"
   description: "Remove rsh client packages due to insecure cleartext transmission"
@@ -2493,7 +3536,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.b.ii"
   post_reboot_required: false
-
 - id: "B.3.b.iii"
   title: "Ensure talk client is not installed"
   description: "Remove talk client packages to prevent insecure communication"
@@ -2505,7 +3547,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.b.iii"
   post_reboot_required: false
-
 - id: "B.3.b.iv"
   title: "Ensure telnet client is not installed"
   description: "Remove telnet client packages due to insecure cleartext transmission"
@@ -2517,7 +3558,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.b.iv"
   post_reboot_required: false
-
 - id: "B.3.b.v"
   title: "Ensure ldap client is not installed"
   description: "Remove ldap client packages if not required for authentication"
@@ -2529,7 +3569,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.b.v"
   post_reboot_required: false
-
 - id: "B.3.b.vi"
   title: "Ensure ftp client is not installed"
   description: "Remove ftp client packages; use sftp or scp instead"
@@ -2541,7 +3580,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.b.vi"
   post_reboot_required: false
-
+# Section 3.c: Time Synchronization
 - id: "B.3.c.i"
   title: "Ensure a single time synchronization daemon is in use"
   description: "Ensure only one time synchronization daemon (ntp, chrony, or systemd-timesyncd) is running"
@@ -2553,7 +3592,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.c.i"
   post_reboot_required: false
-
+# Section 3.d: systemd-timesyncd
 - id: "B.3.d.i"
   title: "Ensure systemd-timesyncd configured with authorized timeserver"
   description: "Configure systemd-timesyncd to use authorized NTP servers"
@@ -2565,7 +3604,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.d.i"
   post_reboot_required: false
-
 - id: "B.3.d.ii"
   title: "Ensure systemd-timesyncd is enabled and running"
   description: "Ensure the systemd-timesyncd service is enabled and active"
@@ -2577,7 +3615,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.d.ii"
   post_reboot_required: false
-
+# Section 3.e: Chrony
 - id: "B.3.e.i"
   title: "Ensure chrony is configured with authorized timeserver"
   description: "Configure chrony to use authorized NTP servers"
@@ -2589,7 +3627,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.e.i"
   post_reboot_required: false
-
 - id: "B.3.e.ii"
   title: "Ensure chrony is running as user _chrony"
   description: "Ensure the chrony daemon runs as the unprivileged user _chrony"
@@ -2601,7 +3638,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.e.ii"
   post_reboot_required: false
-
 - id: "B.3.e.iii"
   title: "Ensure chrony is enabled and running"
   description: "Ensure the chrony service is enabled and active"
@@ -2613,7 +3649,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.e.iii"
   post_reboot_required: false
-
+# Section 3.f: Job Schedulers
 - id: "B.3.f.i"
   title: "Ensure cron daemon is enabled and active"
   description: "Ensure the cron service is enabled and running"
@@ -2625,7 +3661,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.f.i"
   post_reboot_required: false
-
 - id: "B.3.f.ii"
   title: "Ensure permissions on /etc/crontab are configured"
   description: "Secure permissions on the /etc/crontab file"
@@ -2637,7 +3672,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.f.ii"
   post_reboot_required: false
-
 - id: "B.3.f.iii"
   title: "Ensure permissions on /etc/cron.hourly are configured"
   description: "Secure permissions on the /etc/cron.hourly directory"
@@ -2649,7 +3683,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.f.iii"
   post_reboot_required: false
-
 - id: "B.3.f.iv"
   title: "Ensure permissions on /etc/cron.daily are configured"
   description: "Secure permissions on the /etc/cron.daily directory"
@@ -2661,7 +3694,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.f.iv"
   post_reboot_required: false
-
 - id: "B.3.f.v"
   title: "Ensure permissions on /etc/cron.weekly are configured"
   description: "Secure permissions on the /etc/cron.weekly directory"
@@ -2673,7 +3705,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 26, Item 3.f.v"
   post_reboot_required: false
-
 - id: "B.3.f.vi"
   title: "Ensure permissions on /etc/cron.monthly are configured"
   description: "Secure permissions on the /etc/cron.monthly directory"
@@ -2685,7 +3716,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 3.f.vi"
   post_reboot_required: false
-
 - id: "B.3.f.vii"
   title: "Ensure permissions on /etc/cron.d are configured"
   description: "Secure permissions on the /etc/cron.d directory"
@@ -2697,7 +3727,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 3.f.vii"
   post_reboot_required: false
-
 - id: "B.3.f.viii"
   title: "Ensure crontab is restricted to authorized users"
   description: "Restrict access to the crontab command using cron.allow and cron.deny"
@@ -2709,7 +3738,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 3.f.viii"
   post_reboot_required: false
-
+# Section 4.a: Configure Network Devices
 - id: "B.4.a.i"
   title: "Ensure IPv6 status is identified"
   description: "Identify if IPv6 is enabled or disabled on the system to align with network policy"
@@ -2721,7 +3750,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.a.i"
   post_reboot_required: false
-
 - id: "B.4.a.ii"
   title: "Ensure wireless interfaces are disabled"
   description: "Disable wireless interfaces (e.g., wlan0) if not required"
@@ -2733,7 +3761,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.a.ii"
   post_reboot_required: false
-
 - id: "B.4.a.iii"
   title: "Ensure bluetooth services are not in use"
   description: "Disable the Bluetooth service to prevent unauthorized wireless connections"
@@ -2745,8 +3772,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.a.iii"
   post_reboot_required: false
-
-
+# Section 4.b: Configure Network Kernel Modules
 - id: "B.4.b.i"
   title: "Ensure dccp kernel module is not available"
   description: "Disable the DCCP (Datagram Congestion Control Protocol) kernel module"
@@ -2758,7 +3784,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.b.i"
   post_reboot_required: false
-
 - id: "B.4.b.ii"
   title: "Ensure tipc kernel module is not available"
   description: "Disable the TIPC (Transparent Inter Process Communication) kernel module"
@@ -2770,7 +3795,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.b.ii"
   post_reboot_required: false
-
 - id: "B.4.b.iii"
   title: "Ensure rds kernel module is not available"
   description: "Disable the RDS (Reliable Datagram Sockets) kernel module"
@@ -2782,7 +3806,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.b.iii"
   post_reboot_required: false
-
 - id: "B.4.b.iv"
   title: "Ensure sctp kernel module is not available"
   description: "Disable the SCTP (Stream Control Transmission Protocol) kernel module"
@@ -2794,7 +3817,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.b.iv"
   post_reboot_required: false
-
+# Section 4.c: Configure Network Kernel Parameters
 - id: "B.4.c.i"
   title: "Ensure ip forwarding is disabled"
   description: "Disable IP forwarding to prevent the system from acting as a router"
@@ -2806,7 +3829,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.i"
   post_reboot_required: false
-
 - id: "B.4.c.ii"
   title: "Ensure packet redirect sending is disabled"
   description: "Disable sending of ICMP redirect packets"
@@ -2818,7 +3840,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.ii"
   post_reboot_required: false
-
 - id: "B.4.c.iii"
   title: "Ensure bogus icmp responses are ignored"
   description: "Configure the kernel to ignore bogus ICMP error responses"
@@ -2830,7 +3851,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.iii"
   post_reboot_required: false
-
 - id: "B.4.c.iv"
   title: "Ensure broadcast icmp requests are ignored"
   description: "Configure the kernel to ignore ICMP broadcasts to prevent Smurf attacks"
@@ -2842,7 +3862,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.iv"
   post_reboot_required: false
-
 - id: "B.4.c.v"
   title: "Ensure icmp redirects are not accepted"
   description: "Prevent the system from accepting ICMP redirects to avoid routing table manipulation"
@@ -2854,7 +3873,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.v"
   post_reboot_required: false
-
 - id: "B.4.c.xi"
   title: "Ensure secure icmp redirects are not accepted"
   description: "Prevent the system from accepting secure ICMP redirects"
@@ -2866,7 +3884,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.xi"
   post_reboot_required: false
-
 - id: "B.4.c.xii"
   title: "Ensure reverse path filtering is enabled"
   description: "Enable Reverse Path Filtering to prevent IP spoofing"
@@ -2878,7 +3895,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.xii"
   post_reboot_required: false
-
 - id: "B.4.c.xiii"
   title: "Ensure source routed packets are not accepted"
   description: "Disable acceptance of source routed packets to prevent traffic redirection"
@@ -2890,7 +3906,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.xiii"
   post_reboot_required: false
-
 - id: "B.4.c.xiv"
   title: "Ensure suspicious packets are logged"
   description: "Enable logging of martian (suspicious) packets"
@@ -2902,7 +3917,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.xiv"
   post_reboot_required: false
-
 - id: "B.4.c.xv"
   title: "Ensure tcp syn cookies is enabled"
   description: "Enable TCP SYN cookies to protect against SYN flood attacks"
@@ -2914,7 +3928,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.xv"
   post_reboot_required: false
-
 - id: "B.4.c.xvi"
   title: "Ensure ipv6 router advertisements are not accepted"
   description: "Prevent the system from accepting IPv6 router advertisements"
@@ -2926,7 +3939,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 4.c.xvi"
   post_reboot_required: false
-
+# Section 5.a: Configure a single firewall utility
 - id: "B.5.a.i"
   title: "Ensure ufw is installed"
   description: "Install the Uncomplicated Firewall (UFW) package"
@@ -2938,7 +3951,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 5.a.i"
   post_reboot_required: false
-
 - id: "B.5.a.ii"
   title: "Ensure iptables-persistent is not installed with ufw"
   description: "Remove iptables-persistent to avoid conflicting firewall configurations"
@@ -2950,7 +3962,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 5.a.ii"
   post_reboot_required: false
-
 - id: "B.5.a.iii"
   title: "Ensure ufw service is enabled"
   description: "Enable and activate the UFW service"
@@ -2962,7 +3973,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 5.a.iii"
   post_reboot_required: false
-
 - id: "B.5.a.iv"
   title: "Ensure ufw loopback traffic is configured"
   description: "Configure UFW to allow traffic on the loopback interface"
@@ -2974,7 +3984,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 5.a.iv"
   post_reboot_required: false
-
 - id: "B.5.a.v"
   title: "Ensure ufw outbound connections are configured"
   description: "Configure UFW outbound connection policies based on requirements"
@@ -2986,7 +3995,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 5.a.v"
   post_reboot_required: false
-
 - id: "B.5.a.vi"
   title: "Ensure ufw firewall rules exist for all open ports"
   description: "Verify that firewall rules are explicitly defined for all open ports"
@@ -2998,7 +4006,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 5.a.vi"
   post_reboot_required: false
-
 - id: "B.5.a.vii"
   title: "Ensure ufw default deny firewall policy"
   description: "Set the default UFW policy to deny incoming connections"
@@ -3010,7 +4017,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 5.a.vii"
   post_reboot_required: false
-
 - id: "B.5.a.viii"
   title: "Ensure ufw is not in use with iptables"
   description: "Ensure raw iptables are not used simultaneously with UFW to prevent conflicts"
@@ -3022,7 +4028,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 27, Item 5.a.viii"
   post_reboot_required: false
-
+# Section 6.a: Configure SSH Server
 - id: "B.6.a.i"
   title: "Ensure permissions on /etc/ssh/sshd_config are configured"
   description: "Secure the sshd_config file by setting appropriate ownership and permissions"
@@ -3034,7 +4040,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.i"
   post_reboot_required: false
-
 - id: "B.6.a.ii"
   title: "Ensure permissions on SSH private host key files are configured"
   description: "Secure SSH private host keys to prevent unauthorized access"
@@ -3046,7 +4051,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.ii"
   post_reboot_required: false
-
 - id: "B.6.a.iii"
   title: "Ensure permissions on SSH public host key files are configured"
   description: "Secure SSH public host keys by setting appropriate permissions"
@@ -3058,7 +4062,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.iii"
   post_reboot_required: false
-
 - id: "B.6.a.iv"
   title: "Ensure sshd access is configured"
   description: "Configure AllowUsers, AllowGroups, DenyUsers, or DenyGroups to restrict SSH access"
@@ -3070,7 +4073,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.iv"
   post_reboot_required: false
-
 - id: "B.6.a.v"
   title: "Ensure sshd Banner is configured"
   description: "Configure the SSH banner to display a legal warning message"
@@ -3082,7 +4084,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.v"
   post_reboot_required: false
-
 - id: "B.6.a.vi"
   title: "Ensure sshd Ciphers are configured"
   description: "Limit SSH ciphers to strong algorithms only"
@@ -3094,7 +4095,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.vi"
   post_reboot_required: false
-
 - id: "B.6.a.vii"
   title: "Ensure sshd ClientAliveInterval and ClientAliveCountMax are configured"
   description: "Set idle timeout intervals to disconnect inactive sessions"
@@ -3106,7 +4106,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.vii"
   post_reboot_required: false
-
 - id: "B.6.a.viii"
   title: "Ensure sshd DisableForwarding is enabled"
   description: "Disable SSH forwarding features (like X11 or TCP forwarding) if not needed"
@@ -3118,7 +4117,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.viii"
   post_reboot_required: false
-
 - id: "B.6.a.ix"
   title: "Ensure sshd GSSAPIAuthentication is disabled"
   description: "Disable GSSAPI authentication if not required"
@@ -3130,7 +4128,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.ix"
   post_reboot_required: false
-
 - id: "B.6.a.x"
   title: "Ensure sshd HostbasedAuthentication is disabled"
   description: "Disable host-based authentication to prevent trust-based attacks"
@@ -3142,7 +4139,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.x"
   post_reboot_required: false
-
 - id: "B.6.a.xi"
   title: "Ensure sshd IgnoreRhosts is enabled"
   description: "Ensure SSH ignores .rhosts and .shosts files"
@@ -3154,7 +4150,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xi"
   post_reboot_required: false
-
 - id: "B.6.a.xii"
   title: "Ensure sshd KexAlgorithms is configured"
   description: "Limit Key Exchange Algorithms to strong, secure options"
@@ -3166,7 +4161,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xii"
   post_reboot_required: false
-
 - id: "B.6.a.xiii"
   title: "Ensure sshd LoginGraceTime is configured"
   description: "Set the time allow for successful login to prevent DoS"
@@ -3178,7 +4172,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xiii"
   post_reboot_required: false
-
 - id: "B.6.a.xiv"
   title: "Ensure sshd LogLevel is configured"
   description: "Set LogLevel to INFO or VERBOSE to capture sufficient audit data"
@@ -3190,7 +4183,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xiv"
   post_reboot_required: false
-
 - id: "B.6.a.xv"
   title: "Ensure sshd MACs are configured"
   description: "Limit Message Authentication Codes (MACs) to strong algorithms"
@@ -3202,7 +4194,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xv"
   post_reboot_required: false
-
 - id: "B.6.a.xvi"
   title: "Ensure sshd MaxAuthTries is configured"
   description: "Limit the maximum number of authentication attempts per connection"
@@ -3214,7 +4205,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xvi"
   post_reboot_required: false
-
 - id: "B.6.a.xvii"
   title: "Ensure sshd MaxSessions is configured"
   description: "Limit the number of open sessions per network connection"
@@ -3226,7 +4216,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xvii"
   post_reboot_required: false
-
 - id: "B.6.a.xviii"
   title: "Ensure sshd MaxStartups is configured"
   description: "Limit the number of concurrent unauthenticated connections"
@@ -3238,7 +4227,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xviii"
   post_reboot_required: false
-
 - id: "B.6.a.xix"
   title: "Ensure sshd PermitEmptyPasswords is disabled"
   description: "Prevent logins with empty passwords"
@@ -3250,7 +4238,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xix"
   post_reboot_required: false
-
 - id: "B.6.a.xx"
   title: "Ensure sshd PermitRootLogin is disabled"
   description: "Disable direct root login via SSH"
@@ -3262,7 +4249,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xx"
   post_reboot_required: false
-
 - id: "B.6.a.xxi"
   title: "Ensure sshd PermitUserEnvironment is disabled"
   description: "Prevent users from setting environment variables in SSH"
@@ -3274,7 +4260,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xxi"
   post_reboot_required: false
-
 - id: "B.6.a.xxii"
   title: "Ensure sshd UsePAM is enabled"
   description: "Enable PAM to manage SSH authentication"
@@ -3286,7 +4271,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.a.xxii"
   post_reboot_required: false
-
+# Section 6.b: Configure privilege escalation
 - id: "B.6.b.i"
   title: "Ensure sudo is installed"
   description: "Ensure the sudo package is installed for privilege delegation"
@@ -3298,7 +4283,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.b.i"
   post_reboot_required: false
-
 - id: "B.6.b.ii"
   title: "Ensure sudo commands use pty"
   description: "Ensure sudo runs commands in a pseudo-terminal (use_pty)"
@@ -3310,7 +4294,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.b.ii"
   post_reboot_required: false
-
 - id: "B.6.b.iii"
   title: "Ensure sudo log file exists"
   description: "Configure sudo to log events to a custom log file"
@@ -3322,7 +4305,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.b.iii"
   post_reboot_required: false
-
 - id: "B.6.b.iv"
   title: "Ensure users must provide password for privilege escalation"
   description: "Ensure 'nopasswd' is not used in sudoers"
@@ -3334,7 +4316,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.b.iv"
   post_reboot_required: false
-
 - id: "B.6.b.v"
   title: "Ensure re-authentication for privilege escalation is not disabled globally"
   description: "Ensure credential caching timeout is not disabled"
@@ -3346,7 +4327,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.b.v"
   post_reboot_required: false
-
 - id: "B.6.b.vi"
   title: "Ensure sudo authentication timeout is configured correctly"
   description: "Configure the timestamp_timeout for sudo sessions"
@@ -3358,7 +4338,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.b.vi"
   post_reboot_required: false
-
 - id: "B.6.b.vii"
   title: "Ensure access to the su command is restricted"
   description: "Restrict usage of the su command to the wheel group or specific users"
@@ -3370,7 +4349,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.b.vii"
   post_reboot_required: false
-
+# Section 6.c.i: Configure PAM software packages
 - id: "B.6.c.i.1"
   title: "Ensure latest version of pam is installed"
   description: "Install the latest updates for the PAM library"
@@ -3382,7 +4361,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.c.i.1"
   post_reboot_required: false
-
 - id: "B.6.c.i.2"
   title: "Ensure libpam-modules is installed"
   description: "Install the libpam-modules package"
@@ -3394,7 +4372,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.c.i.2"
   post_reboot_required: false
-
 - id: "B.6.c.i.3"
   title: "Ensure libpam-pwquality is installed"
   description: "Install the libpam-pwquality package for password strength checking"
@@ -3406,7 +4383,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 28, Item 6.c.i.3"
   post_reboot_required: false
-
+# Section 6.c.ii: Configure pam-auth-update profiles
 - id: "B.6.c.ii.1"
   title: "Ensure pam_unix module is enabled"
   description: "Enable the pam_unix module for standard authentication"
@@ -3418,7 +4395,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.ii.1"
   post_reboot_required: false
-
 - id: "B.6.c.ii.2"
   title: "Ensure pam_faillock module is enabled"
   description: "Enable the pam_faillock module to lock accounts after failed attempts"
@@ -3430,7 +4406,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.ii.2"
   post_reboot_required: false
-
 - id: "B.6.c.ii.3"
   title: "Ensure pam_pwquality module is enabled"
   description: "Enable the pam_pwquality module for password quality enforcement"
@@ -3442,7 +4417,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.ii.3"
   post_reboot_required: false
-
 - id: "B.6.c.ii.4"
   title: "Ensure pam_pwhistory module is enabled"
   description: "Enable the pam_pwhistory module to prevent password reuse"
@@ -3454,7 +4428,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.ii.4"
   post_reboot_required: false
-
+# Section 6.c.iii: Configure pam_faillock module
 - id: "B.6.c.iii.1"
   title: "Ensure password failed attempts lockout is configured"
   description: "Set the number of failed attempts before lockout (deny)"
@@ -3466,7 +4440,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.iii.1"
   post_reboot_required: false
-
 - id: "B.6.c.iii.2"
   title: "Ensure password unlock time is configured"
   description: "Set the duration for which an account remains locked (unlock_time)"
@@ -3478,7 +4451,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.iii.2"
   post_reboot_required: false
-
 - id: "B.6.c.iii.3"
   title: "Ensure password failed attempts lockout includes root account"
   description: "Ensure even_deny_root is set to lock the root account on failures"
@@ -3490,7 +4462,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.iii.3"
   post_reboot_required: false
-
+# Section 6.c.iv: Configure pam_pwquality module
 - id: "B.6.c.iv.1"
   title: "Ensure password number of changed characters is configured"
   description: "Enforce a minimum number of character changes (difok)"
@@ -3502,7 +4474,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.iv.1"
   post_reboot_required: false
-
 - id: "B.6.c.iv.2"
   title: "Ensure minimum password length is configured"
   description: "Enforce a minimum password length (minlen)"
@@ -3514,7 +4485,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.iv.2"
   post_reboot_required: false
-
 - id: "B.6.c.iv.3"
   title: "Ensure password same consecutive characters is configured"
   description: "Limit the number of same consecutive characters (maxclassrepeat)"
@@ -3526,7 +4496,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.iv.3"
   post_reboot_required: false
-
 - id: "B.6.c.iv.4"
   title: "Ensure password maximum sequential characters is configured"
   description: "Limit the number of sequential characters (maxsequence)"
@@ -3538,7 +4507,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.iv.4"
   post_reboot_required: false
-
 - id: "B.6.c.iv.5"
   title: "Ensure password dictionary check is enabled"
   description: "Enable dictionary checking to prevent common words"
@@ -3550,7 +4518,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.iv.5"
   post_reboot_required: false
-
 - id: "B.6.c.iv.6"
   title: "Ensure password quality checking is enforced"
   description: "Ensure enforcement of password quality settings (enforce_for_root)"
@@ -3562,7 +4529,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.iv.6"
   post_reboot_required: false
-
 - id: "B.6.c.iv.7"
   title: "Ensure password quality is enforced for the root user"
   description: "Ensure root user is also subject to password quality checks"
@@ -3574,7 +4540,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.iv.7"
   post_reboot_required: false
-
+# Section 6.c.v: Configure pam_pwhistory module
 - id: "B.6.c.v.1"
   title: "Ensure password history remember is configured"
   description: "Set the number of previous passwords to remember (remember)"
@@ -3586,7 +4552,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.v.1"
   post_reboot_required: false
-
 - id: "B.6.c.v.2"
   title: "Ensure password history is enforced for the root user"
   description: "Ensure password history is also enforced for root (enforce_for_root)"
@@ -3598,7 +4563,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.v.2"
   post_reboot_required: false
-
 - id: "B.6.c.v.3"
   title: "Ensure pam_pwhistory includes use_authtok"
   description: "Use the use_authtok option to enforce the previous password check"
@@ -3610,7 +4574,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 6.c.v.3"
   post_reboot_required: false
-
+# Section 7.a: Configure shadow password suite parameters
 - id: "B.7.a.i"
   title: "Ensure password expiration is configured"
   description: "Configure password expiration limits to force periodic password changes"
@@ -3622,7 +4586,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 7.a.i"
   post_reboot_required: false
-
 - id: "B.7.a.ii"
   title: "Ensure minimum password days is configured"
   description: "Configure the minimum number of days between password changes"
@@ -3634,7 +4597,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 7.a.ii"
   post_reboot_required: false
-
 - id: "B.7.a.iii"
   title: "Ensure password expiration warning days is configured"
   description: "Configure the warning period before a password expires"
@@ -3646,7 +4608,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 7.a.iii"
   post_reboot_required: false
-
 - id: "B.7.a.iv"
   title: "Ensure strong password hashing algorithm is configured"
   description: "Ensure passwords are hashed using a strong algorithm (e.g., SHA-512)"
@@ -3658,7 +4619,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 7.a.iv"
   post_reboot_required: false
-
 - id: "B.7.a.v"
   title: "Ensure inactive password lock is configured"
   description: "Lock accounts that have been inactive for a specified period after password expiration"
@@ -3670,7 +4630,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 7.a.v"
   post_reboot_required: false
-
 - id: "B.7.a.vi"
   title: "Ensure all users last password change date is in the past"
   description: "Verify that there are no users with a password change date in the future"
@@ -3682,7 +4641,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 7.a.vi"
   post_reboot_required: false
-
 - id: "B.7.a.vii"
   title: "Ensure root is the only UID 0 account"
   description: "Verify that the root account is the only account with UID 0"
@@ -3694,7 +4652,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 7.a.vii"
   post_reboot_required: false
-
 - id: "B.7.a.viii"
   title: "Ensure root is the only GID 0 account"
   description: "Verify that the root account is the only account with GID 0"
@@ -3706,7 +4663,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 7.a.viii"
   post_reboot_required: false
-
 - id: "B.7.a.ix"
   title: "Ensure group root is the only GID 0 group"
   description: "Verify that the root group is the only group with GID 0"
@@ -3718,7 +4674,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 29, Item 7.a.ix"
   post_reboot_required: false
-
 - id: "B.7.a.x"
   title: "Ensure root account access is controlled"
   description: "Ensure usage of the root account is restricted to the console or via sudo"
@@ -3730,7 +4685,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 7.a.x"
   post_reboot_required: false
-
 - id: "B.7.a.xi"
   title: "Ensure root path integrity"
   description: "Ensure the root PATH variable does not contain insecure directories"
@@ -3742,7 +4696,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 7.a.xi"
   post_reboot_required: false
-
 - id: "B.7.a.xii"
   title: "Ensure root user umask is configured"
   description: "Configure the default umask for the root user"
@@ -3754,7 +4707,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 7.a.xii"
   post_reboot_required: false
-
 - id: "B.7.a.xiii"
   title: "Ensure system accounts do not have a valid login shell"
   description: "Ensure system accounts are assigned nologin or false shells"
@@ -3766,7 +4718,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 7.a.xiii"
   post_reboot_required: false
-
 - id: "B.7.a.xiv"
   title: "Ensure accounts without a valid login shell are locked"
   description: "Lock accounts that are not intended for interactive login"
@@ -3778,7 +4729,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 7.a.xiv"
   post_reboot_required: false
-
+# Section 7.b: Configure user default environment
 - id: "B.7.b.i"
   title: "Ensure nologin is not listed in /etc/shells"
   description: "Ensure the nologin shell is not included in the valid shells list"
@@ -3790,7 +4741,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 7.b.i"
   post_reboot_required: false
-
 - id: "B.7.b.ii"
   title: "Ensure default user shell timeout is configured"
   description: "Configure the TMOUT environment variable to auto-logout inactive shells"
@@ -3802,7 +4752,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 7.b.ii"
   post_reboot_required: false
-
 - id: "B.7.b.iii"
   title: "Ensure default user umask is configured"
   description: "Configure the default umask for standard users"
@@ -3814,7 +4763,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 7.b.iii"
   post_reboot_required: false
-
+  # Section 8.a.i: Configure systemd-journald service
 - id: "B.8.a.i.1"
   title: "Ensure journald service is enabled and active"
   description: "Ensure the systemd-journald service is running to capture system logs"
@@ -3826,7 +4775,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.i.1"
   post_reboot_required: false
-
 - id: "B.8.a.i.2"
   title: "Ensure journald log file access is configured"
   description: "Configure access permissions for journald log files"
@@ -3838,7 +4786,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.i.2"
   post_reboot_required: false
-
 - id: "B.8.a.i.3"
   title: "Ensure journald log file rotation is configured"
   description: "Configure log rotation to prevent disk saturation"
@@ -3850,7 +4797,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.i.3"
   post_reboot_required: false
-
 - id: "B.8.a.i.4"
   title: "Ensure only one logging system is in use"
   description: "Prevent conflicts by ensuring only one primary logging system is active"
@@ -3862,7 +4808,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.i.4"
   post_reboot_required: false
-
+# Section 8.a.ii: Configure rsyslog
 - id: "B.8.a.ii.1"
   title: "Ensure rsyslog is installed"
   description: "Install the rsyslog package for system logging"
@@ -3874,7 +4820,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.ii.1"
   post_reboot_required: false
-
 - id: "B.8.a.ii.2"
   title: "Ensure rsyslog service is enabled and active"
   description: "Ensure the rsyslog service is running"
@@ -3886,7 +4831,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.ii.2"
   post_reboot_required: false
-
 - id: "B.8.a.ii.3"
   title: "Ensure journald is configured to send logs to rsyslog"
   description: "Forward journald logs to rsyslog for centralized management"
@@ -3898,7 +4842,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.ii.3"
   post_reboot_required: false
-
 - id: "B.8.a.ii.4"
   title: "Ensure rsyslog log file creation mode is configured"
   description: "Set default file permissions for new log files"
@@ -3910,7 +4853,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.ii.4"
   post_reboot_required: false
-
 - id: "B.8.a.ii.5"
   title: "Ensure rsyslog logging is configured"
   description: "Configure rsyslog rules to capture necessary events"
@@ -3922,7 +4864,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.ii.5"
   post_reboot_required: false
-
 - id: "B.8.a.ii.6"
   title: "Ensure rsyslog is configured to send logs to a remote log host"
   description: "Offload logs to a remote server for security and backup"
@@ -3934,7 +4875,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.ii.6"
   post_reboot_required: false
-
 - id: "B.8.a.ii.7"
   title: "Ensure rsyslog is not configured to receive logs from a remote client"
   description: "Disable remote log reception if not acting as a log server"
@@ -3946,7 +4886,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.ii.7"
   post_reboot_required: false
-
 - id: "B.8.a.ii.8"
   title: "Ensure logrotate is configured"
   description: "Configure logrotate to manage log file sizes and retention"
@@ -3958,7 +4897,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.ii.8"
   post_reboot_required: false
-
+# Section 8.a.iii: Configure Logfiles
 - id: "B.8.a.iii.1"
   title: "Ensure access to all logfiles has been configured"
   description: "Restrict permissions on all log files to authorized users only"
@@ -3970,7 +4909,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.a.iii.1"
   post_reboot_required: false
-
+# Section 8.b: System Auditing (auditd)
 - id: "B.8.b.i.1"
   title: "Ensure auditd packages are installed"
   description: "Install auditd to enable system auditing"
@@ -3982,7 +4921,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.b.i.1"
   post_reboot_required: false
-
 - id: "B.8.b.i.2"
   title: "Ensure auditd service is enabled and active"
   description: "Ensure the auditd service is running"
@@ -3994,7 +4932,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.b.i.2"
   post_reboot_required: false
-
 - id: "B.8.b.i.3"
   title: "Ensure auditing for processes that start prior to auditd is enabled"
   description: "Enable auditing kernel parameter (audit=1) at boot"
@@ -4006,7 +4943,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.b.i.3"
   post_reboot_required: false
-
 - id: "B.8.b.i.4"
   title: "Ensure audit_backlog_limit is sufficient"
   description: "Increase the audit backlog limit to prevent event loss"
@@ -4018,7 +4954,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 30, Item 8.b.i.4"
   post_reboot_required: false
-
+# Section 8.c: Configure Data Retention
 - id: "B.8.c.i"
   title: "Ensure audit log storage size is configured"
   description: "Configure max_log_file to manage storage usage"
@@ -4030,7 +4966,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.c.i"
   post_reboot_required: false
-
 - id: "B.8.c.ii"
   title: "Ensure audit logs are not automatically deleted"
   description: "Configure max_log_file_action to keep logs"
@@ -4042,7 +4977,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.c.ii"
   post_reboot_required: false
-
 - id: "B.8.c.iii"
   title: "Ensure system is disabled when audit logs are full"
   description: "Configure action (e.g., suspend/halt) when disk is full to preserve audit trail"
@@ -4054,7 +4988,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.c.iii"
   post_reboot_required: false
-
 - id: "B.8.c.iv"
   title: "Ensure system warns when audit logs are low on space"
   description: "Configure admin_space_left_action to warn administrators"
@@ -4066,7 +4999,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.c.iv"
   post_reboot_required: false
-
+# Section 8.d: Configure auditd Rules
 - id: "B.8.d.i"
   title: "Ensure changes to system administration scope (sudoers) is collected"
   description: "Audit changes to /etc/sudoers and /etc/sudoers.d"
@@ -4078,7 +5011,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.i"
   post_reboot_required: false
-
 - id: "B.8.d.ii"
   title: "Ensure actions as another user are always logged"
   description: "Audit user switching and privilege escalation"
@@ -4090,7 +5022,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.ii"
   post_reboot_required: false
-
 - id: "B.8.d.iii"
   title: "Ensure events that modify the sudo log file are collected"
   description: "Audit writes to the sudo log file"
@@ -4102,7 +5033,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.iii"
   post_reboot_required: false
-
 - id: "B.8.d.iv"
   title: "Ensure events that modify date and time information are collected"
   description: "Audit changes to system time (adjtimex, settimeofday)"
@@ -4114,7 +5044,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.iv"
   post_reboot_required: false
-
 - id: "B.8.d.v"
   title: "Ensure events that modify the system's network environment are collected"
   description: "Audit network configuration changes (sethostname, setdomainname)"
@@ -4126,7 +5055,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.v"
   post_reboot_required: false
-
 - id: "B.8.d.vi"
   title: "Ensure use of privileged commands are collected"
   description: "Audit execution of SUID/SGID binaries"
@@ -4138,7 +5066,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.vi"
   post_reboot_required: false
-
 - id: "B.8.d.vii"
   title: "Ensure unsuccessful file access attempts are collected"
   description: "Audit failed file open/access attempts (EACCES, EPERM)"
@@ -4150,7 +5077,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.vii"
   post_reboot_required: false
-
 - id: "B.8.d.viii"
   title: "Ensure events that modify user/group information are collected"
   description: "Audit changes to /etc/passwd, /etc/group, etc."
@@ -4162,7 +5088,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.viii"
   post_reboot_required: false
-
 - id: "B.8.d.ix"
   title: "Ensure discretionary access control permission modification events are collected"
   description: "Audit chmod, chown, and similar system calls"
@@ -4174,7 +5099,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.ix"
   post_reboot_required: false
-
 - id: "B.8.d.x"
   title: "Ensure successful file system mounts are collected"
   description: "Audit mount and umount system calls"
@@ -4186,7 +5110,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.x"
   post_reboot_required: false
-
 - id: "B.8.d.xi"
   title: "Ensure session initiation information is collected"
   description: "Audit session starts (utmp, wtmp, btmp)"
@@ -4198,7 +5121,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xi"
   post_reboot_required: false
-
 - id: "B.8.d.xii"
   title: "Ensure login and logout events are collected"
   description: "Audit login/logout events via faillog/lastlog"
@@ -4210,7 +5132,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xii"
   post_reboot_required: false
-
 - id: "B.8.d.xiii"
   title: "Ensure file deletion events by users are collected"
   description: "Audit unlink and rename system calls"
@@ -4222,7 +5143,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xiii"
   post_reboot_required: false
-
 - id: "B.8.d.xiv"
   title: "Ensure events that modify the system's Mandatory Access Controls are collected"
   description: "Audit changes to SELinux or AppArmor configurations"
@@ -4234,7 +5154,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xiv"
   post_reboot_required: false
-
 - id: "B.8.d.xv"
   title: "Ensure successful and unsuccessful attempts to use the chcon command are collected"
   description: "Audit use of the chcon command"
@@ -4246,7 +5165,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xv"
   post_reboot_required: false
-
 - id: "B.8.d.xvi"
   title: "Ensure successful and unsuccessful attempts to use the setfacl command are collected"
   description: "Audit use of the setfacl command"
@@ -4258,7 +5176,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xvi"
   post_reboot_required: false
-
 - id: "B.8.d.xvii"
   title: "Ensure successful and unsuccessful attempts to use the chacl command are collected"
   description: "Audit use of the chacl command"
@@ -4270,7 +5187,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xvii"
   post_reboot_required: false
-
 - id: "B.8.d.xviii"
   title: "Ensure successful and unsuccessful attempts to use the usermod command are collected"
   description: "Audit use of the usermod command"
@@ -4282,7 +5198,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xviii"
   post_reboot_required: false
-
 - id: "B.8.d.xix"
   title: "Ensure kernel module loading unloading and modification is collected"
   description: "Audit insmod, rmmod, modprobe calls"
@@ -4294,7 +5209,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xix"
   post_reboot_required: false
-
 - id: "B.8.d.xx"
   title: "Ensure the audit configuration is immutable"
   description: "Set the audit configuration to immutable (audit_backlog_limit setting)"
@@ -4306,7 +5220,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xx"
   post_reboot_required: false
-
 - id: "B.8.d.xxi"
   title: "Ensure the running and on disk configuration is the same"
   description: "Verify that runtime audit rules match the on-disk configuration"
@@ -4318,7 +5231,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.d.xxi"
   post_reboot_required: false
-
+# Section 8.e: Configure auditd File Access
 - id: "B.8.e.i"
   title: "Ensure audit log files mode is configured"
   description: "Configure permissions (e.g., 0600) for audit logs"
@@ -4330,7 +5243,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.e.i"
   post_reboot_required: false
-
 - id: "B.8.e.ii"
   title: "Ensure audit log files owner is configured"
   description: "Ensure audit logs are owned by root"
@@ -4342,7 +5254,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.e.ii"
   post_reboot_required: false
-
 - id: "B.8.e.iii"
   title: "Ensure audit log files group owner is configured"
   description: "Ensure audit logs are group-owned by root"
@@ -4354,7 +5265,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.e.iii"
   post_reboot_required: false
-
 - id: "B.8.e.iv"
   title: "Ensure the audit log file directory mode is configured"
   description: "Configure permissions for the audit log directory"
@@ -4366,7 +5276,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.e.iv"
   post_reboot_required: false
-
 - id: "B.8.e.v"
   title: "Ensure audit configuration files mode is configured"
   description: "Configure permissions for auditd.conf and rules"
@@ -4378,7 +5287,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.e.v"
   post_reboot_required: false
-
 - id: "B.8.e.vi"
   title: "Ensure audit configuration files owner is configured"
   description: "Ensure audit config files are owned by root"
@@ -4390,7 +5298,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 31, Item 8.e.vi"
   post_reboot_required: false
-
 - id: "B.8.e.vii"
   title: "Ensure audit configuration files group owner is configured"
   description: "Ensure audit config files are group-owned by root"
@@ -4402,7 +5309,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 8.e.vii"
   post_reboot_required: false
-
 - id: "B.8.e.viii"
   title: "Ensure audit tools mode is configured"
   description: "Configure permissions for audit tools (auditctl, aureport, etc.)"
@@ -4414,7 +5320,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 8.e.viii"
   post_reboot_required: false
-
 - id: "B.8.e.ix"
   title: "Ensure audit tools owner is configured"
   description: "Ensure audit tools are owned by root"
@@ -4426,7 +5331,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 8.e.ix"
   post_reboot_required: false
-
 - id: "B.8.e.x"
   title: "Ensure audit tools group owner is configured"
   description: "Ensure audit tools are group-owned by root"
@@ -4438,7 +5342,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 8.e.x"
   post_reboot_required: false
-
+# Section 8.f: Configure Integrity Checking
 - id: "B.8.f.i"
   title: "Ensure AIDE is installed"
   description: "Install AIDE (Advanced Intrusion Detection Environment) for file integrity checking"
@@ -4450,7 +5354,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 8.f.i"
   post_reboot_required: false
-
 - id: "B.8.f.ii"
   title: "Ensure filesystem integrity is regularly checked"
   description: "Schedule regular execution of AIDE checks (e.g., via cron)"
@@ -4462,7 +5365,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 8.f.ii"
   post_reboot_required: false
-
 - id: "B.8.f.iii"
   title: "Ensure cryptographic mechanisms are used to protect the integrity of audit tools"
   description: "Verify integrity of audit tools using AIDE or similar mechanisms"
@@ -4474,7 +5376,7 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 8.f.iii"
   post_reboot_required: false
-
+  # Section 9.a: System File Permissions
 - id: "B.9.a.i"
   title: "Ensure permissions on /etc/passwd are configured"
   description: "Secure permissions (e.g., 644, owned by root) for /etc/passwd"
@@ -4486,7 +5388,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.i"
   post_reboot_required: false
-
 - id: "B.9.a.ii"
   title: "Ensure permissions on /etc/passwd- are configured"
   description: "Secure permissions for the password backup file /etc/passwd-"
@@ -4498,7 +5399,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.ii"
   post_reboot_required: false
-
 - id: "B.9.a.iii"
   title: "Ensure permissions on /etc/group are configured"
   description: "Secure permissions (e.g., 644, owned by root) for /etc/group"
@@ -4510,7 +5410,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.iii"
   post_reboot_required: false
-
 - id: "B.9.a.iv"
   title: "Ensure permissions on /etc/group- are configured"
   description: "Secure permissions for the group backup file /etc/group-"
@@ -4522,7 +5421,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.iv"
   post_reboot_required: false
-
 - id: "B.9.a.v"
   title: "Ensure permissions on /etc/shadow are configured"
   description: "Secure permissions (e.g., 640, owned by root:shadow) for /etc/shadow"
@@ -4534,7 +5432,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.v"
   post_reboot_required: false
-
 - id: "B.9.a.vi"
   title: "Ensure permissions on /etc/shadow- are configured"
   description: "Secure permissions for the shadow backup file /etc/shadow-"
@@ -4546,7 +5443,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.vi"
   post_reboot_required: false
-
 - id: "B.9.a.vii"
   title: "Ensure permissions on /etc/gshadow are configured"
   description: "Secure permissions (e.g., 640, owned by root:shadow) for /etc/gshadow"
@@ -4558,7 +5454,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.vii"
   post_reboot_required: false
-
 - id: "B.9.a.viii"
   title: "Ensure permissions on /etc/gshadow- are configured"
   description: "Secure permissions for the gshadow backup file /etc/gshadow-"
@@ -4570,7 +5465,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.viii"
   post_reboot_required: false
-
 - id: "B.9.a.ix"
   title: "Ensure permissions on /etc/shells are configured"
   description: "Secure permissions for the /etc/shells file"
@@ -4582,7 +5476,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.ix"
   post_reboot_required: false
-
 - id: "B.9.a.x"
   title: "Ensure permissions on /etc/security/opasswd are configured"
   description: "Secure permissions for the old password history file"
@@ -4594,7 +5487,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.x"
   post_reboot_required: false
-
 - id: "B.9.a.xi"
   title: "Ensure world writable files and directories are secured"
   description: "Scan for and secure any files or directories that are world-writable"
@@ -4606,7 +5498,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xi"
   post_reboot_required: false
-
 - id: "B.9.a.xii"
   title: "Ensure no files or directories without an owner and a group exist"
   description: "Identify and fix unowned files or directories"
@@ -4618,7 +5509,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xii"
   post_reboot_required: false
-
 - id: "B.9.a.xiii"
   title: "Ensure SUID and SGID files are reviewed"
   description: "Review files with SUID/SGID bits set to minimize privilege escalation risks"
@@ -4630,10 +5520,10 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xiii"
   post_reboot_required: false
-
+# Section 9.a (Continued): Local User and Group Settings
 - id: "B.9.a.xiv"
   title: "Ensure accounts in /etc/passwd use shadowed passwords"
-  description: "Verify that ‘x’ is used in the password field of /etc/passwd"
+  description: "Verify that â€˜xâ€™ is used in the password field of /etc/passwd"
   platform: "linux"
   severity: "high"
   reversible: true
@@ -4642,7 +5532,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xiv"
   post_reboot_required: false
-
 - id: "B.9.a.xv"
   title: "Ensure /etc/shadow password fields are not empty"
   description: "Ensure no accounts have empty passwords in the shadow file"
@@ -4654,7 +5543,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xv"
   post_reboot_required: false
-
 - id: "B.9.a.xvi"
   title: "Ensure all groups in /etc/passwd exist in /etc/group"
   description: "Verify consistency between passwd and group files"
@@ -4666,7 +5554,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xvi"
   post_reboot_required: false
-
 - id: "B.9.a.xvii"
   title: "Ensure shadow group is empty"
   description: "Ensure no users are assigned to the shadow group"
@@ -4678,7 +5565,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xvii"
   post_reboot_required: false
-
 - id: "B.9.a.xviii"
   title: "Ensure no duplicate UIDs exist"
   description: "Verify that all User IDs (UIDs) are unique"
@@ -4690,7 +5576,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xviii"
   post_reboot_required: false
-
 - id: "B.9.a.xix"
   title: "Ensure no duplicate GIDs exist"
   description: "Verify that all Group IDs (GIDs) are unique"
@@ -4702,7 +5587,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xix"
   post_reboot_required: false
-
 - id: "B.9.a.xx"
   title: "Ensure no duplicate user names exist"
   description: "Verify that all usernames are unique"
@@ -4714,7 +5598,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xx"
   post_reboot_required: false
-
 - id: "B.9.a.xxi"
   title: "Ensure no duplicate group names exist"
   description: "Verify that all group names are unique"
@@ -4726,7 +5609,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xxi"
   post_reboot_required: false
-
 - id: "B.9.a.xxii"
   title: "Ensure local interactive user home directories are configured"
   description: "Ensure all interactive users have valid home directories assigned"
@@ -4738,7 +5620,6 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xxii"
   post_reboot_required: false
-
 - id: "B.9.a.xxiii"
   title: "Ensure local interactive user dot files access is configured"
   description: "Secure access to dot files (e.g., .bashrc) in user home directories"
@@ -4750,3 +5631,106 @@
   remediate_type: "manual"
   reference: "Annexure B Page 32, Item 9.a.xxiii"
   post_reboot_required: false
+- id: "A.2.sm1"
+  title: "Disable SMBv1 Protocol"
+  description: "Ensure SMBv1 is disabled to prevent exploitation of legacy protocol vulnerabilities"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry"
+  registry_path: "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\LanmanServer\\Parameters"
+  value_name: "SMB1"
+  expected_state: "0"
+  remediate_type: "registry_set"
+  set_value: "0"
+  post_reboot_required: true
+  reference: "Mapped from Secure Configurations SC.2 (Disable unnecessary protocols) :contentReference[oaicite:2]{index=2}"
+- id: "A.2.fw1"
+  title: "Ensure Windows Firewall is Enabled"
+  description: "Verify Windows Firewall is active across all profiles"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "powershell"
+  command: "Get-NetFirewallProfile | Select-Object -ExpandProperty Enabled"
+  expected_state:
+    operator: "eq"
+    value: 1
+  remediate_type: "powershell_run"
+  remediate_command: "Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True"
+  post_reboot_required: false
+  reference: "Network & Email Security NES.1 – Deploy firewalls :contentReference[oaicite:3]{index=3}"
+- id: "A.2.prt1"
+  title: "Block Unused and Unsafe Ports"
+  description: "Enumerate listening ports and ensure non-baseline ports are blocked"
+  platform: "windows"
+  severity: "medium"
+  reversible: true
+  check_type: "powershell"
+  command: "Get-NetTCPConnection | Select-Object LocalPort"
+  expected_state: "baseline_port_list"
+  remediate_type: "firewall_block"
+  set_value: "block_nonbaseline"
+  post_reboot_required: false
+  reference: "Secure Configurations SC.2 – Disable unnecessary ports/services :contentReference[oaicite:4]{index=4}"
+- id: "A.2.tls1"
+  title: "Enforce TLS 1.2 and TLS 1.3"
+  description: "Disable weak protocols TLS1.0/1.1 and ensure TLS1.2+ is enabled"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "registry"
+  registry_path: "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\SCHANNEL\\Protocols"
+  expected_state:
+    TLS1.0: "disabled"
+    TLS1.1: "disabled"
+    TLS1.2: "enabled"
+  remediate_type: "registry_multiple"
+  set_value:
+    disable_TLS1_0: true
+    disable_TLS1_1: true
+    enable_TLS1_2: true
+  post_reboot_required: true
+  reference: "Cryptographic Practices – avoid outdated crypto & secure protocol configuration :contentReference[oaicite:5]{index=5}"
+- id: "A.2.ciph1"
+  title: "Disable Weak Cipher Suites"
+  description: "Remove RC4, DES, 3DES, EXPORT, NULL and MD5-based cipher suites"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "powershell"
+  command: "Get-TlsCipherSuite | Select-Object Name"
+  expected_state: "no_weak_ciphers"
+  remediate_type: "registry_set"
+  set_value: "strong_cipher_list"
+  post_reboot_required: true
+  reference: "Cryptographic Practices – avoid outdated algorithms :contentReference[oaicite:6]{index=6}"
+- id: "A.2.acc1"
+  title: "Disable Guest and Anonymous Access Accounts"
+  description: "Ensure Guest account and anonymous SID enumeration are disabled"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "local_policy"
+  policy_name: "Accounts: Guest account status"
+  expected_state: "disabled"
+  remediate_type: "local_policy_set"
+  set_value: "0"
+  post_reboot_required: false
+  reference: "Access Control & Identity Management ACIM.1 – unique IDs only, no shared/guest accounts :contentReference[oaicite:7]{index=7}"
+- id: "A.2.priv1"
+  title: "Restrict Dangerous Privileges from Local Accounts"
+  description: "Remove SeDebugPrivilege, SeImpersonatePrivilege and SeBackupPrivilege from non-admin accounts"
+  platform: "windows"
+  severity: "high"
+  reversible: true
+  check_type: "privilege_enum"
+  privilege_list:
+    - SeDebugPrivilege
+    - SeImpersonatePrivilege
+    - SeBackupPrivilege
+  expected_state: "assigned_to_admins_only"
+  remediate_type: "secedit_update"
+  set_value: "remove_from_non_admins"
+  post_reboot_required: false
+  reference: "Principle of Least Privilege – SC.1, ACIM.2, ACIM.4 :contentReference[oaicite:8]{index=8}"

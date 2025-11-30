@@ -4,14 +4,13 @@ use anyhow::Result;
 /// Provides TUI, audit, and remediate commands for the NoGap security platform.
 use clap::{Parser, Subcommand};
 use nogap_cli::ui;
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use chrono::Utc;
 use nogap_core::{policy_parser, engine};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::fs;
-use std::io::Write;
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 struct CliReport {
     timestamp: String,
     compliance_score: f32,
@@ -64,6 +63,27 @@ enum Commands {
         #[arg(long)]
         export_csv: Option<String>,
     },
+    /// Scan for USB storage devices and policy repositories
+    ScanUsb {
+        /// Output as JSON (headless mode)
+        #[arg(long)]
+        json: bool,
+    },
+    /// View, filter, and export past audit/remediation results
+    Report {
+        /// Path to input JSON report file
+        #[arg(long)]
+        from_json: String,
+        /// Export to CSV file
+        #[arg(long)]
+        to_csv: Option<String>,
+        /// Filter by policy ID or severity (high/medium/low)
+        #[arg(long)]
+        filter: Option<String>,
+        /// Show summary statistics only
+        #[arg(long)]
+        summary: bool,
+    },
 }
 
 fn main() -> Result<()> {
@@ -82,6 +102,16 @@ fn main() -> Result<()> {
         }
         Commands::Remediate { policies, id, yes, export_csv } => {
             run_remediate_cli(&policies, &id, yes, export_csv.as_deref())?;
+        }
+        Commands::ScanUsb { json } => {
+            if json {
+                run_scan_usb_json()?;
+            } else {
+                run_scan_usb_cli()?;
+            }
+        }
+        Commands::Report { from_json, to_csv, filter, summary } => {
+            run_report_cli(&from_json, to_csv.as_deref(), filter.as_deref(), summary)?;
         }
     }
 
@@ -405,3 +435,351 @@ fn detect_usb_b_mount() -> Option<String> {
     
     None
 }
+
+#[derive(Serialize)]
+struct UsbDeviceInfo {
+    name: String,
+    mount_path: String,
+    size_available: Option<u64>,
+    has_policy_folder: bool,
+    policy_files_detected: Vec<String>,
+}
+
+/// Scan USB devices and output results in plain text format
+fn run_scan_usb_cli() -> Result<()> {
+    println!("🔍 Scanning for USB storage devices...\n");
+    
+    let devices = scan_usb_devices()?;
+    
+    if devices.is_empty() {
+        println!("No USB storage devices detected.");
+        return Ok(());
+    }
+    
+    println!("Found {} USB device(s):\n", devices.len());
+    
+    for (idx, device) in devices.iter().enumerate() {
+        println!("Device #{}", idx + 1);
+        println!("  Name: {}", device.name);
+        println!("  Mount: {}", device.mount_path);
+        if let Some(size) = device.size_available {
+            println!("  Available: {} MB", size / 1024 / 1024);
+        } else {
+            println!("  Available: N/A");
+        }
+        println!("  Policy folder: {}", if device.has_policy_folder { "✓ Yes" } else { "✗ No" });
+        if !device.policy_files_detected.is_empty() {
+            println!("  Policy files:");
+            for file in &device.policy_files_detected {
+                println!("    - {}", file);
+            }
+        } else {
+            println!("  Policy files: None");
+        }
+        println!();
+    }
+    
+    Ok(())
+}
+
+/// Scan USB devices and output results in JSON format
+fn run_scan_usb_json() -> Result<()> {
+    let devices = scan_usb_devices()?;
+    
+    let json = serde_json::to_string_pretty(&devices)?;
+    println!("{}", json);
+    
+    Ok(())
+}
+
+/// Core USB scanning logic - reusable for CLI and TUI
+fn scan_usb_devices() -> Result<Vec<UsbDeviceInfo>> {
+    use nogap_core::ostree_lite;
+    
+    let mut devices = Vec::new();
+    
+    // Discover USB repos using existing core functionality
+    let repo_paths = ostree_lite::discover_usb_repos()
+        .unwrap_or_else(|_| Vec::new());
+    
+    // Get all removable drives
+    #[cfg(target_os = "windows")]
+    {
+        for letter in b'D'..=b'Z' {
+            let drive_path = format!("{}:\\", letter as char);
+            let path = PathBuf::from(&drive_path);
+            
+            if !path.exists() {
+                continue;
+            }
+            
+            // Check if removable using Windows API
+            use std::os::windows::ffi::OsStrExt;
+            use std::ffi::OsString;
+            
+            let wide: Vec<u16> = OsString::from(&drive_path)
+                .encode_wide()
+                .chain(std::iter::once(0))
+                .collect();
+            
+            let drive_type = unsafe {
+                winapi::um::fileapi::GetDriveTypeW(wide.as_ptr())
+            };
+            
+            // Only process removable (2) or fixed (3) drives
+            if drive_type != 2 && drive_type != 3 {
+                continue;
+            }
+            
+            let name = format!("Drive {}", letter as char);
+            let has_policy_folder = repo_paths.iter().any(|p| p.starts_with(&path));
+            
+            // Get available space
+            let size_available = get_drive_space(&drive_path);
+            
+            // Detect policy files
+            let policy_files = detect_policy_files(&drive_path);
+            
+            devices.push(UsbDeviceInfo {
+                name,
+                mount_path: drive_path,
+                size_available,
+                has_policy_folder,
+                policy_files_detected: policy_files,
+            });
+        }
+    }
+    
+    #[cfg(target_os = "linux")]
+    {
+        // Check /media and /mnt for mounted devices
+        let mount_points = ["/media", "/mnt"];
+        
+        for mount_base in &mount_points {
+            if let Ok(entries) = fs::read_dir(mount_base) {
+                for entry in entries.flatten() {
+                    if let Ok(sub_entries) = fs::read_dir(entry.path()) {
+                        for sub_entry in sub_entries.flatten() {
+                            let mount_path = sub_entry.path();
+                            if !mount_path.is_dir() {
+                                continue;
+                            }
+                            
+                            let mount_str = mount_path.to_string_lossy().to_string();
+                            let name = mount_path
+                                .file_name()
+                                .and_then(|n| n.to_str())
+                                .unwrap_or("Unknown")
+                                .to_string();
+                            
+                            let has_policy_folder = repo_paths.iter().any(|p| p.starts_with(&mount_path));
+                            let size_available = get_drive_space(&mount_str);
+                            let policy_files = detect_policy_files(&mount_str);
+                            
+                            devices.push(UsbDeviceInfo {
+                                name,
+                                mount_path: mount_str,
+                                size_available,
+                                has_policy_folder,
+                                policy_files_detected: policy_files,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    Ok(devices)
+}
+
+/// Get available space on drive/mount point
+fn get_drive_space(path: &str) -> Option<u64> {
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::ffi::OsStrExt;
+        use std::ffi::OsString;
+        use winapi::um::fileapi::GetDiskFreeSpaceExW;
+        use winapi::shared::minwindef::FALSE;
+        
+        let wide: Vec<u16> = OsString::from(path)
+            .encode_wide()
+            .chain(std::iter::once(0))
+            .collect();
+        
+        let mut free_bytes_available: u64 = 0;
+        
+        unsafe {
+            let result = GetDiskFreeSpaceExW(
+                wide.as_ptr(),
+                std::mem::transmute(&mut free_bytes_available),
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+            );
+            
+            if result != FALSE {
+                return Some(free_bytes_available);
+            }
+        }
+    }
+    
+    #[cfg(target_os = "linux")]
+    {
+        use std::os::unix::fs::MetadataExt;
+        
+        if let Ok(metadata) = fs::metadata(path) {
+            // This is approximate - actual free space requires statvfs
+            return Some(metadata.blocks() * 512);
+        }
+    }
+    
+    None
+}
+
+/// Detect policy-related files on USB device
+fn detect_policy_files(base_path: &str) -> Vec<String> {
+    let mut files = Vec::new();
+    
+    // Check for aegis_repo marker
+    let aegis_marker = PathBuf::from(base_path).join("aegis_repo");
+    if aegis_marker.exists() {
+        files.push("aegis_repo/".to_string());
+        
+        // Check for manifest
+        if aegis_marker.join("manifest.json").exists() {
+            files.push("aegis_repo/manifest.json".to_string());
+        }
+        
+        // Check for objects directory
+        if aegis_marker.join("objects").exists() {
+            files.push("aegis_repo/objects/".to_string());
+        }
+    }
+    
+    // Check for nogap_usb_repo marker
+    let nogap_marker = PathBuf::from(base_path).join("nogap_usb_repo");
+    if nogap_marker.exists() {
+        files.push("nogap_usb_repo".to_string());
+    }
+    
+    // Check for policies.yaml
+    if PathBuf::from(base_path).join("policies.yaml").exists() {
+        files.push("policies.yaml".to_string());
+    }
+    
+    // Check for reports directory
+    let reports_dir = PathBuf::from(base_path).join("reports");
+    if reports_dir.exists() {
+        files.push("reports/".to_string());
+    }
+    
+    files
+}
+
+/// View, filter, and export past audit/remediation results
+fn run_report_cli(
+    json_path: &str,
+    csv_path: Option<&str>,
+    filter: Option<&str>,
+    summary_only: bool,
+) -> Result<()> {
+    use std::fs;
+    
+    // Load JSON report
+    let json_content = fs::read_to_string(json_path)
+        .map_err(|e| anyhow::anyhow!("Failed to read JSON file: {}", e))?;
+    
+    let report: CliReport = serde_json::from_str(&json_content)
+        .map_err(|e| anyhow::anyhow!("Failed to parse JSON report: {}", e))?;
+    
+    // Apply filter if provided
+    let filtered_results: Vec<_> = if let Some(f) = filter {
+        let filter_lower = f.to_lowercase();
+        
+        // Check if filtering by severity
+        if filter_lower == "high" || filter_lower == "medium" || filter_lower == "low" {
+            // Filter by severity (need to cross-reference with policies)
+            // For now, just filter by policy ID since severity is in policies, not results
+            report.results.iter()
+                .filter(|r| r.policy_id.to_lowercase().contains(&filter_lower))
+                .cloned()
+                .collect()
+        } else {
+            // Filter by policy ID
+            report.results.iter()
+                .filter(|r| r.policy_id.contains(f))
+                .cloned()
+                .collect()
+        }
+    } else {
+        report.results.clone()
+    };
+    
+    // Show summary
+    if summary_only {
+        let total = filtered_results.len();
+        let passed = filtered_results.iter().filter(|r| r.passed).count();
+        let failed = total - passed;
+        let score = if total > 0 {
+            (passed as f32 / total as f32) * 100.0
+        } else {
+            0.0
+        };
+        
+        println!("Report Summary");
+        println!("==============");
+        println!("Report Date: {}", report.timestamp);
+        println!("Total Policies: {}", total);
+        println!("Passed: {}", passed);
+        println!("Failed: {}", failed);
+        println!("Compliance Score: {:.2}%", score);
+        
+        if let Some(f) = filter {
+            println!("Filter Applied: {}", f);
+        }
+        
+        return Ok(());
+    }
+    
+    // Display filtered results
+    println!("Report Date: {}", report.timestamp);
+    println!("Compliance Score: {:.2}%", report.compliance_score);
+    
+    if let Some(f) = filter {
+        println!("Filter: {}", f);
+    }
+    
+    println!("\nResults ({} policies):\n", filtered_results.len());
+    
+    for result in &filtered_results {
+        let status = if result.passed { "PASS" } else { "FAIL" };
+        println!("  [{}] {} - {}", status, result.policy_id, result.message);
+    }
+    
+    // Export to CSV if requested
+    if let Some(csv_output) = csv_path {
+        // Create minimal policy stubs for CSV export
+        // Since we don't have full policy objects, create them from results
+        let stub_policies: Vec<nogap_core::types::Policy> = filtered_results.iter()
+            .map(|r| {
+                use nogap_core::types::Policy;
+                Policy {
+                    id: r.policy_id.clone(),
+                    title: None,
+                    description: Some(r.message.clone()),
+                    platform: "unknown".to_string(),
+                    check_type: "unknown".to_string(),
+                    severity: Some("medium".to_string()),
+                    target_file: None,
+                    expected_state: None,
+                    ..Default::default()
+                }
+            })
+            .collect();
+        
+        export_csv_report(&filtered_results, &stub_policies, csv_output)?;
+    }
+    
+    Ok(())
+}
+

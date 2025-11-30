@@ -12,6 +12,7 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use nogap_core::{engine, policy_parser, snapshot};
+use chrono;
 use ratatui::{
     backend::CrosstermBackend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -306,6 +307,36 @@ impl AppState {
             self.multiselect.clear_all();
             self.dashboard
                 .set_last_action("Selections cleared".to_string());
+        } else if KeyMap::is_export_csv(code) {
+            // Export current audit results to CSV
+            let timestamp = chrono::Utc::now().format("%Y%m%d_%H%M%S");
+            let csv_filename = format!("nogap_export_{}.csv", timestamp);
+            
+            // Run audit to get current results
+            match engine::audit(&self.dashboard.policies) {
+                Ok(results) => {
+                    match Self::export_audit_results_csv(&results, &self.dashboard.policies, &csv_filename) {
+                        Ok(_) => {
+                            self.push_modal(Modal::new(
+                                "Export Successful",
+                                format!("Results exported to: {}", csv_filename),
+                            ));
+                        }
+                        Err(e) => {
+                            self.push_modal(Modal::new(
+                                "Export Failed",
+                                format!("Error: {}", e),
+                            ));
+                        }
+                    }
+                }
+                Err(e) => {
+                    self.push_modal(Modal::new(
+                        "Export Failed",
+                        format!("Audit error: {}", e),
+                    ));
+                }
+            }
         }
         // Note: Audit key is handled in main loop to support blocking modal flow
     }
@@ -650,6 +681,72 @@ impl AppState {
 
         // Exit multi-select mode
         self.multiselect.exit_mode();
+    }
+
+    /// Export audit results to CSV (TUI version)
+    fn export_audit_results_csv(
+        results: &[engine::AuditResult],
+        policies: &[nogap_core::types::Policy],
+        csv_path: &str,
+    ) -> Result<()> {
+        use std::fs;
+        use std::path::Path;
+        
+        // Create parent directories if needed
+        if let Some(parent) = Path::new(csv_path).parent() {
+            fs::create_dir_all(parent)?;
+        }
+
+        let mut wtr = csv::Writer::from_path(csv_path)?;
+
+        // Write header
+        wtr.write_record(&[
+            "policy_id",
+            "description",
+            "expected",
+            "actual",
+            "status",
+            "severity",
+            "timestamp",
+        ])?;
+
+        let timestamp = chrono::Utc::now().to_rfc3339();
+
+        // Write results
+        for result in results {
+            // Find corresponding policy for additional metadata
+            let policy = policies.iter().find(|p| p.id == result.policy_id);
+            
+            let description = policy
+                .and_then(|p| p.description.as_deref())
+                .unwrap_or("N/A");
+            
+            let severity = policy
+                .and_then(|p| p.severity.as_deref())
+                .unwrap_or("medium");
+
+            let expected = policy
+                .and_then(|p| p.expected_state.as_ref())
+                .map(|e| format!("{:?}", e))
+                .unwrap_or_else(|| "N/A".to_string());
+
+            let status = if result.passed { "PASS" } else { "FAIL" };
+            let actual = &result.message;
+
+            wtr.write_record(&[
+                &result.policy_id,
+                description,
+                &expected,
+                actual,
+                status,
+                severity,
+                &timestamp,
+            ])?;
+        }
+
+        wtr.flush()?;
+        
+        Ok(())
     }
 }
 
