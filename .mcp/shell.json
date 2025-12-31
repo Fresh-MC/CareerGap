@@ -1,8 +1,0 @@
-{
-  "id": "shell",
-  "name": "Shell MCP",
-  "command": "bash",
-  "args": ["-c", "echo Shell MCP active in ${workspaceFolder}"],
-  "workingDirectory": "${workspaceFolder}",
-  "description": "Runs local scripts for ${workspaceFolder}"
-}

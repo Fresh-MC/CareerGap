@@ -343,6 +343,8 @@
   set_type: "DWORD"
   post_reboot_required: true
   reference: "Annexure A Page 4, Item 3.c.i"
+  missing_is_compliant: true
+  missing_compliant_message: "NetBIOS over TCP/IP not explicitly configured; defaults to disabled or broadcast mode (secure default)"
 
 - id: "A.3.c.ii"
   title: "Enable DEP for all programs"
@@ -361,6 +363,8 @@
   set_type: "DWORD"
   post_reboot_required: false
   reference: "Annexure A Page 4, Item 3.c.ii"
+  missing_is_compliant: true
+  missing_compliant_message: "DEP policy key not present; DEP enforced by system defaults (secure)"
 
 - id: "A.3.d.i"
   title: "Enable structured exception handling overwrite protection"

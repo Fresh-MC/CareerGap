@@ -8,7 +8,6 @@ mod privilege;
 mod reporting;
 mod reporting_csv;
 mod utils;
-mod commands_ostree;
 
 #[cfg(target_os = "windows")]
 mod windows_registry;
@@ -57,6 +56,12 @@ pub struct FullPolicy {
     pub service_name: Option<String>,
     #[serde(default)]
     pub remediate_params: Option<HashMap<String, YamlValue>>,
+    /// If true, missing registry key or value indicates compliance (secure default behavior)
+    #[serde(default)]
+    pub missing_is_compliant: bool,
+    /// Message to display when key/value is missing and missing_is_compliant is true
+    #[serde(default)]
+    pub missing_compliant_message: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -438,24 +443,12 @@ fn convert_to_core_policy(policy: &FullPolicy) -> nogap_core::types::Policy {
         severity: Some(policy.severity.clone()),
         reversible: Some(policy.reversible),
         check_type: policy.check_type.clone(),
-        target_file: None,
-        target_glob: None,
-        regex: None,
-        replace_regex: None,
-        replace_with: None,
-        key: None,
-        expected_state: None, // Not needed for rollback
-        package_name: None,
         service_name: policy.service_name.clone(),
         value_name: policy.value_name.clone(),
         target_path: policy.target_path.clone(),
         policy_name: policy.policy_name.clone(),
-        right_name: None,
-        port: None,
-        protocol: None,
         remediate_type: Some(policy.remediate_type.clone()),
-        value: None,
-        set_value: policy.set_value.as_ref().map(|v| v.clone()),
+        set_value: policy.set_value.clone(),
         set_type: policy.set_type.clone(),
         remediate_params: policy.remediate_params.as_ref().map(|map| {
             nogap_core::types::RemediateParams {
@@ -465,9 +458,10 @@ fn convert_to_core_policy(policy: &FullPolicy) -> nogap_core::types::Policy {
                 enable: map.get("enable").and_then(|v| v.as_bool()),
             }
         }),
-        chmod_mode: None,
         reference: Some(policy.reference.clone()),
         post_reboot_required: Some(policy.post_reboot_required),
+        // Use defaults for all other fields (including missing_is_compliant, registry, gpo)
+        ..Default::default()
     }
 }
 
@@ -592,8 +586,9 @@ fn audit_registry_key(policy: &FullPolicy) -> Result<AuditResult, String> {
         .as_ref()
         .ok_or_else(|| format!("No value_name for policy {}", policy.id))?;
 
+    use windows_registry::RegistryAuditResult;
     match windows_registry::audit_registry_value(target_path, value_name, &policy.expected_state) {
-        Ok(compliant) => {
+        RegistryAuditResult::Compliant(compliant) => {
             log::info!(
                 "[policy:{}] Audit result: compliant={}",
                 policy.id,
@@ -609,7 +604,81 @@ fn audit_registry_key(policy: &FullPolicy) -> Result<AuditResult, String> {
                 },
             })
         }
-        Err(e) => {
+        RegistryAuditResult::KeyNotFound => {
+            // Key doesn't exist - check if this policy treats missing as compliant
+            if policy.missing_is_compliant {
+                let msg = policy
+                    .missing_compliant_message
+                    .clone()
+                    .unwrap_or_else(|| {
+                        format!(
+                            "Registry key not present; secure default applies for {}",
+                            value_name
+                        )
+                    });
+                log::info!(
+                    "[policy:{}] Key not found, missing_is_compliant=true: {}",
+                    policy.id,
+                    msg
+                );
+                Ok(AuditResult {
+                    policy_id: policy.id.clone(),
+                    compliant: true,
+                    message: msg,
+                })
+            } else {
+                log::warn!(
+                    "[policy:{}] Key not found, missing_is_compliant=false",
+                    policy.id
+                );
+                Ok(AuditResult {
+                    policy_id: policy.id.clone(),
+                    compliant: false,
+                    message: format!(
+                        "Registry key {} does not exist; policy requires explicit configuration",
+                        target_path
+                    ),
+                })
+            }
+        }
+        RegistryAuditResult::ValueNotFound => {
+            // Key exists but value doesn't - check if this policy treats missing as compliant
+            if policy.missing_is_compliant {
+                let msg = policy
+                    .missing_compliant_message
+                    .clone()
+                    .unwrap_or_else(|| {
+                        format!(
+                            "Registry value {} not present; feature disabled by default (secure)",
+                            value_name
+                        )
+                    });
+                log::info!(
+                    "[policy:{}] Value not found, missing_is_compliant=true: {}",
+                    policy.id,
+                    msg
+                );
+                Ok(AuditResult {
+                    policy_id: policy.id.clone(),
+                    compliant: true,
+                    message: msg,
+                })
+            } else {
+                log::warn!(
+                    "[policy:{}] Value not found, missing_is_compliant=false",
+                    policy.id
+                );
+                Ok(AuditResult {
+                    policy_id: policy.id.clone(),
+                    compliant: false,
+                    message: format!(
+                        "Registry value {} does not exist in {}; policy requires explicit configuration",
+                        value_name, target_path
+                    ),
+                })
+            }
+        }
+        RegistryAuditResult::Error(e) => {
             log::error!("[policy:{}] Audit error: {}", policy.id, e);
             Ok(AuditResult {
                 policy_id: policy.id.clone(),
@@ -1871,6 +1940,1301 @@ fn write_binary_file(path: String, data: Vec<u8>) -> Result<(), String> {
         .map_err(|e| format!("Failed to write binary file {}: {}", path, e))
 }
 
+// ============================================================
+// AI-ASSISTED FEATURES (Non-Agentic, Read-Only, User-Controlled)
+// ============================================================
+
+/// Risk Scoring Report - Calculates deterministic risk scores for policies
+/// 
+/// Formula: risk_score = severity_weight × (1 - compliance_state)
+/// - severity_weight: critical=1.0, high=0.75, medium=0.5, low=0.25
+/// - compliance_state: 1.0 if compliant, 0.0 if non-compliant
+/// 
+/// This is AI-ASSISTED and read-only - no automatic remediation.
+#[tauri::command]
+fn cmd_get_risk_report(app_handle: tauri::AppHandle) -> Result<RiskReportResponse, String> {
+    log::info!("[AI-ASSIST] Generating risk scoring report");
+    
+    // Get audit results for all policies
+    let audit_results = audit_all_policies(app_handle.clone())?;
+    
+    // Load full policies to get severity information
+    let policies = load_full_policies(&app_handle)?;
+    
+    // Convert to core types for risk scoring
+    let core_policies: Vec<nogap_core::types::Policy> = policies
+        .iter()
+        .map(|p| convert_to_core_policy(p))
+        .collect();
+    
+    let core_results: Vec<nogap_core::engine::AuditResult> = audit_results
+        .iter()
+        .map(|r| nogap_core::engine::AuditResult {
+            policy_id: r.policy_id.clone(),
+            passed: r.compliant,
+            message: r.message.clone(),
+        })
+        .collect();
+    
+    // Calculate risk scores using core library
+    let all_scores = nogap_core::risk_scoring::calculate_all_risk_scores(&core_policies, &core_results);
+    let summary = nogap_core::risk_scoring::calculate_system_risk(&all_scores);
+    let top_risks_data = nogap_core::risk_scoring::get_top_risks(&all_scores, 10);
+    
+    // Convert to response format
+    let top_risks: Vec<ScoredPolicyResponse> = top_risks_data
+        .iter()
+        .map(|sp| {
+            ScoredPolicyResponse {
+                policy_id: sp.policy_id.clone(),
+                title: sp.policy_title.clone(),
+                severity: sp.severity.clone(),
+                risk_score: sp.risk_score,
+                compliant: sp.is_compliant,
+            }
+        })
+        .collect();
+    
+    log::info!(
+        "[AI-ASSIST] Risk report: {} total policies, {} compliant, aggregate score: {:.2}",
+        summary.total_policies,
+        summary.compliant_count,
+        summary.normalized_risk_score
+    );
+    
+    Ok(RiskReportResponse {
+        top_risks,
+        aggregate_score: summary.normalized_risk_score,
+        total_policies: summary.total_policies,
+        compliant_count: summary.compliant_count,
+        non_compliant_count: summary.non_compliant_count,
+    })
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ScoredPolicyResponse {
+    pub policy_id: String,
+    pub title: String,
+    pub severity: String,
+    pub risk_score: f32,
+    pub compliant: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RiskReportResponse {
+    pub top_risks: Vec<ScoredPolicyResponse>,
+    pub aggregate_score: f32,
+    pub total_policies: usize,
+    pub compliant_count: usize,
+    pub non_compliant_count: usize,
+}
+
+/// Compliance Drift Detection - Detects policies that changed from compliant to non-compliant
+/// 
+/// Compares current audit results against the last saved snapshot.
+/// Only reports transitions: compliant → non-compliant (drift events)
+/// 
+/// This is AI-ASSISTED and read-only - alerts only, no automatic action.
+#[tauri::command]
+fn cmd_detect_drift(app_handle: tauri::AppHandle) -> Result<DriftReportResponse, String> {
+    log::info!("[AI-ASSIST] Detecting compliance drift");
+    
+    // Get current audit results
+    let current_results = audit_all_policies(app_handle.clone())?;
+    
+    // Load full policies for title lookup
+    let policies = load_full_policies(&app_handle)?;
+    
+    let core_results: Vec<nogap_core::engine::AuditResult> = current_results
+        .iter()
+        .map(|r| nogap_core::engine::AuditResult {
+            policy_id: r.policy_id.clone(),
+            passed: r.compliant,
+            message: r.message.clone(),
+        })
+        .collect();
+    
+    // Initialize drift detection database
+    let conn = nogap_core::drift_detection::init_drift_db()
+        .map_err(|e| format!("Failed to initialize drift database: {}", e))?;
+    
+    // Detect drift by comparing against last snapshot
+    let drift_report = nogap_core::drift_detection::detect_drift(&conn, &core_results)
+        .map_err(|e| format!("Failed to detect drift: {}", e))?;
+    
+    // Save current audit as new snapshot for future comparisons
+    nogap_core::drift_detection::store_audit_results(&conn, &core_results, None)
+        .map_err(|e| format!("Failed to save audit snapshot: {}", e))?;
+    
+    // Convert regressions (compliant → non-compliant) to response format
+    let events: Vec<DriftEventResponse> = drift_report.regressions
+        .iter()
+        .map(|e| {
+            // Find policy title for display
+            let title = policies.iter()
+                .find(|p| p.id == e.policy_id)
+                .map(|p| p.title.clone())
+                .unwrap_or_default();
+            
+            DriftEventResponse {
+                policy_id: e.policy_id.clone(),
+                title,
+                previous_state: if e.previous_state { "compliant" } else { "non-compliant" }.to_string(),
+                current_state: if e.current_state { "compliant" } else { "non-compliant" }.to_string(),
+                severity: "high".to_string(), // Regressions are always concerning
+                timestamp: e.detected_at.to_string(),
+            }
+        })
+        .collect();
+    
+    // Build summary message
+    let summary = format!(
+        "Compared {} policies: {} regressions, {} improvements, {} unchanged",
+        drift_report.total_compared,
+        drift_report.regressions.len(),
+        drift_report.improvements.len(),
+        drift_report.unchanged_count
+    );
+    
+    log::info!(
+        "[AI-ASSIST] Drift detection complete: {} regressions found",
+        events.len()
+    );
+    
+    Ok(DriftReportResponse {
+        events,
+        summary,
+        has_drift: drift_report.has_regressions(),
+    })
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DriftEventResponse {
+    pub policy_id: String,
+    pub title: String,
+    pub previous_state: String,
+    pub current_state: String,
+    pub severity: String,
+    pub timestamp: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DriftReportResponse {
+    pub events: Vec<DriftEventResponse>,
+    pub summary: String,
+    pub has_drift: bool,
+}
+
+/// Policy Recommendations - Returns keyword-matched policy recommendations
+/// 
+/// This uses keyword matching (not LLM) to suggest relevant policies
+/// based on system context (OS, role, environment).
+/// 
+/// This is AI-ASSISTED and advisory only - user must review and approve.
+#[tauri::command]
+fn cmd_get_recommendations(
+    app_handle: tauri::AppHandle,
+    role: String,
+    environment: String,
+    additional_context: Option<String>,
+) -> Result<RecommendationsResponse, String> {
+    log::info!(
+        "[AI-ASSIST] Generating policy recommendations for role='{}', env='{}'",
+        role, environment
+    );
+    
+    // Load all policies
+    let policies = load_full_policies(&app_handle)?;
+    
+    // Convert to core types
+    let core_policies: Vec<nogap_core::types::Policy> = policies
+        .iter()
+        .map(|p| convert_to_core_policy(p))
+        .collect();
+    
+    // Build system context
+    let context = nogap_core::ai_recommender::SystemContext {
+        os: std::env::consts::OS.to_string(),
+        role: role.clone(),
+        environment: environment.clone(),
+        additional_context,
+    };
+    
+    // Get keyword-based recommendations (no LLM required)
+    let recommended = nogap_core::ai_recommender::keyword_based_recommendations(
+        &context,
+        &core_policies,
+        20, // max recommendations
+    );
+    
+    // Build response with full policy details
+    let recommendations: Vec<RecommendedPolicyResponse> = recommended
+        .iter()
+        .filter_map(|rec| {
+            policies.iter().find(|p| p.id == rec.policy_id).map(|p| {
+                RecommendedPolicyResponse {
+                    policy_id: p.id.clone(),
+                    title: p.title.clone(),
+                    description: p.description.clone(),
+                    severity: p.severity.clone(),
+                    platform: p.platform.clone(),
+                    relevance_score: rec.relevance_score,
+                    reason: rec.reason.clone(),
+                }
+            })
+        })
+        .collect();
+    
+    log::info!(
+        "[AI-ASSIST] Generated {} recommendations for context",
+        recommendations.len()
+    );
+    
+    Ok(RecommendationsResponse {
+        recommendations,
+        context_summary: format!(
+            "Recommendations for {} environment with {} role",
+            std::env::consts::OS,
+            role
+        ),
+        note: "These are AI-assisted suggestions. Please review each policy before applying.".to_string(),
+    })
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RecommendedPolicyResponse {
+    pub policy_id: String,
+    pub title: String,
+    pub description: String,
+    pub severity: String,
+    pub platform: String,
+    pub relevance_score: f32,
+    pub reason: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RecommendationsResponse {
+    pub recommendations: Vec<RecommendedPolicyResponse>,
+    pub context_summary: String,
+    pub note: String,
+}
+
+// ============================================================
+// AUTONOMOUS MONITORING - Sensor State Management (GUI Integration)
+// ============================================================
+// These commands expose the sensor state to the dashboard UI.
+// No sensing logic modification - only state read/write.
+
+use std::sync::{Arc, Mutex, OnceLock};
+
+/// Global sensor scheduler instance for dashboard access
+static SENSOR_SCHEDULER: OnceLock<Arc<Mutex<Option<SensorState>>>> = OnceLock::new();
+
+fn get_sensor_state_store() -> &'static Arc<Mutex<Option<SensorState>>> {
+    SENSOR_SCHEDULER.get_or_init(|| Arc::new(Mutex::new(None)))
+}
+
+/// Persisted sensor state (survives between page reloads)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SensorState {
+    pub enabled: bool,
+    pub interval_hours: u64,
+    pub last_run_timestamp: Option<u64>,
+    pub next_run_timestamp: Option<u64>,
+    pub last_scan_summary: Option<SensorScanSummary>,
+    pub is_running: bool,
+}
+
+impl Default for SensorState {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            interval_hours: 24,
+            last_run_timestamp: None,
+            next_run_timestamp: None,
+            last_scan_summary: None,
+            is_running: false,
+        }
+    }
+}
+
+/// Summary of the last autonomous scan
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SensorScanSummary {
+    pub policies_checked: usize,
+    pub compliant: usize,
+    pub non_compliant: usize,
+    pub drift_events: usize,
+    pub status: String,
+}
+
+/// Response for sensor state query
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SensorStateResponse {
+    pub enabled: bool,
+    pub interval_hours: u64,
+    pub last_run: Option<String>,      // Formatted timestamp
+    pub next_run: Option<String>,      // Formatted timestamp
+    pub last_run_timestamp: Option<u64>,
+    pub next_run_timestamp: Option<u64>,
+    pub last_scan_summary: Option<SensorScanSummary>,
+    pub is_running: bool,
+    pub has_history: bool,
+}
+
+/// Request to update sensor configuration
+#[derive(Debug, Deserialize)]
+pub struct SensorConfigUpdate {
+    pub enabled: Option<bool>,
+    pub interval_hours: Option<u64>,
+}
+
+/// Get current sensor state for the dashboard
+#[tauri::command]
+fn cmd_get_sensor_state() -> Result<SensorStateResponse, String> {
+    log::info!("[SENSOR-GUI] Getting sensor state");
+    
+    let store = get_sensor_state_store();
+    let guard = store.lock().map_err(|e| format!("Lock error: {}", e))?;
+    
+    let state = guard.clone().unwrap_or_default();
+    
+    // Try to load history from database
+    let has_history = check_sensor_history();
+    
+    // Format timestamps for display
+    let last_run = state.last_run_timestamp.map(format_sensor_timestamp);
+    let next_run = state.next_run_timestamp.map(format_sensor_timestamp);
+    
+    Ok(SensorStateResponse {
+        enabled: state.enabled,
+        interval_hours: state.interval_hours,
+        last_run,
+        next_run,
+        last_run_timestamp: state.last_run_timestamp,
+        next_run_timestamp: state.next_run_timestamp,
+        last_scan_summary: state.last_scan_summary,
+        is_running: state.is_running,
+        has_history,
+    })
+}
+
+/// Update sensor configuration from dashboard
+#[tauri::command]
+fn cmd_update_sensor_config(config: SensorConfigUpdate) -> Result<SensorStateResponse, String> {
+    log::info!("[SENSOR-GUI] Updating sensor config: {:?}", config);
+    
+    let store = get_sensor_state_store();
+    let mut guard = store.lock().map_err(|e| format!("Lock error: {}", e))?;
+    
+    let mut state = guard.clone().unwrap_or_default();
+    
+    // Apply updates
+    if let Some(enabled) = config.enabled {
+        state.enabled = enabled;
+        
+        // If disabling, also stop running state
+        if !enabled {
+            state.is_running = false;
+            state.next_run_timestamp = None;
+        }
+    }
+    
+    if let Some(interval) = config.interval_hours {
+        // Validate interval (minimum 1 hour, max 168 hours = 1 week)
+        if interval < 1 || interval > 168 {
+            return Err("Interval must be between 1 and 168 hours".to_string());
+        }
+        state.interval_hours = interval;
+        
+        // Recalculate next run if enabled and was previously running
+        if state.enabled && state.last_run_timestamp.is_some() {
+            let last_run = state.last_run_timestamp.unwrap();
+            state.next_run_timestamp = Some(last_run + (interval * 3600));
+        }
+    }
+    
+    *guard = Some(state.clone());
+    drop(guard);
+    
+    // Return updated state
+    cmd_get_sensor_state()
+}
+
+/// Start the autonomous sensor from dashboard
+#[tauri::command]
+fn cmd_start_sensor(app_handle: tauri::AppHandle) -> Result<SensorStateResponse, String> {
+    log::info!("[SENSOR-GUI] Starting sensor from dashboard");
+    
+    let store = get_sensor_state_store();
+    let mut guard = store.lock().map_err(|e| format!("Lock error: {}", e))?;
+    
+    let mut state = guard.clone().unwrap_or_default();
+    
+    if !state.enabled {
+        return Err("Sensor is disabled. Enable it first.".to_string());
+    }
+    
+    if state.is_running {
+        return Err("Sensor is already running".to_string());
+    }
+    
+    // Mark as running
+    state.is_running = true;
+    
+    // Calculate next run time
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    state.next_run_timestamp = Some(now + (state.interval_hours * 3600));
+    
+    *guard = Some(state.clone());
+    drop(guard);
+    
+    // Spawn background sensing (simplified for GUI - actual implementation would use sensor_scheduler)
+    let interval_hours = state.interval_hours;
+    std::thread::spawn(move || {
+        run_sensor_loop(app_handle, interval_hours);
+    });
+    
+    cmd_get_sensor_state()
+}
+
+/// Stop the autonomous sensor from dashboard
+#[tauri::command]
+fn cmd_stop_sensor() -> Result<SensorStateResponse, String> {
+    log::info!("[SENSOR-GUI] Stopping sensor from dashboard");
+    
+    let store = get_sensor_state_store();
+    let mut guard = store.lock().map_err(|e| format!("Lock error: {}", e))?;
+    
+    let mut state = guard.clone().unwrap_or_default();
+    
+    state.is_running = false;
+    state.next_run_timestamp = None;
+    
+    *guard = Some(state);
+    
+    cmd_get_sensor_state()
+}
+
+/// Run a single autonomous scan now (on-demand)
+#[tauri::command]
+fn cmd_run_sensor_scan_now(app_handle: tauri::AppHandle) -> Result<SensorScanSummary, String> {
+    log::info!("[SENSOR-GUI] Running on-demand sensor scan");
+    
+    // Run the actual audit
+    let audit_results = audit_all_policies(app_handle)?;
+    
+    let compliant_count = audit_results.iter().filter(|r| r.compliant).count();
+    let non_compliant_count = audit_results.len() - compliant_count;
+    
+    // Calculate drift by comparing with previous snapshot
+    let drift_events = calculate_drift_from_snapshot(&audit_results);
+    
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    
+    let summary = SensorScanSummary {
+        policies_checked: audit_results.len(),
+        compliant: compliant_count,
+        non_compliant: non_compliant_count,
+        drift_events,
+        status: "Completed".to_string(),
+    };
+    
+    // Store in sensor snapshot database
+    store_sensor_snapshot(&audit_results, &summary);
+    
+    // Update sensor state
+    let store = get_sensor_state_store();
+    if let Ok(mut guard) = store.lock() {
+        let mut state = guard.clone().unwrap_or_default();
+        state.last_run_timestamp = Some(now);
+        state.last_scan_summary = Some(summary.clone());
+        
+        if state.is_running && state.enabled {
+            state.next_run_timestamp = Some(now + (state.interval_hours * 3600));
+        }
+        
+        *guard = Some(state);
+    }
+    
+    log::info!("[SENSOR-GUI] Scan completed: {} policies, {} drift events", 
+        summary.policies_checked, summary.drift_events);
+    
+    Ok(summary)
+}
+
+/// Get the last autonomous scan report
+#[tauri::command]
+fn cmd_get_last_sensor_report() -> Result<SensorReportResponse, String> {
+    log::info!("[SENSOR-GUI] Getting last sensor report");
+    
+    // Try to load from database
+    let report = load_last_sensor_report()?;
+    
+    Ok(report)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SensorReportResponse {
+    pub timestamp: Option<String>,
+    pub timestamp_raw: Option<u64>,
+    pub summary: Option<SensorScanSummary>,
+    pub audit_results: Vec<SensorAuditItem>,
+    pub source: String, // "agent_sense" to clearly label as autonomous
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SensorAuditItem {
+    pub policy_id: String,
+    pub compliant: bool,
+    pub message: String,
+}
+
+// ============== Internal Helper Functions ==============
+
+fn format_sensor_timestamp(ts: u64) -> String {
+    use chrono::{DateTime, Utc};
+    let datetime = DateTime::<Utc>::from_timestamp(ts as i64, 0)
+        .unwrap_or_else(|| DateTime::<Utc>::from_timestamp(0, 0).unwrap());
+    datetime.format("%Y-%m-%d %H:%M:%S UTC").to_string()
+}
+
+fn check_sensor_history() -> bool {
+    // Check if there are any agent_sense snapshots in the database
+    if let Ok(conn) = nogap_core::snapshot::init_db() {
+        let count: Result<i64, _> = conn.query_row(
+            "SELECT COUNT(*) FROM snapshots WHERE policy_id = 'agent_sense'",
+            [],
+            |row| row.get(0),
+        );
+        return count.unwrap_or(0) > 0;
+    }
+    false
+}
+
+fn calculate_drift_from_snapshot(current_results: &[AuditResult]) -> usize {
+    // Load previous sensor snapshot and compare
+    if let Ok(conn) = nogap_core::snapshot::init_db() {
+        let mut stmt = match conn.prepare(
+            "SELECT after_state FROM snapshots 
+             WHERE policy_id = 'agent_sense' 
+             ORDER BY timestamp DESC 
+             LIMIT 1"
+        ) {
+            Ok(s) => s,
+            Err(_) => return 0,
+        };
+        
+        let prev_json: Result<String, _> = stmt.query_row([], |row| row.get(0));
+        
+        if let Ok(json_str) = prev_json {
+            if let Ok(prev_results) = serde_json::from_str::<Vec<AuditResult>>(&json_str) {
+                // Count state changes
+                let mut drift = 0;
+                for curr in current_results {
+                    if let Some(prev) = prev_results.iter().find(|p| p.policy_id == curr.policy_id) {
+                        if prev.compliant != curr.compliant {
+                            drift += 1;
+                        }
+                    }
+                }
+                return drift;
+            }
+        }
+    }
+    0
+}
+
+fn store_sensor_snapshot(results: &[AuditResult], _summary: &SensorScanSummary) {
+    if let Ok(conn) = nogap_core::snapshot::init_db() {
+        let results_json = serde_json::to_string(results).unwrap_or_default();
+        let _ = nogap_core::snapshot::save_snapshot(
+            &conn,
+            Some("agent_sense"),
+            "Autonomous scan from dashboard",
+            &results_json,
+            &results_json,
+        );
+    }
+}
+
+fn load_last_sensor_report() -> Result<SensorReportResponse, String> {
+    let conn = nogap_core::snapshot::init_db()
+        .map_err(|e| format!("Failed to open database: {}", e))?;
+    
+    let mut stmt = conn.prepare(
+        "SELECT timestamp, after_state FROM snapshots 
+         WHERE policy_id = 'agent_sense' 
+         ORDER BY timestamp DESC 
+         LIMIT 1"
+    ).map_err(|e| format!("Query prepare failed: {}", e))?;
+    
+    let result: Result<(u64, String), _> = stmt.query_row([], |row| {
+        Ok((row.get(0)?, row.get(1)?))
+    });
+    
+    match result {
+        Ok((timestamp, json_str)) => {
+            let audit_results: Vec<AuditResult> = serde_json::from_str(&json_str)
+                .unwrap_or_default();
+            
+            let compliant = audit_results.iter().filter(|r| r.compliant).count();
+            let non_compliant = audit_results.len() - compliant;
+            
+            let items: Vec<SensorAuditItem> = audit_results.iter().map(|r| {
+                SensorAuditItem {
+                    policy_id: r.policy_id.clone(),
+                    compliant: r.compliant,
+                    message: r.message.clone(),
+                }
+            }).collect();
+            
+            Ok(SensorReportResponse {
+                timestamp: Some(format_sensor_timestamp(timestamp)),
+                timestamp_raw: Some(timestamp),
+                summary: Some(SensorScanSummary {
+                    policies_checked: audit_results.len(),
+                    compliant,
+                    non_compliant,
+                    drift_events: 0, // Can't calculate drift for historical report without prior data
+                    status: "Historical".to_string(),
+                }),
+                audit_results: items,
+                source: "agent_sense".to_string(),
+            })
+        }
+        Err(rusqlite::Error::QueryReturnedNoRows) => {
+            Ok(SensorReportResponse {
+                timestamp: None,
+                timestamp_raw: None,
+                summary: None,
+                audit_results: vec![],
+                source: "agent_sense".to_string(),
+            })
+        }
+        Err(e) => Err(format!("Failed to load report: {}", e)),
+    }
+}
+
+fn run_sensor_loop(app_handle: tauri::AppHandle, interval_hours: u64) {
+    log::info!("[SENSOR-GUI] Background sensor loop started");
+    
+    let interval_secs = interval_hours * 3600;
+    
+    loop {
+        // Check if still supposed to be running
+        let store = get_sensor_state_store();
+        let should_run = {
+            let guard = store.lock();
+            if let Ok(g) = guard {
+                g.as_ref().map(|s| s.is_running && s.enabled).unwrap_or(false)
+            } else {
+                false
+            }
+        };
+        
+        if !should_run {
+            log::info!("[SENSOR-GUI] Sensor loop stopping (disabled or stopped)");
+            break;
+        }
+        
+        // Run the scan
+        log::info!("[SENSOR-GUI] Running scheduled autonomous scan");
+        let _ = cmd_run_sensor_scan_now(app_handle.clone());
+        
+        // Sleep in chunks for responsive shutdown
+        for _ in 0..60 {
+            std::thread::sleep(std::time::Duration::from_secs(interval_secs / 60));
+            
+            // Check if still running
+            let store = get_sensor_state_store();
+            if let Ok(guard) = store.lock() {
+                if !guard.as_ref().map(|s| s.is_running).unwrap_or(false) {
+                    log::info!("[SENSOR-GUI] Sensor loop interrupted");
+                    return;
+                }
+            }
+        }
+    }
+}
+
+// ============================================================
+// REMEDIATION PLANNER GUI INTEGRATION
+// ============================================================
+// This section exposes the planner module to the GUI.
+// The planner is READ-ONLY - it generates plans but does NOT execute.
+// Human approval is mandatory before any action.
+
+// Note: OnceLock is already imported via `use std::sync::{Arc, Mutex, OnceLock}` at the top.
+use std::sync::Mutex as StdMutex;
+
+/// Global storage for the latest generated plan
+static LATEST_PLAN: OnceLock<StdMutex<Option<PlannerGuiPlan>>> = OnceLock::new();
+
+fn get_plan_store() -> &'static StdMutex<Option<PlannerGuiPlan>> {
+    LATEST_PLAN.get_or_init(|| StdMutex::new(None))
+}
+
+/// GUI-friendly representation of the remediation plan
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PlannerGuiPlan {
+    pub plan_id: String,
+    pub generated_at: String,
+    pub goal_description: String,
+    pub goal_type: String,
+    pub snapshot_timestamp: String,
+    pub compliance_rate: f32,
+    pub policy_count: usize,
+    pub steps: Vec<PlannerGuiStep>,
+    pub deferred: Vec<PlannerGuiDeferred>,
+    pub excluded: Vec<PlannerGuiExcluded>,  // Manually excluded by user
+    pub requires_human_approval: bool,
+    pub is_approved: bool,
+    pub approved_at: Option<String>,
+    pub is_user_modified: bool,  // True if user made any edits
+    pub metadata: PlannerGuiMetadata,
+}
+
+/// GUI-friendly representation of a plan step
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PlannerGuiStep {
+    pub policy_id: String,
+    pub priority: u32,
+    pub reason: String,
+    pub risk_score: f32,
+    pub confidence: f32,
+    pub constraints_considered: Vec<String>,
+    pub expected_impact: Option<String>,
+    pub estimated_duration_minutes: Option<u32>,
+    pub source: StepSource,  // Track who added this step
+}
+
+/// Source of a plan step
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum StepSource {
+    #[serde(rename = "planner")]
+    Planner,  // System-proposed
+    #[serde(rename = "user")]
+    User,     // Manually added by user
+}
+
+/// GUI-friendly representation of a deferred policy
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PlannerGuiDeferred {
+    pub policy_id: String,
+    pub reason: String,
+    pub blocking_constraints: Vec<String>,
+}
+
+/// GUI-friendly representation of a manually excluded policy
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PlannerGuiExcluded {
+    pub policy_id: String,
+    pub reason: String,
+    pub excluded_at: String,
+    pub original_priority: u32,
+    pub original_source: StepSource,
+}
+
+/// GUI-friendly metadata
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PlannerGuiMetadata {
+    pub llm_assisted: bool,
+    pub used_deterministic_fallback: bool,
+    pub candidates_considered: usize,
+    pub planning_duration_ms: u64,
+    pub warnings: Vec<String>,
+}
+
+/// Generate a remediation plan using latest sensor data
+/// 
+/// This command is READ-ONLY - it generates a plan but does NOT execute anything.
+/// The plan requires explicit human approval.
+#[tauri::command]
+fn cmd_generate_remediation_plan(app_handle: tauri::AppHandle) -> Result<PlannerGuiPlan, String> {
+    log::info!("[PLANNER-GUI] Generating remediation plan");
+    
+    // Load latest sensor snapshot
+    let sensor_report = load_last_sensor_report()?;
+    
+    if sensor_report.timestamp.is_none() {
+        return Err("No sensor data available. Run an autonomous scan first.".to_string());
+    }
+    
+    // Load policies using the existing function
+    let policies_yaml = load_full_policies(&app_handle)?;
+    
+    // Convert to core Policy type
+    let core_policies: Vec<nogap_core::types::Policy> = policies_yaml
+        .iter()
+        .filter_map(|p| {
+            Some(nogap_core::types::Policy {
+                id: p.id.clone(),
+                title: Some(p.title.clone()),
+                description: Some(p.description.clone()),
+                platform: p.platform.clone(),
+                severity: Some(p.severity.clone()),
+                reversible: Some(p.reversible),
+                check_type: p.check_type.clone(),
+                post_reboot_required: Some(p.post_reboot_required),
+                ..Default::default()
+            })
+        })
+        .collect();
+    
+    // Convert sensor audit results to core AuditResult
+    let current_audit: Vec<nogap_core::engine::AuditResult> = sensor_report
+        .audit_results
+        .iter()
+        .map(|r| nogap_core::engine::AuditResult {
+            policy_id: r.policy_id.clone(),
+            passed: r.compliant,
+            message: r.message.clone(),
+        })
+        .collect();
+    
+    // Calculate risk scores
+    let risk_scores = nogap_core::risk_scoring::calculate_all_risk_scores(
+        &core_policies,
+        &current_audit,
+    );
+    
+    // Generate recommendations (candidate list)
+    let recommendations = generate_default_recommendations(&core_policies, &current_audit);
+    
+    // Create planner input
+    let planner_input = nogap_core::planner::PlannerInput {
+        current_audit: current_audit.clone(),
+        previous_audit: None, // Could load from DB if needed
+        risk_scores,
+        policies: core_policies,
+        execution_history: vec![], // TODO: Load from history
+        recommendations,
+        drift_report: None,
+        disabled_policies: std::collections::HashSet::new(),
+        current_platform: get_current_platform(),
+    };
+    
+    // Create default goal: 80% compliance on all policies
+    let goal = nogap_core::planner::PlanningGoal::compliance_threshold(0.80, None);
+    
+    // Generate plan (READ-ONLY operation)
+    let planner = nogap_core::planner::Planner::with_defaults();
+    let plan = planner.generate_plan(goal, &planner_input)
+        .map_err(|e| format!("Failed to generate plan: {}", e))?;
+    
+    // Convert to GUI-friendly format
+    let gui_plan = PlannerGuiPlan {
+        plan_id: plan.plan_id.clone(),
+        generated_at: plan.generated_at.clone(),
+        goal_description: plan.goal.description.clone(),
+        goal_type: format!("{:?}", plan.goal.goal_type),
+        snapshot_timestamp: sensor_report.timestamp.unwrap_or_else(|| "Unknown".to_string()),
+        compliance_rate: plan.source_snapshot.compliance_rate,
+        policy_count: plan.source_snapshot.policy_count,
+        steps: plan.steps.iter().map(|s| PlannerGuiStep {
+            policy_id: s.policy_id.clone(),
+            priority: s.priority,
+            reason: s.reason.clone(),
+            risk_score: s.risk_score,
+            confidence: s.confidence,
+            constraints_considered: s.constraints_considered.clone(),
+            expected_impact: s.expected_impact.clone(),
+            estimated_duration_minutes: s.estimated_duration_minutes,
+            source: StepSource::Planner,  // All initially from planner
+        }).collect(),
+        deferred: plan.deferred.iter().map(|d| PlannerGuiDeferred {
+            policy_id: d.policy_id.clone(),
+            reason: d.reason.clone(),
+            blocking_constraints: d.blocking_constraints.clone(),
+        }).collect(),
+        excluded: vec![],  // Empty initially
+        requires_human_approval: plan.requires_human_approval,
+        is_approved: false,
+        approved_at: None,
+        is_user_modified: false,  // Not modified yet
+        metadata: PlannerGuiMetadata {
+            llm_assisted: plan.metadata.llm_assisted,
+            used_deterministic_fallback: plan.metadata.used_deterministic_fallback,
+            candidates_considered: plan.metadata.candidates_considered,
+            planning_duration_ms: plan.metadata.planning_duration_ms,
+            warnings: plan.metadata.warnings.clone(),
+        },
+    };
+    
+    // Store the plan
+    if let Ok(mut guard) = get_plan_store().lock() {
+        *guard = Some(gui_plan.clone());
+    }
+    
+    log::info!(
+        "[PLANNER-GUI] Plan generated: {} steps, {} deferred",
+        gui_plan.steps.len(),
+        gui_plan.deferred.len()
+    );
+    
+    Ok(gui_plan)
+}
+
+/// Get the latest generated plan
+#[tauri::command]
+fn cmd_get_latest_plan() -> Result<Option<PlannerGuiPlan>, String> {
+    log::info!("[PLANNER-GUI] Getting latest plan");
+    
+    if let Ok(guard) = get_plan_store().lock() {
+        Ok(guard.clone())
+    } else {
+        Err("Failed to access plan store".to_string())
+    }
+}
+
+/// Approve the plan (UI acknowledgment only - NO execution)
+/// 
+/// This marks the plan as approved by the user but does NOT execute anything.
+/// Execution is a separate step that requires additional user action.
+#[tauri::command]
+fn cmd_approve_plan(plan_id: String) -> Result<PlannerGuiPlan, String> {
+    log::info!("[PLANNER-GUI] Approving plan: {}", plan_id);
+    
+    if let Ok(mut guard) = get_plan_store().lock() {
+        if let Some(ref mut plan) = *guard {
+            if plan.plan_id != plan_id {
+                return Err("Plan ID mismatch - plan may have been regenerated".to_string());
+            }
+            
+            plan.is_approved = true;
+            plan.approved_at = Some(chrono::Utc::now().to_rfc3339());
+            
+            log::info!("[PLANNER-GUI] Plan approved (UI acknowledgment only - NO execution)");
+            
+            return Ok(plan.clone());
+        }
+    }
+    
+    Err("No plan available to approve".to_string())
+}
+
+/// Clear the current plan
+#[tauri::command]
+fn cmd_clear_plan() -> Result<(), String> {
+    log::info!("[PLANNER-GUI] Clearing plan");
+    
+    if let Ok(mut guard) = get_plan_store().lock() {
+        *guard = None;
+    }
+    
+    Ok(())
+}
+
+// ============== Plan Editing Commands ==============
+
+/// Remove a step from the plan (move to excluded list)
+/// 
+/// This does NOT re-run the planner. The step is marked as excluded by user.
+#[tauri::command]
+fn cmd_remove_plan_step(policy_id: String) -> Result<PlannerGuiPlan, String> {
+    log::info!("[PLANNER-GUI] Removing step from plan: {}", policy_id);
+    
+    if let Ok(mut guard) = get_plan_store().lock() {
+        if let Some(ref mut plan) = *guard {
+            // Find and remove the step
+            if let Some(pos) = plan.steps.iter().position(|s| s.policy_id == policy_id) {
+                let removed_step = plan.steps.remove(pos);
+                
+                // Add to excluded list
+                plan.excluded.push(PlannerGuiExcluded {
+                    policy_id: removed_step.policy_id.clone(),
+                    reason: "Removed by user".to_string(),
+                    excluded_at: chrono::Utc::now().to_rfc3339(),
+                    original_priority: removed_step.priority,
+                    original_source: removed_step.source.clone(),
+                });
+                
+                // Re-number priorities
+                for (i, step) in plan.steps.iter_mut().enumerate() {
+                    step.priority = (i + 1) as u32;
+                }
+                
+                // Mark as modified
+                plan.is_user_modified = true;
+                plan.is_approved = false;  // Reset approval on modification
+                plan.approved_at = None;
+                
+                log::info!("[PLANNER-GUI] Step removed and moved to excluded list");
+                return Ok(plan.clone());
+            }
+            
+            return Err(format!("Step {} not found in plan", policy_id));
+        }
+    }
+    
+    Err("No plan available".to_string())
+}
+
+/// Restore an excluded step back to the plan
+#[tauri::command]
+fn cmd_restore_excluded_step(policy_id: String) -> Result<PlannerGuiPlan, String> {
+    log::info!("[PLANNER-GUI] Restoring excluded step: {}", policy_id);
+    
+    if let Ok(mut guard) = get_plan_store().lock() {
+        if let Some(ref mut plan) = *guard {
+            // Find and remove from excluded list
+            if let Some(pos) = plan.excluded.iter().position(|e| e.policy_id == policy_id) {
+                let excluded = plan.excluded.remove(pos);
+                
+                // Re-add to steps at the end
+                let new_priority = plan.steps.len() as u32 + 1;
+                plan.steps.push(PlannerGuiStep {
+                    policy_id: excluded.policy_id,
+                    priority: new_priority,
+                    reason: "Restored by user".to_string(),
+                    risk_score: 5.0,  // Default risk score
+                    confidence: 0.5,  // Default confidence for restored
+                    constraints_considered: vec![],
+                    expected_impact: None,
+                    estimated_duration_minutes: None,
+                    source: excluded.original_source,
+                });
+                
+                // Mark as modified
+                plan.is_user_modified = true;
+                plan.is_approved = false;
+                plan.approved_at = None;
+                
+                log::info!("[PLANNER-GUI] Step restored from excluded list");
+                return Ok(plan.clone());
+            }
+            
+            return Err(format!("Excluded step {} not found", policy_id));
+        }
+    }
+    
+    Err("No plan available".to_string())
+}
+
+/// Eligible policy for adding to plan
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EligiblePolicy {
+    pub policy_id: String,
+    pub title: String,
+    pub description: String,
+    pub severity: String,
+    pub platform: String,
+    pub is_compliant: bool,
+    pub can_add: bool,
+    pub block_reason: Option<String>,  // Why it can't be added (hard constraint)
+}
+
+/// Get list of policies eligible to add to the plan
+#[tauri::command]
+fn cmd_get_eligible_policies(app_handle: tauri::AppHandle) -> Result<Vec<EligiblePolicy>, String> {
+    log::info!("[PLANNER-GUI] Getting eligible policies for plan");
+    
+    // Load all policies
+    let policies = load_full_policies(&app_handle)?;
+    
+    // Load sensor report for compliance status
+    let sensor_report = load_last_sensor_report().ok();
+    let audit_map: std::collections::HashMap<String, bool> = sensor_report
+        .as_ref()
+        .map(|r| {
+            r.audit_results
+                .iter()
+                .map(|a| (a.policy_id.clone(), a.compliant))
+                .collect()
+        })
+        .unwrap_or_default();
+    
+    // Get current plan to exclude already-added policies
+    let plan_policies: std::collections::HashSet<String> = get_plan_store()
+        .lock()
+        .ok()
+        .and_then(|g| g.clone())
+        .map(|p| {
+            let mut set: std::collections::HashSet<String> = p.steps.iter().map(|s| s.policy_id.clone()).collect();
+            set.extend(p.deferred.iter().map(|d| d.policy_id.clone()));
+            set.extend(p.excluded.iter().map(|e| e.policy_id.clone()));
+            set
+        })
+        .unwrap_or_default();
+    
+    // Get current platform for hard constraint check
+    let current_platform = get_current_platform();
+    
+    // Build eligible list
+    let eligible: Vec<EligiblePolicy> = policies
+        .iter()
+        .filter(|p| !plan_policies.contains(&p.id))
+        .map(|p| {
+            let is_compliant = audit_map.get(&p.id).copied().unwrap_or(true);
+            
+            // Check hard constraints
+            let platform_mismatch = p.platform != current_platform && p.platform != "all";
+            let block_reason = if platform_mismatch {
+                Some(format!("Policy is for {} but current platform is {}", p.platform, current_platform))
+            } else {
+                None
+            };
+            
+            EligiblePolicy {
+                policy_id: p.id.clone(),
+                title: p.title.clone(),
+                description: p.description.clone(),
+                severity: p.severity.clone(),
+                platform: p.platform.clone(),
+                is_compliant,
+                can_add: block_reason.is_none(),
+                block_reason,
+            }
+        })
+        .collect();
+    
+    log::info!("[PLANNER-GUI] Found {} eligible policies", eligible.len());
+    Ok(eligible)
+}
+
+/// Add a policy to the plan manually
+/// 
+/// This does NOT re-run the planner. The step is added as user-sourced.
+/// Hard constraints are enforced - policies blocked by hard constraints cannot be added.
+#[tauri::command]
+fn cmd_add_policy_to_plan(app_handle: tauri::AppHandle, policy_id: String) -> Result<PlannerGuiPlan, String> {
+    log::info!("[PLANNER-GUI] Adding policy to plan: {}", policy_id);
+    
+    // First verify the policy exists and check hard constraints
+    let policies = load_full_policies(&app_handle)?;
+    let policy = policies
+        .iter()
+        .find(|p| p.id == policy_id)
+        .ok_or_else(|| format!("Policy {} not found", policy_id))?;
+    
+    // Check hard constraint: platform mismatch
+    let current_platform = get_current_platform();
+    if policy.platform != current_platform && policy.platform != "all" {
+        return Err(format!(
+            "Cannot add policy: Platform mismatch. Policy is for '{}' but current platform is '{}'",
+            policy.platform, current_platform
+        ));
+    }
+    
+    if let Ok(mut guard) = get_plan_store().lock() {
+        if let Some(ref mut plan) = *guard {
+            // Check if already in plan
+            if plan.steps.iter().any(|s| s.policy_id == policy_id) {
+                return Err(format!("Policy {} is already in the plan", policy_id));
+            }
+            
+            // Check if in excluded list - remove from there first
+            if let Some(pos) = plan.excluded.iter().position(|e| e.policy_id == policy_id) {
+                plan.excluded.remove(pos);
+            }
+            
+            // Check if in deferred list - remove from there
+            if let Some(pos) = plan.deferred.iter().position(|d| d.policy_id == policy_id) {
+                plan.deferred.remove(pos);
+            }
+            
+            // Add as new step at the end
+            let new_priority = plan.steps.len() as u32 + 1;
+            
+            // Get severity-based risk score
+            let risk_score = match policy.severity.as_str() {
+                "critical" => 9.0,
+                "high" => 7.0,
+                "medium" => 5.0,
+                "low" => 3.0,
+                _ => 5.0,
+            };
+            
+            plan.steps.push(PlannerGuiStep {
+                policy_id: policy_id.clone(),
+                priority: new_priority,
+                reason: "Manually added by user".to_string(),
+                risk_score,
+                confidence: 0.5,  // Default confidence for user-added (not auto-updated)
+                constraints_considered: vec![],
+                expected_impact: Some(format!("{} severity policy", policy.severity)),
+                estimated_duration_minutes: Some(5),
+                source: StepSource::User,
+            });
+            
+            // Mark as modified
+            plan.is_user_modified = true;
+            plan.is_approved = false;
+            plan.approved_at = None;
+            
+            log::info!("[PLANNER-GUI] Policy added to plan as user step");
+            return Ok(plan.clone());
+        }
+    }
+    
+    Err("No plan available. Generate a plan first.".to_string())
+}
+
+// ============== Planner Helper Functions ==============
+
+fn get_current_platform() -> String {
+    #[cfg(target_os = "windows")]
+    { "windows".to_string() }
+    
+    #[cfg(target_os = "linux")]
+    { "linux".to_string() }
+    
+    #[cfg(target_os = "macos")]
+    { "macos".to_string() }
+    
+    #[cfg(not(any(target_os = "windows", target_os = "linux", target_os = "macos")))]
+    { "unknown".to_string() }
+}
+
+fn generate_default_recommendations(
+    policies: &[nogap_core::types::Policy],
+    audit_results: &[nogap_core::engine::AuditResult],
+) -> nogap_core::ai_recommender::RecommendationResult {
+    // Build a set of non-compliant policy IDs
+    let non_compliant: std::collections::HashSet<&str> = audit_results
+        .iter()
+        .filter(|r| !r.passed)
+        .map(|r| r.policy_id.as_str())
+        .collect();
+    
+    // Generate recommendations for non-compliant policies
+    let recommendations: Vec<nogap_core::ai_recommender::PolicyRecommendation> = policies
+        .iter()
+        .filter(|p| non_compliant.contains(p.id.as_str()))
+        .map(|p| {
+            let severity_score = match p.severity.as_deref().unwrap_or("medium") {
+                "critical" => 1.0,
+                "high" => 0.85,
+                "medium" => 0.7,
+                "low" => 0.5,
+                _ => 0.6,
+            };
+            
+            nogap_core::ai_recommender::PolicyRecommendation {
+                policy_id: p.id.clone(),
+                relevance_score: severity_score,
+                reason: format!(
+                    "Non-compliant {} severity policy requiring remediation",
+                    p.severity.as_deref().unwrap_or("medium")
+                ),
+            }
+        })
+        .collect();
+    
+    nogap_core::ai_recommender::RecommendationResult {
+        recommendations,
+        invalid_suggestions: vec![],
+        warnings: vec![],
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // Initialize logger (only once)
@@ -1893,15 +3257,31 @@ pub fn run() {
             reporting::generate_html_report,
             reporting::export_pdf,
             reporting_csv::generate_csv_report,
-            commands_ostree::cmd_scan_usb_repos,
-            commands_ostree::cmd_preview_repo,
-            commands_ostree::cmd_import_repo,
-            commands_ostree::cmd_export_commit,
-            commands_ostree::cmd_list_all_drives,
             detect_usb_csv_reports,
             read_csv_file,
             read_binary_file,
-            write_binary_file
+            write_binary_file,
+            // AI-Assisted Features (Non-Agentic)
+            cmd_get_risk_report,
+            cmd_detect_drift,
+            cmd_get_recommendations,
+            // Autonomous Monitoring (Sensor GUI Integration)
+            cmd_get_sensor_state,
+            cmd_update_sensor_config,
+            cmd_start_sensor,
+            cmd_stop_sensor,
+            cmd_run_sensor_scan_now,
+            cmd_get_last_sensor_report,
+            // Remediation Planner (Read-Only Plan Generation)
+            cmd_generate_remediation_plan,
+            cmd_get_latest_plan,
+            cmd_approve_plan,
+            cmd_clear_plan,
+            // Plan Editing (User Modifications)
+            cmd_remove_plan_step,
+            cmd_restore_excluded_step,
+            cmd_get_eligible_policies,
+            cmd_add_policy_to_plan
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

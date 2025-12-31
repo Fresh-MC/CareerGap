@@ -7,8 +7,7 @@ This document provides step-by-step instructions for packaging and distributing 
 1. [Prerequisites](#prerequisites)
 2. [CLI Binary Distribution](#cli-binary-distribution)
 3. [Tauri Desktop Application](#tauri-desktop-application)
-4. [MCP Server (Optional)](#mcp-server-optional)
-5. [Cross-Platform Build Matrix](#cross-platform-build-matrix)
+4. [Cross-Platform Build Matrix](#cross-platform-build-matrix)
 
 ---
 
@@ -174,7 +173,6 @@ cargo rpm build
 - [ ] `--help` and `--version` work correctly
 - [ ] Smoke tests pass (`integration_tests/smoke_test.sh`)
 - [ ] Include `policies.yaml` in distribution package
-- [ ] Include README or INSTALL instructions
 - [ ] Provide SHA256 checksums for all archives
 
 ```bash
@@ -324,109 +322,6 @@ Edit `src-tauri/tauri.conf.json` for packaging customization:
 
 ---
 
-## MCP Server (Optional)
-
-The `nogap_mcp` is a Model Context Protocol server for AI agent integration (Claude Desktop, etc.).
-
-### 1. Build MCP Server Binary
-
-```bash
-cd nogap-workspace
-
-# Build release binary
-cargo build --release --package nogap_mcp
-
-# Binary location:
-# target/release/nogap_mcp (Linux/macOS)
-# target\release\nogap_mcp.exe (Windows)
-```
-
-### 2. Docker Image (Recommended)
-
-Create `Dockerfile` in `nogap_mcp/`:
-
-```dockerfile
-# nogap_mcp/Dockerfile
-FROM rust:1.75-slim as builder
-
-WORKDIR /build
-COPY Cargo.toml Cargo.lock ./
-COPY nogap_core ./nogap_core
-COPY nogap_mcp ./nogap_mcp
-
-RUN cargo build --release --package nogap_mcp
-
-FROM debian:bookworm-slim
-
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY --from=builder /build/target/release/nogap_mcp /usr/local/bin/nogap_mcp
-COPY nogap_core/policies.yaml /etc/nogap/policies.yaml
-
-EXPOSE 8080
-
-CMD ["nogap_mcp"]
-```
-
-Build and push Docker image:
-
-```bash
-# Build image
-docker build -t nogap/mcp-server:latest -f nogap_mcp/Dockerfile .
-
-# Test locally
-docker run -p 8080:8080 nogap/mcp-server:latest
-
-# Tag for registry
-docker tag nogap/mcp-server:latest ghcr.io/your-org/nogap-mcp:v1.0.0
-
-# Push to GitHub Container Registry
-echo $GITHUB_TOKEN | docker login ghcr.io -u your-username --password-stdin
-docker push ghcr.io/your-org/nogap-mcp:v1.0.0
-```
-
-### 3. MCP Configuration
-
-Users can add to their MCP settings (e.g., Claude Desktop config):
-
-```json
-{
-  "mcpServers": {
-    "nogap-security": {
-      "command": "/path/to/nogap_mcp",
-      "args": [],
-      "env": {
-        "NOGAP_POLICIES": "/path/to/policies.yaml"
-      }
-    }
-  }
-}
-```
-
-Or with Docker:
-
-```json
-{
-  "mcpServers": {
-    "nogap-security": {
-      "command": "docker",
-      "args": [
-        "run",
-        "-i",
-        "--rm",
-        "-v",
-        "/path/to/policies.yaml:/etc/nogap/policies.yaml",
-        "ghcr.io/your-org/nogap-mcp:v1.0.0"
-      ]
-    }
-  }
-}
-```
-
----
-
 ## Cross-Platform Build Matrix
 
 For automated CI/CD builds (GitHub Actions, GitLab CI, etc.):
@@ -534,7 +429,7 @@ Before publishing a release:
 - [ ] Notarization completed (macOS)
 - [ ] SHA256 checksums generated
 - [ ] Release notes drafted
-- [ ] Documentation updated (README.md, PACKAGING.md)
+- [ ] Documentation updated (PACKAGING.md)
 - [ ] Git tag created: `git tag -a v1.0.0 -m "Release v1.0.0"`
 - [ ] Tag pushed: `git push origin v1.0.0`
 
@@ -557,11 +452,6 @@ Before publishing a release:
 - **Homebrew** (macOS/Linux): Create formula in tap repository
 - **Chocolatey** (Windows): Submit package
 - **winget** (Windows): Submit manifest to winget-pkgs repository
-
-### Container Registries
-
-- **Docker Hub**: `docker push nogap/mcp-server:latest`
-- **GitHub Container Registry**: `docker push ghcr.io/org/nogap-mcp:v1.0.0`
 
 ---
 
@@ -606,3 +496,12 @@ For packaging issues or questions:
 
 **Last Updated**: Stage 10 - December 2024  
 **NoGap Version**: 1.0.0 (pre-release)
+- **Flathub** (Linux): Submit Flatpak manifest
+- **Snapcraft** (Linux): Submit snap package
+- **Homebrew** (macOS/Linux): Create formula in tap repository
+- **Chocolatey** (Windows): Submit package
+- **winget** (Windows): Submit manifest to winget-pkgs repository
+
+---
+
+## Troubleshooting

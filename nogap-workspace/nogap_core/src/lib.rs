@@ -15,8 +15,21 @@ pub mod auto_signer;
 pub mod engine;
 pub mod platforms;
 
-// Week 3+ Air-Gap Features
-pub mod ostree_lite;
+// AI-Assisted Features (Optional, Non-Agentic)
+// These modules provide optional AI-assisted functionality while maintaining
+// deterministic, user-controlled security enforcement.
+pub mod ai_recommender;
+pub mod risk_scoring;
+pub mod drift_detection;
+
+// Autonomous Sensing (Agent Foundation)
+// Background observation without decision-making or remediation
+pub mod sensor_scheduler;
+
+// Planning Phase (Agent Foundation)
+// Read-only plan generation - NO execution, NO remediation
+// Human approval mandatory
+pub mod planner;
 
 // Legacy API functions (preserved for backward compatibility)
 pub fn audit_system() -> String {

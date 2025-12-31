@@ -1,8 +1,0 @@
-{
-  "id": "node",
-  "name": "Node MCP",
-  "command": "npm",
-  "args": ["run", "build"],
-  "workingDirectory": "${workspaceFolder}",
-  "description": "Builds Node/Tauri front-end for ${workspaceFolder}"
-}

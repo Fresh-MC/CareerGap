@@ -16,13 +16,9 @@ Extract `nogap-cli-v1.0.0-x86_64-linux.tar.gz` (or Windows `.zip`, macOS `.tar.g
 
 ## First-Time Setup
 
-**USB Flow (Dashboard)**
+**Policy File Configuration**
 
-The dashboard launches with USB repository manager (`usb.html`). It automatically scans for USB drives containing `aegis_repo/` directories (Windows D:-Z:, Linux `/media` and `/run/media`, macOS `/Volumes`). If a valid USB repo is detected, the app displays the manifest preview with signature status (green checkmark for valid Ed25519 signature, red X for invalid). A 3-second countdown auto-redirects to the main dashboard. Users can click "Import Now" to skip countdown or "Skip to Dashboard" to proceed without import. The import process calls `cmd_import_repo()` to copy objects from USB CAS (`objects/<hash[0:2]>/<hash[2:]>`) to local storage with SHA256 verification.
-
-**Local Repo Creation**
-
-First-time users without USB repos can create local policies manually. The dashboard auto-loads bundled `policies.yaml` (1600+ policies embedded in Tauri resources). For CLI, specify policy path: `nogap-cli tui --policies /etc/nogap/policies.yaml` (Linux) or `nogap-cli.exe tui --policies C:\ProgramData\NoGap\policies.yaml` (Windows). Custom policy YAMLs follow the schema with 30+ optional fields (`id`, `platform`, `check_type`, `target_path`, `value_name`, `expected_state`, etc.). Store at repository-relative path for dev or system paths for production (`/etc/nogap` on Linux, `C:\ProgramData\NoGap` on Windows).
+The dashboard auto-loads bundled `policies.yaml` (1600+ policies embedded in Tauri resources). For CLI, specify policy path: `nogap-cli tui --policies /etc/nogap/policies.yaml` (Linux) or `nogap-cli.exe tui --policies C:\ProgramData\NoGap\policies.yaml` (Windows). Custom policy YAMLs follow the schema with 30+ optional fields (`id`, `platform`, `check_type`, `target_path`, `value_name`, `expected_state`, etc.). Store at repository-relative path for dev or system paths for production (`/etc/nogap` on Linux, `C:\ProgramData\NoGap` on Windows).
 
 **Trusted Keys Setup**
 
@@ -40,7 +36,7 @@ Without this file, the system uses a hardcoded fallback key (insecure for produc
 
 **GUI (Dashboard)**
 
-1. Launch dashboard, navigate past USB flow to main interface (60/40 split: policy table left, details right).
+1. Launch dashboard to main interface (60/40 split: policy table left, details right).
 2. Use filters: Platform dropdown (Windows/Linux/All), Severity checkboxes (Critical/High/Medium/Low), Search box for text matching.
 3. Select policy from table (click row or use `j`/`k` keys if keyboard navigation enabled).
 4. Click "Audit" button or press `a` key. A modal displays "AUDITING..." during execution (blocking operation, typically 100-500ms per policy).
@@ -97,29 +93,6 @@ sqlite3 snapshots.db "SELECT before_state FROM snapshots WHERE policy_id='A.1.a.
 ```
 
 Automatic rollback via `engine::rollback()` supports 6 check types: `registry_key`, `local_policy`, `service_status`, `sysctl_key`, `file_content`, `file_permissions`. Unsupported types require manual intervention.
-
-## Using USB Import/Export
-
-**Import (Air-Gapped Update)**
-
-1. Receive USB drive with `aegis_repo/` structure: `manifest.json`, `manifest.json.sig`, `objects/<hash>/` CAS directory.
-2. Insert USB into air-gapped system.
-3. Launch dashboard—USB manager auto-scans on startup.
-4. If valid signature detected, 3-second countdown begins. Click "Import Now" to execute immediately.
-5. Import process: reads manifest (`refs/heads/production.manifest`), verifies Ed25519 signature (`refs/heads/production.sig`), streams objects from USB to local CAS with SHA256 verification, atomic `.tmp` writes, per-object 100 MB size limit.
-6. On success, manifest installed atomically to local refs. Dashboard loads updated policies automatically.
-7. If signature invalid, error modal shows "Invalid signature" with Retry/Skip options.
-
-**Export (Policy Distribution)**
-
-Export functionality uses `export_commit_to_target()` in `ostree_lite.rs`. Enforces removable media checks on Windows (prevents accidental writes to system drives). Requires explicit user confirmation. Export workflow (not yet exposed in GUI):
-```bash
-# CLI command (hypothetical):
-sudo nogap-cli export --target /media/usb --commit production
-```
-Copies local CAS objects to USB with directory sharding, generates manifest JSON with object hashes/sizes, signs manifest with Ed25519 private key, writes signature to `refs/heads/production.sig`.
-
-**Manifest Structure**: Canonical JSON format (keys sorted alphabetically, no whitespace, UTF-8 encoding) ensures identical byte representation across systems for signature verification. Manifest lists all objects required for commit with `hash` (64-char SHA256 hex), `size` (bytes), `type` (blob/tree/commit).
 
 ## Automation with --json
 

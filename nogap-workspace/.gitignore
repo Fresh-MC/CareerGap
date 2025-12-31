@@ -13,9 +13,22 @@ Cargo.lock
 .DS_Store
 Thumbs.db
 
-# Test reports
+# Test reports and artifacts
 test-results/
 playwright-report/
+*.log
+test_report*.json
+report*.json
+test.json
+simple.json
+output.csv
+snapshots.db
+*.tmp
+*.cache
+coverage/
+*.profraw
+*.profdata
+*.lcov
 
 # Node modules (for dashboard)
 node_modules/

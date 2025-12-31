@@ -21,30 +21,11 @@ pub enum RemediateResult {
 
 pub fn audit_policy(policy: &Policy) -> Result<AuditResult, Box<dyn Error>> {
     match policy.check_type.as_str() {
-        "registry_key" => {
+        // All registry-based policies use the generic handler
+        // Supports both new "registry" block and legacy "target_path"/"value_name" fields
+        "registry" | "registry_key" => {
             let registry = RealRegistry;
-            // Route based on policy ID to the correct registry check function
-            match policy.id.as_str() {
-                "A.1.b.i" => check_registry_password_history(policy, &registry),
-                "A.1.a.ii" => check_min_password_length(policy, &registry),
-                "A.1.a.iii" => check_max_password_age(policy, &registry),
-                "A.1.a.iv" => check_registry_min_password_length(policy, &registry),
-                "A.1.b.ii" => check_account_lockout_threshold(policy, &registry),
-                "A.2.a.ii" => check_admin_account_renamed(policy, &registry),
-                "A.2.b.i" => check_lockout_threshold(policy, &registry),
-                // A.2.b.ii removed - now handled by local_policy
-                "A.3.a.i" => check_smb1_disabled(policy, &registry),
-                "A.3.a.ii" => check_firewall_domain_profile(policy, &registry),
-                "A.3.a.iii" => check_firewall_private_profile(policy, &registry),
-                "A.3.a.iv" => check_firewall_public_profile(policy, &registry),
-                "A.4.b.i" => check_autoplay_disabled(policy, &registry),
-                "A.4.b.ii" => check_remote_registry_disabled(policy, &RealServiceManager),
-                "A.5.a.i" => check_restrict_anonymous_sam(policy, &registry),
-                "A.5.a.ii" => check_restrict_anonymous(policy, &registry),
-                "A.5.b.i" => check_lm_compatibility(policy, &registry),
-                "A.7.b.i" => check_uac_elevation(policy, &registry),
-                _ => Err(format!("Unknown registry_key policy: {}", policy.id).into()),
-            }
+            audit_registry_generic(policy, &registry)
         }
         "local_policy" => {
             #[cfg(target_os = "windows")]
@@ -62,6 +43,11 @@ pub fn audit_policy(policy: &Policy) -> Result<AuditResult, Box<dyn Error>> {
                 "A.7.a.i" => check_remote_registry_disabled(policy, &service_manager),
                 _ => check_service_status(policy, &service_manager),
             }
+        }
+        // GPO audit - requires Group Policy cmdlets or RSOP
+        // Returns a structured result indicating manual verification needed
+        "gpo" => {
+            audit_gpo_generic(policy)
         }
         _ => Err(format!(
             "Unsupported check_type for Windows platform: {} (policy: {})",
@@ -82,29 +68,10 @@ pub fn remediate_policy(policy: &Policy) -> Result<RemediateResult, Box<dyn Erro
     }
 
     match policy.check_type.as_str() {
-        "registry_key" => {
+        // All registry-based policies use the generic handler
+        "registry" | "registry_key" => {
             let registry = RealRegistry;
-            match policy.id.as_str() {
-                "A.1.b.i" => remediate_registry_password_history(policy, &registry),
-                "A.1.a.ii" => remediate_min_password_length(policy, &registry),
-                "A.1.a.iii" => remediate_max_password_age(policy, &registry),
-                "A.1.a.iv" => remediate_registry_min_password_length(policy, &registry),
-                "A.1.b.ii" => remediate_account_lockout_threshold(policy, &registry),
-                "A.2.a.ii" => remediate_admin_account_renamed(policy, &registry),
-                "A.2.b.i" => remediate_lockout_threshold(policy, &registry),
-                // A.2.b.ii removed - now handled by local_policy
-                "A.3.a.i" => remediate_smb1_disabled(policy, &registry),
-                "A.3.a.ii" => remediate_firewall_domain_profile(policy, &registry),
-                "A.3.a.iii" => remediate_firewall_private_profile(policy, &registry),
-                "A.3.a.iv" => remediate_firewall_public_profile(policy, &registry),
-                "A.4.b.i" => remediate_autoplay_disabled(policy, &registry),
-                "A.4.b.ii" => remediate_remote_registry_disabled(policy, &RealServiceManager),
-                "A.5.a.i" => remediate_restrict_anonymous_sam(policy, &registry),
-                "A.5.a.ii" => remediate_restrict_anonymous(policy, &registry),
-                "A.5.b.i" => remediate_lm_compatibility(policy, &registry),
-                "A.7.b.i" => remediate_uac_elevation(policy, &registry),
-                _ => Err(format!("Unknown registry_key policy: {}", policy.id).into()),
-            }
+            remediate_registry_generic(policy, &registry)
         }
         "local_policy" => {
             #[cfg(target_os = "windows")]
@@ -122,6 +89,10 @@ pub fn remediate_policy(policy: &Policy) -> Result<RemediateResult, Box<dyn Erro
                 "A.7.a.i" => remediate_remote_registry_disabled(policy, &service_manager),
                 _ => remediate_service_disable(policy, &service_manager),
             }
+        }
+        // GPO remediation - requires Group Policy cmdlets
+        "gpo" => {
+            remediate_gpo_generic(policy)
         }
         _ => Err(format!(
             "Unsupported check_type for Windows platform: {} (policy: {})",
@@ -441,11 +412,32 @@ pub fn remediate_service_disable(
 
 // ========== STAGE 4: REGISTRY OPERATIONS ==========
 
+/// Result type for registry value reads that distinguishes between
+/// missing keys/values and actual errors
+#[derive(Debug, Clone)]
+pub enum RegistryReadResult<T> {
+    /// Value was found and read successfully
+    Found(T),
+    /// Key does not exist
+    KeyNotFound,
+    /// Key exists but value does not exist
+    ValueNotFound,
+    /// Access denied or other permission error
+    AccessDenied(String),
+    /// Other error (I/O, parsing, etc.)
+    Error(String),
+}
+
 pub trait Registry {
     fn get_dword(&self, path: &str, value_name: &str) -> Result<u32, Box<dyn Error>>;
     fn set_dword(&self, path: &str, value_name: &str, value: u32) -> Result<(), Box<dyn Error>>;
     fn get_string(&self, path: &str, value_name: &str) -> Result<String, Box<dyn Error>>;
     fn set_string(&self, path: &str, value_name: &str, value: &str) -> Result<(), Box<dyn Error>>;
+    
+    /// Try to read a DWORD value, distinguishing between missing and errors
+    fn try_get_dword(&self, path: &str, value_name: &str) -> RegistryReadResult<u32>;
+    /// Try to read a String value, distinguishing between missing and errors
+    fn try_get_string(&self, path: &str, value_name: &str) -> RegistryReadResult<String>;
 }
 
 #[cfg(target_os = "windows")]
@@ -520,6 +512,93 @@ impl Registry for RealRegistry {
         key.set_value(value_name, &value)?;
         Ok(())
     }
+    
+    fn try_get_dword(&self, path: &str, value_name: &str) -> RegistryReadResult<u32> {
+        use winreg::enums::*;
+        use std::io::ErrorKind;
+
+        let (hive_name, subkey) = match split_registry_path(path) {
+            Ok(parts) => parts,
+            Err(e) => return RegistryReadResult::Error(e.to_string()),
+        };
+        
+        let hive = match open_hive(hive_name) {
+            Ok(h) => h,
+            Err(e) => return RegistryReadResult::Error(e.to_string()),
+        };
+
+        // Try to open the key
+        let key = match hive.open_subkey_with_flags(subkey, KEY_READ) {
+            Ok(k) => k,
+            Err(e) => {
+                // Check if key doesn't exist
+                if e.kind() == ErrorKind::NotFound {
+                    return RegistryReadResult::KeyNotFound;
+                }
+                if e.kind() == ErrorKind::PermissionDenied {
+                    return RegistryReadResult::AccessDenied(format!("Access denied: {}", path));
+                }
+                return RegistryReadResult::Error(e.to_string());
+            }
+        };
+
+        // Try to read the value
+        match key.get_value::<u32, _>(value_name) {
+            Ok(v) => RegistryReadResult::Found(v),
+            Err(e) => {
+                if e.kind() == ErrorKind::NotFound {
+                    return RegistryReadResult::ValueNotFound;
+                }
+                if e.kind() == ErrorKind::PermissionDenied {
+                    return RegistryReadResult::AccessDenied(format!("Access denied: {}\\{}", path, value_name));
+                }
+                RegistryReadResult::Error(e.to_string())
+            }
+        }
+    }
+    
+    fn try_get_string(&self, path: &str, value_name: &str) -> RegistryReadResult<String> {
+        use winreg::enums::*;
+        use std::io::ErrorKind;
+
+        let (hive_name, subkey) = match split_registry_path(path) {
+            Ok(parts) => parts,
+            Err(e) => return RegistryReadResult::Error(e.to_string()),
+        };
+        
+        let hive = match open_hive(hive_name) {
+            Ok(h) => h,
+            Err(e) => return RegistryReadResult::Error(e.to_string()),
+        };
+
+        // Try to open the key
+        let key = match hive.open_subkey_with_flags(subkey, KEY_READ) {
+            Ok(k) => k,
+            Err(e) => {
+                if e.kind() == ErrorKind::NotFound {
+                    return RegistryReadResult::KeyNotFound;
+                }
+                if e.kind() == ErrorKind::PermissionDenied {
+                    return RegistryReadResult::AccessDenied(format!("Access denied: {}", path));
+                }
+                return RegistryReadResult::Error(e.to_string());
+            }
+        };
+
+        // Try to read the value
+        match key.get_value::<String, _>(value_name) {
+            Ok(v) => RegistryReadResult::Found(v),
+            Err(e) => {
+                if e.kind() == ErrorKind::NotFound {
+                    return RegistryReadResult::ValueNotFound;
+                }
+                if e.kind() == ErrorKind::PermissionDenied {
+                    return RegistryReadResult::AccessDenied(format!("Access denied: {}\\{}", path, value_name));
+                }
+                RegistryReadResult::Error(e.to_string())
+            }
+        }
+    }
 }
 
 #[cfg(not(target_os = "windows"))]
@@ -543,6 +622,14 @@ impl Registry for RealRegistry {
         _value: &str,
     ) -> Result<(), Box<dyn Error>> {
         Err("Registry operations not supported on this platform".into())
+    }
+    
+    fn try_get_dword(&self, _path: &str, _value_name: &str) -> RegistryReadResult<u32> {
+        RegistryReadResult::Error("Registry operations not supported on this platform".to_string())
+    }
+    
+    fn try_get_string(&self, _path: &str, _value_name: &str) -> RegistryReadResult<String> {
+        RegistryReadResult::Error("Registry operations not supported on this platform".to_string())
     }
 }
 
@@ -609,6 +696,434 @@ impl Registry for MockRegistry {
             value.to_string(),
         );
         Ok(())
+    }
+    
+    fn try_get_dword(&self, path: &str, value_name: &str) -> RegistryReadResult<u32> {
+        match self.dword_values
+            .borrow()
+            .get(&(path.to_string(), value_name.to_string()))
+            .copied()
+        {
+            Some(v) => RegistryReadResult::Found(v),
+            None => RegistryReadResult::ValueNotFound,
+        }
+    }
+    
+    fn try_get_string(&self, path: &str, value_name: &str) -> RegistryReadResult<String> {
+        match self.string_values
+            .borrow()
+            .get(&(path.to_string(), value_name.to_string()))
+            .cloned()
+        {
+            Some(v) => RegistryReadResult::Found(v),
+            None => RegistryReadResult::ValueNotFound,
+        }
+    }
+}
+
+// ========== GENERIC REGISTRY AUDIT ==========
+
+/// Generic registry audit function that respects policy.missing_is_compliant
+/// 
+/// This function:
+/// 1. Reads the registry configuration from policy.registry block
+/// 2. Attempts to read the registry key/value
+/// 3. If missing and policy.missing_is_compliant is true, returns COMPLIANT
+/// 4. If missing and policy.missing_is_compliant is false, returns NON-COMPLIANT
+/// 5. If value exists, evaluates against expected_state
+/// 6. Only returns ERROR for permission issues or unexpected failures
+pub fn audit_registry_generic<R: Registry>(
+    policy: &Policy,
+    registry: &R,
+) -> Result<AuditResult, Box<dyn Error>> {
+    // Get registry configuration from policy
+    // Supports both new "registry" block and legacy "target_path"/"value_name" fields
+    let (reg_path, value_name, value_type) = if let Some(ref reg_config) = policy.registry {
+        // New format: policy.registry block
+        (
+            reg_config.path.clone(),
+            reg_config.value_name.clone(),
+            reg_config.value_type.to_uppercase(),
+        )
+    } else if let (Some(ref path), Some(ref name)) = (&policy.target_path, &policy.value_name) {
+        // Legacy format: target_path and value_name fields
+        // Normalize path: add HKLM prefix if not present
+        let normalized_path = if path.starts_with("HKLM\\") || path.starts_with("HKEY_") {
+            path.clone()
+        } else {
+            format!("HKLM\\{}", path)
+        };
+        // Default to DWORD for legacy policies (most common)
+        (normalized_path, name.clone(), "DWORD".to_string())
+    } else {
+        return Err(format!(
+            "Policy {} has check_type '{}' but no registry configuration (need 'registry' block or 'target_path'/'value_name')",
+            policy.id, policy.check_type
+        ).into());
+    };
+    
+    // Helper function to generate compliant message for missing values
+    let missing_compliant_msg = || {
+        policy.missing_compliant_message
+            .clone()
+            .unwrap_or_else(|| format!(
+                "Registry key/value not present (secure default for {})",
+                policy.id
+            ))
+    };
+    
+    // Read registry value based on type
+    let read_result: RegistryReadResult<String> = match value_type.as_str() {
+        "DWORD" => {
+            match registry.try_get_dword(&reg_path, &value_name) {
+                RegistryReadResult::Found(v) => RegistryReadResult::Found(v.to_string()),
+                RegistryReadResult::KeyNotFound => RegistryReadResult::KeyNotFound,
+                RegistryReadResult::ValueNotFound => RegistryReadResult::ValueNotFound,
+                RegistryReadResult::AccessDenied(e) => RegistryReadResult::AccessDenied(e),
+                RegistryReadResult::Error(e) => RegistryReadResult::Error(e),
+            }
+        }
+        "STRING" | "SZ" | "REG_SZ" => {
+            registry.try_get_string(&reg_path, &value_name)
+        }
+        _ => {
+            return Err(format!(
+                "Unsupported registry value_type '{}' for policy {}",
+                value_type, policy.id
+            ).into());
+        }
+    };
+    
+    // Handle the read result
+    match read_result {
+        RegistryReadResult::Found(current_value) => {
+            // Value exists - evaluate against expected_state
+            evaluate_registry_value(policy, &current_value, &value_type)
+        }
+        
+        RegistryReadResult::KeyNotFound | RegistryReadResult::ValueNotFound => {
+            // Key or value is missing
+            if policy.missing_is_compliant {
+                // Policy explicitly marks missing as compliant
+                Ok(AuditResult {
+                    policy_id: policy.id.clone(),
+                    passed: true,
+                    message: missing_compliant_msg(),
+                })
+            } else {
+                // Missing is non-compliant - policy requires explicit configuration
+                Ok(AuditResult {
+                    policy_id: policy.id.clone(),
+                    passed: false,
+                    message: format!(
+                        "Registry value not configured: {}\\{} - Policy requires explicit configuration",
+                        reg_path, value_name
+                    ),
+                })
+            }
+        }
+        
+        RegistryReadResult::AccessDenied(err) => {
+            // Permission error - this is a real error, not a missing value
+            Err(format!(
+                "Access denied reading registry for policy {}: {}",
+                policy.id, err
+            ).into())
+        }
+        
+        RegistryReadResult::Error(err) => {
+            // Other error - propagate as failure
+            Err(format!(
+                "Error reading registry for policy {}: {}",
+                policy.id, err
+            ).into())
+        }
+    }
+}
+
+/// Evaluate a registry value against the policy's expected_state
+fn evaluate_registry_value(
+    policy: &Policy,
+    current_value: &str,
+    value_type: &str,
+) -> Result<AuditResult, Box<dyn Error>> {
+    let expected = policy.expected_state.as_ref()
+        .ok_or_else(|| format!(
+            "Policy {} has no expected_state defined",
+            policy.id
+        ))?;
+    
+    let passed = match expected {
+        crate::types::ExpectedState::String(expected_str) => {
+            current_value == expected_str
+        }
+        crate::types::ExpectedState::Map { operator, value } => {
+            match operator.as_str() {
+                "eq" => {
+                    // Equality comparison
+                    let expected_str = yaml_value_to_string(value);
+                    current_value == expected_str
+                }
+                "ne" => {
+                    // Not equal comparison
+                    let expected_str = yaml_value_to_string(value);
+                    current_value != expected_str
+                }
+                "gte" | "ge" => {
+                    // Greater than or equal (numeric)
+                    if value_type == "DWORD" {
+                        let current_num: i64 = current_value.parse()
+                            .map_err(|_| format!("Cannot parse '{}' as number", current_value))?;
+                        let expected_num = yaml_value_to_i64(value)?;
+                        current_num >= expected_num
+                    } else {
+                        return Err(format!(
+                            "Operator '{}' requires DWORD type for policy {}",
+                            operator, policy.id
+                        ).into());
+                    }
+                }
+                "lte" | "le" => {
+                    // Less than or equal (numeric)
+                    if value_type == "DWORD" {
+                        let current_num: i64 = current_value.parse()
+                            .map_err(|_| format!("Cannot parse '{}' as number", current_value))?;
+                        let expected_num = yaml_value_to_i64(value)?;
+                        current_num <= expected_num
+                    } else {
+                        return Err(format!(
+                            "Operator '{}' requires DWORD type for policy {}",
+                            operator, policy.id
+                        ).into());
+                    }
+                }
+                "gt" => {
+                    // Greater than (numeric)
+                    if value_type == "DWORD" {
+                        let current_num: i64 = current_value.parse()
+                            .map_err(|_| format!("Cannot parse '{}' as number", current_value))?;
+                        let expected_num = yaml_value_to_i64(value)?;
+                        current_num > expected_num
+                    } else {
+                        return Err(format!(
+                            "Operator 'gt' requires DWORD type for policy {}",
+                            policy.id
+                        ).into());
+                    }
+                }
+                "lt" => {
+                    // Less than (numeric)
+                    if value_type == "DWORD" {
+                        let current_num: i64 = current_value.parse()
+                            .map_err(|_| format!("Cannot parse '{}' as number", current_value))?;
+                        let expected_num = yaml_value_to_i64(value)?;
+                        current_num < expected_num
+                    } else {
+                        return Err(format!(
+                            "Operator 'lt' requires DWORD type for policy {}",
+                            policy.id
+                        ).into());
+                    }
+                }
+                "not_empty" => {
+                    // Value must not be empty
+                    !current_value.is_empty()
+                }
+                _ => {
+                    return Err(format!(
+                        "Unknown operator '{}' for policy {}",
+                        operator, policy.id
+                    ).into());
+                }
+            }
+        }
+    };
+    
+    let message = if passed {
+        format!(
+            "Registry value compliant: {} = {}",
+            policy.registry.as_ref().map(|r| format!("{}\\{}", r.path, r.value_name)).unwrap_or_default(),
+            current_value
+        )
+    } else {
+        format!(
+            "Registry value non-compliant: {} = {} (expected: {:?})",
+            policy.registry.as_ref().map(|r| format!("{}\\{}", r.path, r.value_name)).unwrap_or_default(),
+            current_value,
+            expected
+        )
+    };
+    
+    Ok(AuditResult {
+        policy_id: policy.id.clone(),
+        passed,
+        message,
+    })
+}
+
+/// Convert a serde_yaml::Value to a string for comparison
+fn yaml_value_to_string(value: &serde_yaml::Value) -> String {
+    match value {
+        serde_yaml::Value::String(s) => s.clone(),
+        serde_yaml::Value::Number(n) => n.to_string(),
+        serde_yaml::Value::Bool(b) => if *b { "1" } else { "0" }.to_string(),
+        serde_yaml::Value::Null => String::new(),
+        _ => format!("{:?}", value),
+    }
+}
+
+/// Convert a serde_yaml::Value to i64 for numeric comparisons
+fn yaml_value_to_i64(value: &serde_yaml::Value) -> Result<i64, Box<dyn Error>> {
+    match value {
+        serde_yaml::Value::Number(n) => {
+            n.as_i64().ok_or_else(|| "Expected value is not a valid i64".into())
+        }
+        serde_yaml::Value::String(s) => {
+            // Handle hex values like 0x20080000
+            if s.starts_with("0x") || s.starts_with("0X") {
+                i64::from_str_radix(&s[2..], 16)
+                    .map_err(|_| format!("Cannot parse '{}' as hex number", s).into())
+            } else {
+                s.parse()
+                    .map_err(|_| format!("Cannot parse '{}' as number", s).into())
+            }
+        }
+        _ => Err(format!("Cannot convert {:?} to number", value).into()),
+    }
+}
+
+// ========== GPO (GROUP POLICY) OPERATIONS ==========
+
+/// Audit a Group Policy Object (GPO) based policy
+/// 
+/// GPO policies require access to:
+/// - Group Policy cmdlets (Get-GPO, Get-GPResultantSetOfPolicy)
+/// - RSOP (Resultant Set of Policy) data
+/// - Local Group Policy Editor settings
+/// 
+/// Currently returns a structured "not implemented" result since GPO auditing
+/// requires elevated PowerShell cmdlets that aren't easily accessible from Rust.
+pub fn audit_gpo_generic(policy: &Policy) -> Result<AuditResult, Box<dyn Error>> {
+    let gpo_config = policy.gpo.as_ref();
+    
+    let gpo_path = gpo_config
+        .map(|g| format!("{}\\{}", g.path, g.value_name))
+        .unwrap_or_else(|| "unknown GPO path".to_string());
+    
+    // GPO auditing requires Group Policy cmdlets or RSOP
+    // This is a placeholder that returns a clear "not implemented" status
+    Ok(AuditResult {
+        policy_id: policy.id.clone(),
+        passed: false,
+        message: format!(
+            "GPO policy '{}' requires manual verification. Path: {}. \
+             Use Group Policy Management Console (gpmc.msc) or 'gpresult /h' to verify.",
+            policy.id, gpo_path
+        ),
+    })
+}
+
+/// Remediate a Group Policy Object (GPO) based policy
+/// 
+/// GPO remediation requires:
+/// - Set-GPRegistryValue or similar cmdlets
+/// - Administrative access to Group Policy
+/// - Domain controller connectivity for domain policies
+/// 
+/// Currently returns a "not implemented" result.
+pub fn remediate_gpo_generic(policy: &Policy) -> Result<RemediateResult, Box<dyn Error>> {
+    let gpo_config = policy.gpo.as_ref();
+    
+    let gpo_path = gpo_config
+        .map(|g| format!("{}\\{}", g.path, g.value_name))
+        .unwrap_or_else(|| "unknown GPO path".to_string());
+    
+    Ok(RemediateResult::Failed(format!(
+        "GPO remediation for '{}' requires Group Policy Management tools. \
+         Path: {}. Use gpedit.msc or Group Policy Management Console to configure.",
+        policy.id, gpo_path
+    )))
+}
+
+// ========== GENERIC REGISTRY REMEDIATION ==========
+
+/// Generic registry remediation function
+/// 
+/// Supports both new "registry" block and legacy "target_path"/"value_name" fields.
+/// Writes the set_value to the registry at the specified path.
+pub fn remediate_registry_generic<R: Registry>(
+    policy: &Policy,
+    registry: &R,
+) -> Result<RemediateResult, Box<dyn Error>> {
+    // Get registry configuration from policy
+    let (reg_path, value_name, value_type) = if let Some(ref reg_config) = policy.registry {
+        // New format: policy.registry block
+        (
+            reg_config.path.clone(),
+            reg_config.value_name.clone(),
+            reg_config.value_type.to_uppercase(),
+        )
+    } else if let (Some(ref path), Some(ref name)) = (&policy.target_path, &policy.value_name) {
+        // Legacy format: target_path and value_name fields
+        let normalized_path = if path.starts_with("HKLM\\") || path.starts_with("HKEY_") {
+            path.clone()
+        } else {
+            format!("HKLM\\{}", path)
+        };
+        // Default to DWORD for legacy policies
+        (normalized_path, name.clone(), "DWORD".to_string())
+    } else {
+        return Ok(RemediateResult::Failed(format!(
+            "Policy {} has no registry configuration (need 'registry' block or 'target_path'/'value_name')",
+            policy.id
+        )));
+    };
+    
+    // Get the value to set
+    let set_value = policy.set_value.as_ref()
+        .ok_or_else(|| format!("Policy {} has no set_value defined for remediation", policy.id))?;
+    
+    // Write the registry value based on type
+    match value_type.as_str() {
+        "DWORD" => {
+            let dword_value: u32 = match set_value {
+                serde_yaml::Value::Number(n) => {
+                    n.as_u64().ok_or("set_value is not a valid u32")? as u32
+                }
+                serde_yaml::Value::String(s) => {
+                    if s.starts_with("0x") || s.starts_with("0X") {
+                        u32::from_str_radix(&s[2..], 16)
+                            .map_err(|_| format!("Cannot parse '{}' as hex DWORD", s))?
+                    } else {
+                        s.parse().map_err(|_| format!("Cannot parse '{}' as DWORD", s))?
+                    }
+                }
+                _ => return Ok(RemediateResult::Failed(format!(
+                    "Invalid set_value type for DWORD: {:?}", set_value
+                ))),
+            };
+            
+            registry.set_dword(&reg_path, &value_name, dword_value)?;
+            
+            Ok(RemediateResult::Success(format!(
+                "Set registry DWORD {}\\{} = {}",
+                reg_path, value_name, dword_value
+            )))
+        }
+        "STRING" | "SZ" | "REG_SZ" => {
+            let string_value = yaml_value_to_string(set_value);
+            
+            registry.set_string(&reg_path, &value_name, &string_value)?;
+            
+            Ok(RemediateResult::Success(format!(
+                "Set registry STRING {}\\{} = {}",
+                reg_path, value_name, string_value
+            )))
+        }
+        _ => Ok(RemediateResult::Failed(format!(
+            "Unsupported registry value_type '{}' for remediation of policy {}",
+            value_type, policy.id
+        ))),
     }
 }
 

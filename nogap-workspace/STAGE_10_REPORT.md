@@ -466,7 +466,6 @@ To add reboot support to CLI:
    - Prerequisites (Rust toolchain, system dependencies)
    - CLI Binary Distribution (5 packaging options)
    - Tauri Desktop Application (platform-specific bundles)
-   - MCP Server (Docker + binary distribution)
    - Cross-Platform Build Matrix (GitHub Actions examples)
    - Release Checklist (comprehensive pre-release validation)
    - Distribution Channels (GitHub Releases, package registries, containers)
@@ -484,12 +483,7 @@ To add reboot support to CLI:
    - ✅ macOS: DMG + APP (with code signing/notarization)
    - ✅ Windows: MSI + NSIS (with code signing)
 
-4. **Docker MCP Server**:
-   - ✅ Dockerfile example
-   - ✅ Multi-stage build for minimal image size
-   - ✅ GitHub Container Registry push instructions
-
-5. **CI/CD Integration**:
+4. **CI/CD Integration**:
    - ✅ GitHub Actions workflow example
    - ✅ Matrix builds for multiple platforms
    - ✅ Artifact upload automation
@@ -682,9 +676,8 @@ To add reboot support to CLI:
 
 1. **Cross-Platform Tests**: Add CI/CD matrix for Linux/macOS/Windows test runs
 2. **Performance Benchmarks**: Add criterion.rs benchmarks for audit/remediate operations
-3. **Integration with MCP**: Expand nogap_mcp server capabilities
-4. **Plugin System**: Allow custom policy types via dynamic loading
-5. **Web Dashboard**: Alternative to Tauri desktop app for headless servers
+3. **Plugin System**: Allow custom policy types via dynamic loading
+4. **Web Dashboard**: Alternative to Tauri desktop app for headless servers
 
 ---
 
@@ -711,15 +704,6 @@ To add reboot support to CLI:
 | Code signing | ⚠️ | Documented, not applied (requires certificates) |
 | Notarization | ⚠️ | Documented (macOS only) |
 | **VERDICT** | **⚠️ READY** | Ready after code signing |
-
-### MCP Server (nogap_mcp)
-
-| Criterion | Status | Notes |
-|-----------|--------|-------|
-| Binary builds | ✅ | cargo build --release successful |
-| Docker support | ✅ | Dockerfile example provided |
-| Container registry | ✅ | Push instructions documented |
-| **VERDICT** | **✅ READY** | Ready for distribution |
 
 ---
 
@@ -774,7 +758,6 @@ All 10 tasks completed with production-ready quality:
 The NoGap Security Platform is now ready for:
 - ✅ Binary distribution (CLI)
 - ✅ Desktop app packaging (Tauri)
-- ✅ Container deployment (MCP server)
 - ✅ Multi-platform releases (cross-compilation documented)
 
 **Known limitations** documented for future enhancement:

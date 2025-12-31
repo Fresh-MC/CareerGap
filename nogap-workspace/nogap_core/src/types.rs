@@ -59,6 +59,20 @@ pub struct Policy {
     pub reference: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub post_reboot_required: Option<bool>,
+    
+    // Registry block for check_type: "registry"
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub registry: Option<RegistryConfig>,
+    
+    // GPO block for check_type: "gpo"
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gpo: Option<GpoConfig>,
+    
+    // Missing value handling
+    #[serde(default)]
+    pub missing_is_compliant: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub missing_compliant_message: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -81,4 +95,24 @@ pub struct RemediateParams {
     pub start: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub enable: Option<bool>,
+}
+
+/// Registry configuration for check_type: "registry"
+#[derive(Clone, Debug, Serialize, Deserialize, Default)]
+pub struct RegistryConfig {
+    pub path: String,
+    pub value_name: String,
+    #[serde(default = "default_registry_type")]
+    pub value_type: String,
+}
+
+fn default_registry_type() -> String {
+    "DWORD".to_string()
+}
+
+/// GPO configuration for check_type: "gpo"
+#[derive(Clone, Debug, Serialize, Deserialize, Default)]
+pub struct GpoConfig {
+    pub path: String,
+    pub value_name: String,
 }

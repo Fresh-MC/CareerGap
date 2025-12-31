@@ -178,6 +178,13 @@ body {
 .btn-warning { background-color: var(--warning); }
 .btn-danger { background-color: var(--danger); }
 .btn-info { background-color: var(--info); }
+.btn-ai { 
+  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  border: 1px solid #a78bfa;
+}
+.btn-ai:hover:not(:disabled) { 
+  background: linear-gradient(135deg, #a78bfa, #818cf8);
+}
 
 .btn-small {
   padding: 0.375rem 0.75rem;
@@ -634,6 +641,1366 @@ select:focus {
   color: white;
 }
 
+/* AI-Assisted Feature Styles */
+.ai-disclaimer {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(99, 102, 241, 0.2));
+  border: 1px solid #a78bfa;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  color: #c4b5fd;
+  font-size: 0.875rem;
+}
+
+.risk-summary {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: var(--bg-tertiary);
+  border-radius: 0.5rem;
+}
+
+.risk-score-card {
+  text-align: center;
+}
+
+.risk-score-value {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: var(--warning);
+}
+
+.risk-score-value.low { color: var(--success); }
+.risk-score-value.medium { color: var(--warning); }
+.risk-score-value.high { color: var(--error); }
+
+.risk-stats {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 1rem;
+}
+
+.risks-list, .drift-list, .recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.risk-item, .drift-item, .recommendation-item {
+  background-color: var(--bg-tertiary);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  border-left: 4px solid var(--border);
+}
+
+.risk-item.critical { border-left-color: var(--error); }
+.risk-item.high { border-left-color: var(--warning); }
+.risk-item.medium { border-left-color: var(--info); }
+.risk-item.low { border-left-color: var(--success); }
+
+.drift-item { border-left-color: var(--error); }
+
+.recommendation-item { 
+  border-left-color: var(--secondary);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.recommendation-item:hover {
+  background-color: var(--bg-secondary);
+}
+
+.risk-item-header, .drift-item-header, .recommendation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.risk-score-badge {
+  background-color: var(--bg-primary);
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-weight: bold;
+  font-size: 0.875rem;
+}
+
+.drift-summary {
+  background-color: var(--bg-tertiary);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.recommendations-form {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: var(--bg-tertiary);
+  border-radius: 0.5rem;
+}
+
+.recommendations-form label {
+  font-weight: 500;
+}
+
+.recommendations-form input,
+.recommendations-form select {
+  min-width: 150px;
+}
+
+.text-success { color: var(--success); }
+.text-danger { color: var(--error); }
+.text-warning { color: var(--warning); }
+
+.relevance-score {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ============================================
+   AUTONOMOUS MONITORING SECTION
+   ============================================ */
+
+.sensor-section {
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(59, 130, 246, 0.1) 100%);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 6px var(--shadow);
+}
+
+.sensor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sensor-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.sensor-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+}
+
+.sensor-badge.active {
+  background: var(--success);
+  color: white;
+}
+
+.sensor-badge.running {
+  background: var(--primary);
+  color: white;
+  animation: pulse-badge 2s infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.sensor-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .sensor-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sensor-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sensor-toggle-row {
+  display: flex;
+  align-items: center;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-weight: 500;
+  user-select: none;
+}
+
+.toggle-label input[type="checkbox"] {
+  display: none;
+}
+
+.toggle-slider {
+  width: 48px;
+  height: 24px;
+  background: var(--bg-tertiary);
+  border-radius: 12px;
+  position: relative;
+  transition: background 0.3s ease;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.3s ease;
+}
+
+.toggle-label input:checked + .toggle-slider {
+  background: var(--success);
+}
+
+.toggle-label input:checked + .toggle-slider::before {
+  transform: translateX(24px);
+}
+
+.sensor-interval-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sensor-interval-row label {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sensor-interval-row select {
+  flex: 1;
+  max-width: 200px;
+}
+
+.sensor-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.sensor-actions .btn {
+  flex: 1;
+  min-width: 80px;
+}
+
+.sensor-status-panel {
+  background: var(--bg-primary);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.sensor-status-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.sensor-status-item:last-child {
+  border-bottom: none;
+}
+
+.status-label {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.status-value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.status-value.running {
+  color: var(--success);
+}
+
+.status-value.stopped {
+  color: var(--text-muted);
+}
+
+.sensor-summary-panel {
+  grid-column: 1 / -1;
+  background: var(--bg-primary);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-top: 0.5rem;
+}
+
+.sensor-summary-panel h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+.sensor-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 600px) {
+  .sensor-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.summary-stat {
+  text-align: center;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 0.5rem;
+}
+
+.summary-stat .stat-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.summary-stat .stat-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.summary-stat.stat-success .stat-value { color: var(--success); }
+.summary-stat.stat-danger .stat-value { color: var(--error); }
+.summary-stat.stat-warning .stat-value { color: var(--warning); }
+
+/* Sensor Report Modal Styles */
+.sensor-label {
+  background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.sensor-source-tag {
+  background: var(--primary);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.sensor-report-header {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 0.5rem;
+}
+
+.sensor-report-header p {
+  margin: 0.25rem 0;
+}
+
+.sensor-report-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.report-stat {
+  text-align: center;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 0.5rem;
+}
+
+.report-stat-value {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.report-stat-label {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.report-stat-success .report-stat-value { color: var(--success); }
+.report-stat-danger .report-stat-value { color: var(--error); }
+
+.sensor-report-results {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.sensor-report-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--bg-tertiary);
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.sensor-report-item .policy-id {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sensor-report-item .policy-message {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  flex: 1;
+  margin: 0 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sensor-report-item .status-icon {
+  font-size: 1.25rem;
+}
+
+.sensor-report-item.compliant { border-left: 3px solid var(--success); }
+.sensor-report-item.non-compliant { border-left: 3px solid var(--error); }
+
+.sensor-report-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+.sensor-report-close:hover {
+  color: var(--text-primary);
+}
+
+/* ============================================================
+   REMEDIATION PLANNER STYLES
+   ============================================================ */
+
+.planner-section {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border-color);
+}
+
+.planner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.planner-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+.planner-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+}
+
+.planner-badge.has-plan {
+  background: #2196f3;
+  color: white;
+}
+
+.planner-badge.approved {
+  background: #4caf50;
+  color: white;
+}
+
+.planner-notice {
+  background: #fff3cd;
+  color: #856404;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  border-left: 4px solid #ffc107;
+}
+
+.planner-controls {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Plan Summary Card */
+.plan-summary-card {
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border-color);
+}
+
+.plan-summary-card h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.plan-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.plan-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.plan-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.plan-value {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.plan-stats-row {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0;
+  padding: 1rem 0;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.plan-stat {
+  flex: 1;
+  text-align: center;
+  padding: 0.75rem;
+  background: var(--card-bg);
+  border-radius: 8px;
+}
+
+.plan-stat-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.plan-stat-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.plan-stat-warning .plan-stat-value {
+  color: #ff9800;
+}
+
+.plan-stat-info .plan-stat-value {
+  color: #2196f3;
+}
+
+.plan-approval-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1rem;
+}
+
+.approval-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.approval-status.approved {
+  color: #4caf50;
+}
+
+.approval-icon {
+  font-size: 1.25rem;
+}
+
+/* Plan Steps Section */
+.plan-steps-section,
+.plan-deferred-section {
+  margin-top: 1.5rem;
+}
+
+.plan-steps-section h3,
+.plan-deferred-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.step-count-badge,
+.deferred-count-badge {
+  background: #2196f3;
+  color: white;
+  padding: 0.125rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.deferred-count-badge {
+  background: #ff9800;
+}
+
+.deferred-explanation {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.plan-steps-list,
+.plan-deferred-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Plan Step Item */
+.plan-step-item {
+  display: grid;
+  grid-template-columns: 50px 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.plan-step-item:hover {
+  border-color: #2196f3;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.15);
+}
+
+.step-priority {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #2196f3, #1976d2);
+  color: white;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.step-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.step-policy-id {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.step-reason {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.step-metrics {
+  display: flex;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.step-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.metric-value {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.metric-value.risk-high {
+  color: #f44336;
+}
+
+.metric-value.risk-medium {
+  color: #ff9800;
+}
+
+.metric-value.risk-low {
+  color: #4caf50;
+}
+
+.metric-value.confidence-high {
+  color: #4caf50;
+}
+
+.metric-value.confidence-medium {
+  color: #ff9800;
+}
+
+.metric-value.confidence-low {
+  color: #f44336;
+}
+
+.metric-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* Deferred Policy Item */
+.plan-deferred-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 1rem;
+  padding: 1rem;
+  background: #fff8e1;
+  border-radius: 8px;
+  border: 1px solid #ffe082;
+}
+
+.deferred-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.deferred-policy-id {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.deferred-reason {
+  font-size: 0.8rem;
+  color: #856404;
+}
+
+.deferred-constraints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.constraint-tag {
+  padding: 0.25rem 0.5rem;
+  background: #ffecb3;
+  color: #856404;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+/* Step Detail Modal */
+.planner-step-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+.planner-step-close:hover {
+  color: var(--text-primary);
+}
+
+.step-detail-content {
+  padding: 1rem 0;
+}
+
+.step-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.step-priority-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #2196f3, #1976d2);
+  color: white;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.step-detail-header .step-policy-id {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.step-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.step-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.detail-value {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.detail-value.risk-score {
+  color: #f44336;
+}
+
+.detail-value.confidence {
+  color: #4caf50;
+}
+
+.step-detail-reason {
+  margin-bottom: 1.5rem;
+}
+
+.step-detail-reason p {
+  margin: 0.5rem 0 0 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.step-detail-constraints {
+  margin-top: 1rem;
+}
+
+.constraints-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.constraints-tags .constraint-tag {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  padding: 0.375rem 0.75rem;
+  border-radius: 16px;
+  font-size: 0.8rem;
+}
+
+.constraints-tags .no-constraints {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.875rem;
+}
+
+/* ============================================================
+   PLAN EDITING STYLES
+   ============================================================ */
+
+/* Plan Section Header with Add Button */
+.plan-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.plan-section-header h3 {
+  margin: 0;
+}
+
+/* Modified Plan Notice */
+.plan-modified-notice {
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  font-size: 0.875rem;
+  border-left: 4px solid #2196f3;
+}
+
+/* User Modified Badge */
+.planner-badge.modified {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+/* Step Source Indicators */
+.step-source-badge {
+  font-size: 0.65rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.step-source-badge.source-planner {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.step-source-badge.source-user {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+/* Step Item with Remove Button */
+.plan-step-item {
+  display: grid;
+  grid-template-columns: 50px 1fr auto auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  transition: all 0.2s;
+}
+
+.plan-step-item.step-user-added {
+  border-color: #90caf9;
+  background: linear-gradient(to right, #e3f2fd, var(--bg-secondary));
+}
+
+.plan-step-item:hover {
+  border-color: #2196f3;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.15);
+}
+
+.step-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-remove-step {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  background: transparent;
+  color: #f44336;
+  border: 1px solid #f44336;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-remove-step:hover {
+  background: #f44336;
+  color: white;
+}
+
+/* Excluded Section */
+.plan-excluded-section {
+  margin-top: 1.5rem;
+}
+
+.plan-excluded-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.excluded-count-badge {
+  background: #f44336;
+  color: white;
+  padding: 0.125rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.excluded-explanation {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.plan-excluded-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.plan-excluded-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #ffebee;
+  border-radius: 8px;
+  border: 1px solid #ffcdd2;
+}
+
+.excluded-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.excluded-policy-id {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.excluded-reason {
+  font-size: 0.8rem;
+  color: #c62828;
+}
+
+.excluded-meta {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.btn-restore-step {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  background: transparent;
+  color: #4caf50;
+  border: 1px solid #4caf50;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-restore-step:hover {
+  background: #4caf50;
+  color: white;
+}
+
+/* Add Policy Modal */
+.modal-content-medium {
+  max-width: 600px;
+  width: 90%;
+}
+
+.modal-content-small {
+  max-width: 450px;
+  width: 90%;
+}
+
+.modal-description {
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
+}
+
+.policy-search-container {
+  margin-bottom: 1rem;
+}
+
+.policy-search-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.policy-search-input:focus {
+  outline: none;
+  border-color: #2196f3;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+.policy-filter-row {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.filter-checkbox input {
+  cursor: pointer;
+}
+
+.eligible-policies-list {
+  max-height: 350px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+}
+
+.eligible-policy-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.2s;
+}
+
+.eligible-policy-item:last-child {
+  border-bottom: none;
+}
+
+.eligible-policy-item:hover:not(.policy-blocked) {
+  background: var(--card-bg);
+}
+
+.eligible-policy-item.policy-blocked {
+  opacity: 0.6;
+  background: #f5f5f5;
+}
+
+.eligible-policy-item.policy-compliant {
+  opacity: 0.7;
+}
+
+.policy-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.policy-info-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.policy-info-id {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.policy-severity-badge {
+  font-size: 0.65rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.policy-severity-badge.critical {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.policy-severity-badge.high {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.policy-severity-badge.medium {
+  background: #fff8e1;
+  color: #f57f17;
+}
+
+.policy-severity-badge.low {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.policy-compliance-badge {
+  font-size: 0.65rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.policy-compliance-badge.compliant {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.policy-compliance-badge.non-compliant {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.policy-info-title {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.policy-block-reason {
+  font-size: 0.75rem;
+  color: #f44336;
+  font-style: italic;
+}
+
+.btn-add-policy {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-add-policy:hover:not(:disabled) {
+  background: #1976d2;
+}
+
+.btn-add-policy:disabled {
+  background: #bdbdbd;
+  cursor: not-allowed;
+}
+
+.modal-footer {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.hard-constraint-notice {
+  font-size: 0.8rem;
+  color: #ff9800;
+}
+
+.loading-text {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 2rem;
+}
+
+.empty-policies-text {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 2rem;
+}
+
+/* Acknowledgment Modal */
+.modification-summary {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.modification-summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modification-summary-item:last-child {
+  border-bottom: none;
+}
+
+.ack-warning {
+  color: #ff9800;
+  font-weight: 500;
+  margin: 1rem 0;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .header {
@@ -659,5 +2026,41 @@ select:focus {
     right: 1rem;
     left: 1rem;
     max-width: none;
+  }
+  
+  .sensor-report-summary {
+    grid-template-columns: 1fr;
+  }
+  
+  .plan-summary-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .plan-stats-row {
+    flex-direction: column;
+  }
+  
+  .plan-step-item {
+    grid-template-columns: 40px 1fr;
+  }
+  
+  .step-metrics {
+    grid-column: span 2;
+    justify-content: flex-start;
+  }
+  
+  .step-actions {
+    grid-column: span 2;
+    justify-content: flex-end;
+  }
+  
+  .step-detail-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .plan-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
   }
 }

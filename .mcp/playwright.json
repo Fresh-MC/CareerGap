@@ -1,8 +1,0 @@
-{
-  "id": "playwright",
-  "name": "Playwright MCP",
-  "command": "npx",
-  "args": ["playwright", "test"],
-  "workingDirectory": "${workspaceFolder}",
-  "description": "Runs Playwright UI tests for the NOGAP Dashboard"
-}

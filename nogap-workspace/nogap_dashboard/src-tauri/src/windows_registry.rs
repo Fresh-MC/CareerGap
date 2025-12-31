@@ -10,6 +10,20 @@ use winreg::RegKey;
 #[cfg(target_os = "windows")]
 use crate::helpers;
 
+/// Represents the result of auditing a registry value
+#[cfg(target_os = "windows")]
+#[derive(Debug)]
+pub enum RegistryAuditResult {
+    /// The key and value exist, audit completed with compliance status
+    Compliant(bool),
+    /// The registry key does not exist
+    KeyNotFound,
+    /// The registry key exists but the value does not
+    ValueNotFound,
+    /// An error occurred during audit (not related to missing key/value)
+    Error(String),
+}
+
 /// Parse registry path into root key and subkey path
 /// Example: "HKLM\\System\\CurrentControlSet\\Services" -> (HKEY_LOCAL_MACHINE, "System\\CurrentControlSet\\Services")
 #[cfg(target_os = "windows")]
@@ -29,19 +43,39 @@ fn parse_registry_path(target_path: &str) -> Result<(RegKey, String)> {
 }
 
 /// Audit a registry value against expected state using operator comparison
+/// Returns detailed result indicating whether key/value exists or if compliant
 #[cfg(target_os = "windows")]
 pub fn audit_registry_value(
     target_path: &str,
     value_name: &str,
     expected_state: &YamlValue,
-) -> Result<bool> {
-    let (root_key, subkey_path) = parse_registry_path(target_path)?;
+) -> RegistryAuditResult {
+    let (root_key, subkey_path) = match parse_registry_path(target_path) {
+        Ok(result) => result,
+        Err(e) => return RegistryAuditResult::Error(e.to_string()),
+    };
 
     log::info!("[registry] Opening registry key: {}", target_path);
-    let subkey = root_key.open_subkey(&subkey_path).map_err(|e| {
-        log::error!("[registry] Failed to open key {}: {}", target_path, e);
-        anyhow!("Failed to open registry key {}: {}", target_path, e)
-    })?;
+    let subkey = match root_key.open_subkey(&subkey_path) {
+        Ok(key) => key,
+        Err(e) => {
+            // Check if the error is "file not found" (key doesn't exist)
+            let error_code = e.raw_os_error().unwrap_or(0);
+            if error_code == 2 {
+                // ERROR_FILE_NOT_FOUND
+                log::info!(
+                    "[registry] Key not found (secure default): {}",
+                    target_path
+                );
+                return RegistryAuditResult::KeyNotFound;
+            }
+            log::error!("[registry] Failed to open key {}: {}", target_path, e);
+            return RegistryAuditResult::Error(format!(
+                "Failed to open registry key {}: {}",
+                target_path, e
+            ));
+        }
+    };
 
     log::info!("[registry] Reading registry value: {}", value_name);
     // Try to read as DWORD first, then as String
@@ -56,16 +90,13 @@ pub fn audit_registry_value(
         log::info!("[registry] Read STRING value: {}", value_name);
         YamlValue::String(string_val)
     } else {
-        log::error!(
-            "[registry] Failed to read value {} from {}",
+        // Value doesn't exist in the key
+        log::info!(
+            "[registry] Value not found (secure default): {} in {}",
             value_name,
             target_path
         );
-        return Err(anyhow!(
-            "Failed to read registry value {} from {}",
-            value_name,
-            target_path
-        ));
+        return RegistryAuditResult::ValueNotFound;
     };
 
     // Parse expected_state and perform comparison using operator helper
@@ -82,7 +113,7 @@ pub fn audit_registry_value(
         helpers::compare_with_operator(&actual_value, expected_state, "eq").unwrap_or(false)
     };
 
-    Ok(compliant)
+    RegistryAuditResult::Compliant(compliant)
 }
 
 /// Remediate a registry value by setting it to the specified value

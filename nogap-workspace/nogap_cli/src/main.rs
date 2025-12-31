@@ -7,7 +7,6 @@ use nogap_cli::ui;
 use serde::{Serialize, Deserialize};
 use chrono::Utc;
 use nogap_core::{policy_parser, engine};
-use std::path::PathBuf;
 use std::fs;
 
 #[derive(Serialize, Deserialize)]
@@ -63,12 +62,6 @@ enum Commands {
         #[arg(long)]
         export_csv: Option<String>,
     },
-    /// Scan for USB storage devices and policy repositories
-    ScanUsb {
-        /// Output as JSON (headless mode)
-        #[arg(long)]
-        json: bool,
-    },
     /// View, filter, and export past audit/remediation results
     Report {
         /// Path to input JSON report file
@@ -83,6 +76,64 @@ enum Commands {
         /// Show summary statistics only
         #[arg(long)]
         summary: bool,
+    },
+    /// AI-ASSISTED: Generate risk report from audit results
+    #[command(name = "risk-report")]
+    RiskReport {
+        /// Path to policies YAML file
+        #[arg(short, long, default_value = "policies.yaml")]
+        policies: String,
+        /// Number of top risks to show
+        #[arg(short, long, default_value = "10")]
+        top: usize,
+        /// Output as JSON
+        #[arg(long)]
+        json: bool,
+    },
+    /// AI-ASSISTED: Detect compliance drift since last audit
+    #[command(name = "drift")]
+    Drift {
+        /// Path to policies YAML file
+        #[arg(short, long, default_value = "policies.yaml")]
+        policies: String,
+        /// Output as JSON
+        #[arg(long)]
+        json: bool,
+    },
+    /// AI-ASSISTED: Get policy recommendations based on system context
+    Recommend {
+        /// Path to policies YAML file
+        #[arg(short, long, default_value = "policies.yaml")]
+        policies: String,
+        /// System role (e.g., "web server", "database", "workstation")
+        #[arg(short, long, default_value = "general")]
+        role: String,
+        /// Environment (production, development, staging, air-gapped)
+        #[arg(short, long, default_value = "production")]
+        environment: String,
+        /// Max recommendations to show
+        #[arg(short, long, default_value = "20")]
+        max: usize,
+        /// Output as JSON
+        #[arg(long)]
+        json: bool,
+    },
+    /// AUTONOMOUS: Start background sensing loop (continuous observation)
+    #[command(name = "sense-start")]
+    SenseStart {
+        /// Path to policies YAML file
+        #[arg(short, long, default_value = "policies.yaml")]
+        policies: String,
+        /// Audit interval in hours
+        #[arg(short, long, default_value = "24")]
+        interval: u64,
+    },
+    /// AUTONOMOUS: View sensing status and history
+    #[command(name = "sense-status")]
+    SenseStatus {
+        /// Output as JSON
+        #[arg(long)]
+        json: bool,
     },
 }
 
@@ -103,15 +154,23 @@ fn main() -> Result<()> {
         Commands::Remediate { policies, id, yes, export_csv } => {
             run_remediate_cli(&policies, &id, yes, export_csv.as_deref())?;
         }
-        Commands::ScanUsb { json } => {
-            if json {
-                run_scan_usb_json()?;
-            } else {
-                run_scan_usb_cli()?;
-            }
-        }
         Commands::Report { from_json, to_csv, filter, summary } => {
             run_report_cli(&from_json, to_csv.as_deref(), filter.as_deref(), summary)?;
+        }
+        Commands::RiskReport { policies, top, json } => {
+            run_risk_report(&policies, top, json)?;
+        }
+        Commands::Drift { policies, json } => {
+            run_drift_detection(&policies, json)?;
+        }
+        Commands::Recommend { policies, role, environment, max, json } => {
+            run_recommendations(&policies, &role, &environment, max, json)?;
+        }
+        Commands::SenseStart { policies, interval } => {
+            run_sense_start(&policies, interval)?;
+        }
+        Commands::SenseStatus { json } => {
+            run_sense_status(json)?;
         }
     }
 
@@ -281,8 +340,12 @@ fn export_csv_report(
 ) -> Result<()> {
     use std::path::Path;
     
-    // Resolve path - could be default path or custom
-    let resolved_path = resolve_csv_path(csv_path)?;
+    // Resolve path - use default or custom
+    let resolved_path = if csv_path == "default" {
+        get_default_csv_path()
+    } else {
+        csv_path.to_string()
+    };
     
     // Create parent directories if needed
     if let Some(parent) = Path::new(&resolved_path).parent() {
@@ -343,30 +406,6 @@ fn export_csv_report(
     Ok(())
 }
 
-/// Resolve CSV path - handle default paths and USB-B mode
-fn resolve_csv_path(csv_path: &str) -> Result<String> {
-    // Check if running in USB-B mode (offline)
-    if let Some(usb_path) = detect_usb_b_mount() {
-        // Get hostname
-        let hostname = hostname::get()
-            .ok()
-            .and_then(|h| h.into_string().ok())
-            .unwrap_or_else(|| "unknown".to_string());
-        
-        let usb_report_path = format!("{}/reports/{}/report.csv", usb_path, hostname);
-        println!("✓ USB-B detected, writing to: {}", usb_report_path);
-        return Ok(usb_report_path);
-    }
-    
-    // Check if default path requested
-    if csv_path == "default" {
-        return Ok(get_default_csv_path());
-    }
-    
-    // Use provided path
-    Ok(csv_path.to_string())
-}
-
 /// Get platform-specific default CSV path
 fn get_default_csv_path() -> String {
     #[cfg(target_os = "windows")]
@@ -378,302 +417,6 @@ fn get_default_csv_path() -> String {
     {
         "/opt/nogap/report.csv".to_string()
     }
-}
-
-/// Detect USB-B mount path (for offline mode)
-fn detect_usb_b_mount() -> Option<String> {
-    #[cfg(target_os = "windows")]
-    {
-        // Check common Windows USB drive letters
-        for letter in 'D'..='Z' {
-            let path = format!("{}:\\", letter);
-            if std::path::Path::new(&path).exists() {
-                // Check if it's a USB-B repository (look for marker file)
-                let marker = format!("{}:\\nogap_usb_repo", letter);
-                if std::path::Path::new(&marker).exists() {
-                    return Some(format!("{}:", letter));
-                }
-            }
-        }
-    }
-    
-    #[cfg(target_os = "linux")]
-    {
-        // Check common Linux mount points
-        let common_mounts = [
-            "/media/usb",
-            "/mnt/usb",
-            "/media/nogap",
-            "/mnt/nogap",
-        ];
-        
-        for mount in &common_mounts {
-            if std::path::Path::new(mount).exists() {
-                let marker = format!("{}/nogap_usb_repo", mount);
-                if std::path::Path::new(&marker).exists() {
-                    return Some(mount.to_string());
-                }
-            }
-        }
-        
-        // Check /media/$USER/* for USB drives
-        if let Ok(entries) = fs::read_dir("/media") {
-            for entry in entries.flatten() {
-                if let Ok(sub_entries) = fs::read_dir(entry.path()) {
-                    for sub_entry in sub_entries.flatten() {
-                        let marker = sub_entry.path().join("nogap_usb_repo");
-                        if marker.exists() {
-                            if let Some(path_str) = sub_entry.path().to_str() {
-                                return Some(path_str.to_string());
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    None
-}
-
-#[derive(Serialize)]
-struct UsbDeviceInfo {
-    name: String,
-    mount_path: String,
-    size_available: Option<u64>,
-    has_policy_folder: bool,
-    policy_files_detected: Vec<String>,
-}
-
-/// Scan USB devices and output results in plain text format
-fn run_scan_usb_cli() -> Result<()> {
-    println!("🔍 Scanning for USB storage devices...\n");
-    
-    let devices = scan_usb_devices()?;
-    
-    if devices.is_empty() {
-        println!("No USB storage devices detected.");
-        return Ok(());
-    }
-    
-    println!("Found {} USB device(s):\n", devices.len());
-    
-    for (idx, device) in devices.iter().enumerate() {
-        println!("Device #{}", idx + 1);
-        println!("  Name: {}", device.name);
-        println!("  Mount: {}", device.mount_path);
-        if let Some(size) = device.size_available {
-            println!("  Available: {} MB", size / 1024 / 1024);
-        } else {
-            println!("  Available: N/A");
-        }
-        println!("  Policy folder: {}", if device.has_policy_folder { "✓ Yes" } else { "✗ No" });
-        if !device.policy_files_detected.is_empty() {
-            println!("  Policy files:");
-            for file in &device.policy_files_detected {
-                println!("    - {}", file);
-            }
-        } else {
-            println!("  Policy files: None");
-        }
-        println!();
-    }
-    
-    Ok(())
-}
-
-/// Scan USB devices and output results in JSON format
-fn run_scan_usb_json() -> Result<()> {
-    let devices = scan_usb_devices()?;
-    
-    let json = serde_json::to_string_pretty(&devices)?;
-    println!("{}", json);
-    
-    Ok(())
-}
-
-/// Core USB scanning logic - reusable for CLI and TUI
-fn scan_usb_devices() -> Result<Vec<UsbDeviceInfo>> {
-    use nogap_core::ostree_lite;
-    
-    let mut devices = Vec::new();
-    
-    // Discover USB repos using existing core functionality
-    let repo_paths = ostree_lite::discover_usb_repos()
-        .unwrap_or_else(|_| Vec::new());
-    
-    // Get all removable drives
-    #[cfg(target_os = "windows")]
-    {
-        for letter in b'D'..=b'Z' {
-            let drive_path = format!("{}:\\", letter as char);
-            let path = PathBuf::from(&drive_path);
-            
-            if !path.exists() {
-                continue;
-            }
-            
-            // Check if removable using Windows API
-            use std::os::windows::ffi::OsStrExt;
-            use std::ffi::OsString;
-            
-            let wide: Vec<u16> = OsString::from(&drive_path)
-                .encode_wide()
-                .chain(std::iter::once(0))
-                .collect();
-            
-            let drive_type = unsafe {
-                winapi::um::fileapi::GetDriveTypeW(wide.as_ptr())
-            };
-            
-            // Only process removable (2) or fixed (3) drives
-            if drive_type != 2 && drive_type != 3 {
-                continue;
-            }
-            
-            let name = format!("Drive {}", letter as char);
-            let has_policy_folder = repo_paths.iter().any(|p| p.starts_with(&path));
-            
-            // Get available space
-            let size_available = get_drive_space(&drive_path);
-            
-            // Detect policy files
-            let policy_files = detect_policy_files(&drive_path);
-            
-            devices.push(UsbDeviceInfo {
-                name,
-                mount_path: drive_path,
-                size_available,
-                has_policy_folder,
-                policy_files_detected: policy_files,
-            });
-        }
-    }
-    
-    #[cfg(target_os = "linux")]
-    {
-        // Check /media and /mnt for mounted devices
-        let mount_points = ["/media", "/mnt"];
-        
-        for mount_base in &mount_points {
-            if let Ok(entries) = fs::read_dir(mount_base) {
-                for entry in entries.flatten() {
-                    if let Ok(sub_entries) = fs::read_dir(entry.path()) {
-                        for sub_entry in sub_entries.flatten() {
-                            let mount_path = sub_entry.path();
-                            if !mount_path.is_dir() {
-                                continue;
-                            }
-                            
-                            let mount_str = mount_path.to_string_lossy().to_string();
-                            let name = mount_path
-                                .file_name()
-                                .and_then(|n| n.to_str())
-                                .unwrap_or("Unknown")
-                                .to_string();
-                            
-                            let has_policy_folder = repo_paths.iter().any(|p| p.starts_with(&mount_path));
-                            let size_available = get_drive_space(&mount_str);
-                            let policy_files = detect_policy_files(&mount_str);
-                            
-                            devices.push(UsbDeviceInfo {
-                                name,
-                                mount_path: mount_str,
-                                size_available,
-                                has_policy_folder,
-                                policy_files_detected: policy_files,
-                            });
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    Ok(devices)
-}
-
-/// Get available space on drive/mount point
-fn get_drive_space(path: &str) -> Option<u64> {
-    #[cfg(target_os = "windows")]
-    {
-        use std::os::windows::ffi::OsStrExt;
-        use std::ffi::OsString;
-        use winapi::um::fileapi::GetDiskFreeSpaceExW;
-        use winapi::shared::minwindef::FALSE;
-        
-        let wide: Vec<u16> = OsString::from(path)
-            .encode_wide()
-            .chain(std::iter::once(0))
-            .collect();
-        
-        let mut free_bytes_available: u64 = 0;
-        
-        unsafe {
-            let result = GetDiskFreeSpaceExW(
-                wide.as_ptr(),
-                std::mem::transmute(&mut free_bytes_available),
-                std::ptr::null_mut(),
-                std::ptr::null_mut(),
-            );
-            
-            if result != FALSE {
-                return Some(free_bytes_available);
-            }
-        }
-    }
-    
-    #[cfg(target_os = "linux")]
-    {
-        use std::os::unix::fs::MetadataExt;
-        
-        if let Ok(metadata) = fs::metadata(path) {
-            // This is approximate - actual free space requires statvfs
-            return Some(metadata.blocks() * 512);
-        }
-    }
-    
-    None
-}
-
-/// Detect policy-related files on USB device
-fn detect_policy_files(base_path: &str) -> Vec<String> {
-    let mut files = Vec::new();
-    
-    // Check for aegis_repo marker
-    let aegis_marker = PathBuf::from(base_path).join("aegis_repo");
-    if aegis_marker.exists() {
-        files.push("aegis_repo/".to_string());
-        
-        // Check for manifest
-        if aegis_marker.join("manifest.json").exists() {
-            files.push("aegis_repo/manifest.json".to_string());
-        }
-        
-        // Check for objects directory
-        if aegis_marker.join("objects").exists() {
-            files.push("aegis_repo/objects/".to_string());
-        }
-    }
-    
-    // Check for nogap_usb_repo marker
-    let nogap_marker = PathBuf::from(base_path).join("nogap_usb_repo");
-    if nogap_marker.exists() {
-        files.push("nogap_usb_repo".to_string());
-    }
-    
-    // Check for policies.yaml
-    if PathBuf::from(base_path).join("policies.yaml").exists() {
-        files.push("policies.yaml".to_string());
-    }
-    
-    // Check for reports directory
-    let reports_dir = PathBuf::from(base_path).join("reports");
-    if reports_dir.exists() {
-        files.push("reports/".to_string());
-    }
-    
-    files
 }
 
 /// View, filter, and export past audit/remediation results
@@ -783,3 +526,328 @@ fn run_report_cli(
     Ok(())
 }
 
+// ============================================================
+// AI-ASSISTED FEATURES (Non-Agentic, Read-Only, User-Controlled)
+// ============================================================
+
+/// AI-ASSISTED: Generate risk report from audit results
+/// Shows top N policies by risk score (severity × non-compliance)
+fn run_risk_report(policies_path: &str, top_n: usize, output_json: bool) -> Result<()> {
+    use nogap_core::{policy_parser, engine, risk_scoring};
+    
+    println!("⚠️  AI-ASSISTED RISK REPORT - Review before taking action\n");
+    
+    let policies = policy_parser::load_policy(policies_path)?;
+    
+    let audit_results = match engine::audit(&policies) {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("Audit error: {}", e);
+            return Err(anyhow::anyhow!("Audit failed"));
+        }
+    };
+    
+    // Calculate risk scores
+    let all_scores = risk_scoring::calculate_all_risk_scores(&policies, &audit_results);
+    let summary = risk_scoring::calculate_system_risk(&all_scores);
+    let top_risks = risk_scoring::get_top_risks(&all_scores, top_n);
+    
+    if output_json {
+        let output = serde_json::json!({
+            "disclaimer": "AI-assisted analysis - review before action",
+            "summary": {
+                "total_policies": summary.total_policies,
+                "compliant": summary.compliant_count,
+                "non_compliant": summary.non_compliant_count,
+                "normalized_risk_score": summary.normalized_risk_score,
+                "total_risk_score": summary.total_risk_score,
+            },
+            "top_risks": top_risks,
+        });
+        println!("{}", serde_json::to_string_pretty(&output)?);
+        return Ok(());
+    }
+    
+    // Text output
+    println!("🎯 RISK SUMMARY");
+    println!("================");
+    println!("Total Policies: {}", summary.total_policies);
+    println!("Compliant: {} ✅", summary.compliant_count);
+    println!("Non-Compliant: {} ❌", summary.non_compliant_count);
+    println!("Normalized Risk: {:.1}%", summary.normalized_risk_score * 100.0);
+    
+    if top_risks.is_empty() {
+        println!("\n✅ No high-risk policies found. Your system is well-configured!");
+    } else {
+        println!("\n🔴 TOP {} RISK PRIORITIES", top_risks.len());
+        println!("============================");
+        for (i, risk) in top_risks.iter().enumerate() {
+            println!(
+                "\n{}. {} [{}]",
+                i + 1,
+                risk.policy_title,
+                risk.policy_id
+            );
+            println!("   Severity: {}", risk.severity.to_uppercase());
+            println!("   Risk Score: {:.0}%", risk.risk_score * 100.0);
+        }
+    }
+    
+    println!("\n⚠️  These are AI-assisted suggestions. Review each policy before remediation.");
+    
+    Ok(())
+}
+
+/// AI-ASSISTED: Detect compliance drift since last audit
+fn run_drift_detection(policies_path: &str, output_json: bool) -> Result<()> {
+    use nogap_core::{policy_parser, engine, drift_detection};
+    
+    println!("⚠️  AI-ASSISTED DRIFT DETECTION - Comparing against previous audit\n");
+    
+    let policies = policy_parser::load_policy(policies_path)?;
+    
+    let audit_results = match engine::audit(&policies) {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("Audit error: {}", e);
+            return Err(anyhow::anyhow!("Audit failed"));
+        }
+    };
+    
+    // Initialize drift database
+    let conn = drift_detection::init_drift_db()
+        .map_err(|e| anyhow::anyhow!("Failed to initialize drift database: {}", e))?;
+    
+    // Detect drift
+    let drift_report = drift_detection::detect_drift(&conn, &audit_results)
+        .map_err(|e| anyhow::anyhow!("Failed to detect drift: {}", e))?;
+    
+    // Store current results for future comparison
+    drift_detection::store_audit_results(&conn, &audit_results, None)
+        .map_err(|e| anyhow::anyhow!("Failed to store audit results: {}", e))?;
+    
+    if output_json {
+        let output = serde_json::json!({
+            "disclaimer": "AI-assisted analysis - review before action",
+            "drift_report": {
+                "timestamp": drift_report.timestamp,
+                "total_compared": drift_report.total_compared,
+                "regressions": drift_report.regressions.len(),
+                "improvements": drift_report.improvements.len(),
+                "unchanged": drift_report.unchanged_count,
+                "has_regressions": drift_report.has_regressions(),
+            },
+            "regression_details": drift_report.regressions,
+            "improvement_details": drift_report.improvements,
+        });
+        println!("{}", serde_json::to_string_pretty(&output)?);
+        return Ok(());
+    }
+    
+    // Text output
+    println!("📉 COMPLIANCE DRIFT REPORT");
+    println!("==========================");
+    println!("Policies Compared: {}", drift_report.total_compared);
+    println!("Regressions: {} ⚠️", drift_report.regressions.len());
+    println!("Improvements: {} ✅", drift_report.improvements.len());
+    println!("Unchanged: {}", drift_report.unchanged_count);
+    
+    if drift_report.has_regressions() {
+        println!("\n🔴 SECURITY REGRESSIONS (Compliant → Non-Compliant)");
+        println!("===================================================");
+        for event in &drift_report.regressions {
+            println!("\n  ⚠️  {}", event.policy_id);
+            println!("     Previous: Compliant ✅");
+            println!("     Current:  Non-Compliant ❌");
+        }
+    } else {
+        println!("\n✅ No regressions detected. Compliance is stable or improving.");
+    }
+    
+    if !drift_report.improvements.is_empty() {
+        println!("\n🟢 IMPROVEMENTS (Non-Compliant → Compliant)");
+        println!("============================================");
+        for event in &drift_report.improvements {
+            println!("  ✅ {}", event.policy_id);
+        }
+    }
+    
+    println!("\n⚠️  This is AI-assisted analysis. Review before taking action.");
+    
+    Ok(())
+}
+
+/// AI-ASSISTED: Get policy recommendations based on system context
+fn run_recommendations(
+    policies_path: &str,
+    role: &str,
+    environment: &str,
+    max_results: usize,
+    output_json: bool,
+) -> Result<()> {
+    use nogap_core::{policy_parser, ai_recommender};
+    
+    println!("⚠️  AI-ASSISTED RECOMMENDATIONS - Review before enabling\n");
+    
+    let policies = policy_parser::load_policy(policies_path)?;
+    
+    let context = ai_recommender::SystemContext {
+        os: std::env::consts::OS.to_string(),
+        role: role.to_string(),
+        environment: environment.to_string(),
+        additional_context: None,
+    };
+    
+    let recommendations = ai_recommender::keyword_based_recommendations(&context, &policies, max_results);
+    
+    if output_json {
+        let output = serde_json::json!({
+            "disclaimer": "AI-assisted suggestions - review each policy before enabling",
+            "context": {
+                "os": context.os,
+                "role": context.role,
+                "environment": context.environment,
+            },
+            "recommendations": recommendations,
+        });
+        println!("{}", serde_json::to_string_pretty(&output)?);
+        return Ok(());
+    }
+    
+    // Text output
+    println!("💡 POLICY RECOMMENDATIONS");
+    println!("=========================");
+    println!("OS: {}", context.os);
+    println!("Role: {}", context.role);
+    println!("Environment: {}", context.environment);
+    
+    if recommendations.is_empty() {
+        println!("\nNo specific recommendations for this context.");
+        println!("Try adjusting the role or environment parameters.");
+    } else {
+        println!("\nRecommended Policies ({}):", recommendations.len());
+        println!("----------------------------");
+        for (i, rec) in recommendations.iter().enumerate() {
+            // Find policy for additional details
+            if let Some(policy) = policies.iter().find(|p| p.id == rec.policy_id) {
+                let title = policy.title.as_deref().unwrap_or("Untitled");
+                let severity = policy.severity.as_deref().unwrap_or("medium");
+                println!(
+                    "\n{}. {} [{}]",
+                    i + 1,
+                    title,
+                    rec.policy_id
+                );
+                println!("   Severity: {}", severity.to_uppercase());
+                println!("   Relevance: {:.0}%", rec.relevance_score * 100.0);
+                println!("   Reason: {}", rec.reason);
+            }
+        }
+    }
+    
+    println!("\n⚠️  These are AI-assisted suggestions. Review each policy before enabling.");
+    
+    Ok(())
+}
+
+/// Start the autonomous sensing loop
+fn run_sense_start(policy_path: &str, interval_hours: u64) -> Result<()> {
+    use nogap_core::sensor_scheduler::{SensorConfig, SensorScheduler};
+    use std::io::{self, Write};
+
+    println!("🔍 AUTONOMOUS SENSING LOOP");
+    println!("==========================");
+    println!();
+    println!("This will start continuous background audits:");
+    println!("  • Interval: {} hours", interval_hours);
+    println!("  • Policy file: {}", policy_path);
+    println!("  • Mode: Observation only (no remediation)");
+    println!();
+    println!("⚠️  WARNING: The sensing loop will run indefinitely.");
+    println!("    Press Ctrl+C to stop.");
+    println!();
+    print!("Continue? [y/N]: ");
+    io::stdout().flush()?;
+    
+    let mut input = String::new();
+    io::stdin().read_line(&mut input)?;
+    
+    if !input.trim().eq_ignore_ascii_case("y") {
+        println!("Cancelled.");
+        return Ok(());
+    }
+
+    // Load policies
+    let policies = match policy_parser::load_policy(policy_path) {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("❌ Failed to load policies from '{}': {}", policy_path, e);
+            return Ok(());
+        }
+    };
+
+    println!("\n✅ Loaded {} policies", policies.len());
+
+    // Create and start sensor
+    let config = SensorConfig {
+        enabled: true,
+        interval_hours,
+        max_stored_events: 100,
+    };
+
+    let scheduler = SensorScheduler::new(config);
+    
+    match scheduler.start(policies) {
+        Ok(_) => {
+            println!("\n🚀 Sensing loop started successfully!");
+            println!("📊 Logs will show audit progress");
+            println!("Press Ctrl+C to stop...");
+            
+            // Keep main thread alive
+            loop {
+                std::thread::sleep(std::time::Duration::from_secs(1));
+            }
+        }
+        Err(e) => {
+            eprintln!("❌ Failed to start sensing loop: {}", e);
+            eprintln!("   Possible causes:");
+            eprintln!("   • Sensing is disabled in configuration");
+            eprintln!("   • Sensing loop is already running");
+        }
+    }
+
+    Ok(())
+}
+
+/// Show sensing status and history
+fn run_sense_status(output_json: bool) -> Result<()> {
+
+    // For now, we'll load status from snapshots database
+    // In a full implementation, we'd persist the scheduler state
+    
+    if output_json {
+        // JSON output for automation
+        let status = serde_json::json!({
+            "sensor_enabled": false,
+            "message": "Use 'sense-start' to begin autonomous sensing",
+            "events": [],
+        });
+        println!("{}", serde_json::to_string_pretty(&status)?);
+        return Ok(());
+    }
+
+    // Text output
+    println!("🔍 AUTONOMOUS SENSOR STATUS");
+    println!("===========================");
+    println!();
+    println!("Status: Not running");
+    println!("Use 'nogap-cli sense-start' to begin autonomous sensing.");
+    println!();
+    println!("What is autonomous sensing?");
+    println!("  • Background audits run automatically on schedule");
+    println!("  • No decision-making or remediation");
+    println!("  • Pure observation and drift detection");
+    println!("  • Results stored in snapshots database");
+    
+    Ok(())
+}
