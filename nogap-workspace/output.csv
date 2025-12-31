@@ -1,2 +1,0 @@
-policy_id,description,expected,actual,status,severity,timestamp
-TEST-001,OK,N/A,OK,PASS,medium,2025-11-30T05:33:07.489633800+00:00

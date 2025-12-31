@@ -1,0 +1,39 @@
+John Doe
+Software Engineer
+
+CONTACT
+john.doe@email.com | (555) 123-4567 | LinkedIn: linkedin.com/in/johndoe
+
+SUMMARY
+Experienced software engineer with 3+ years of full-stack development experience. 
+Passionate about building scalable web applications and working with modern technologies.
+
+SKILLS
+- Programming: Python, JavaScript, TypeScript, Java
+- Frontend: React, Vue.js, HTML5, CSS3
+- Backend: Node.js, Express, Django, FastAPI
+- Database: PostgreSQL, MongoDB, Redis
+- Cloud: AWS (EC2, S3, Lambda), Docker, Kubernetes
+- Tools: Git, JIRA, Jenkins, CI/CD
+
+EXPERIENCE
+
+Software Developer | Tech Corporation | Jan 2021 - Present
+- Developed and maintained RESTful APIs using Node.js and Express, serving 10,000+ daily users
+- Built responsive React frontend applications with Redux state management
+- Implemented CI/CD pipelines using Jenkins and Docker, reducing deployment time by 40%
+- Collaborated with cross-functional teams in Agile sprints
+
+Junior Developer | StartUp Inc | Jun 2019 - Dec 2020
+- Assisted in building Python-based data processing pipelines
+- Created automated testing suites, improving code coverage from 60% to 85%
+- Participated in code reviews and pair programming sessions
+
+EDUCATION
+
+Bachelor of Science in Computer Science
+Massachusetts Institute of Technology (MIT) | 2019
+
+CERTIFICATIONS
+- AWS Certified Developer Associate
+- MongoDB Certified Developer

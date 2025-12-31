@@ -1,7 +1,9 @@
 [workspace]
 members = [
-    "nogap_core",
-    "nogap_cli",
-    "nogap_dashboard/src-tauri",
+    "backend",
 ]
 resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
